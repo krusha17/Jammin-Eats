@@ -3,6 +3,7 @@ import sys
 import random
 import math
 from pygame import mixer
+import os
 
 # Initialize Pygame
 pygame.init()
@@ -28,12 +29,12 @@ font = pygame.font.Font(None, 36)
 
 # Load sounds with error handling
 try:
-    pickup_sound = mixer.Sound('D:/Jammin eats/assets/sounds/characters/food_throw.wav')
-    engine_sound = mixer.Sound('D:/Jammin eats/assets/sounds/vehicles/engine_idle.wav')
-    button_sound = mixer.Sound('D:/Jammin eats/assets/sounds/ui/button_click.wav')
+    pickup_sound = mixer.Sound('assets/sounds/characters/food_throw.wav')
+    engine_sound = mixer.Sound('assets/sounds/vehicles/engine_idle.wav')
+    button_sound = mixer.Sound('assets/sounds/ui/button_click.wav')
     # Try to create background music - fallback to looping a sound if needed
     try:
-        mixer.music.load('D:/Jammin eats/assets/sounds/characters/food_throw.wav')  # Placeholder for background music
+        mixer.music.load('assets/sounds/characters/food_throw.wav')  # Placeholder for background music
         mixer.music.set_volume(0.5)
         mixer.music.play(-1)  # Loop indefinitely
     except:
@@ -43,7 +44,7 @@ except:
 
 # Load the background image with error handling
 try:
-    background = pygame.image.load('D:/Jammin eats/assets/backgrounds/level1/level1.png').convert()
+    background = pygame.image.load('assets/backgrounds/level1/level1.png').convert()
     print("Successfully loaded background image")
 except pygame.error as e:
     print(f"Error loading background image: {e}")
@@ -113,13 +114,10 @@ class Player(pygame.sprite.Sprite):
         # Try loading the sprites from the specific file paths
         try:
             # Load character sprites for different directions
-            self.image_up = pygame.image.load('D:/Jammin eats/assets/sprites/characters/kai/kai_up.png').convert_alpha()
-            self.image_down = pygame.image.load(
-                'D:/Jammin eats/assets/sprites/characters/kai/kai_down.png').convert_alpha()
-            self.image_left = pygame.image.load(
-                'D:/Jammin eats/assets/sprites/characters/kai/kai_left.png').convert_alpha()
-            self.image_right = pygame.image.load(
-                'D:/Jammin eats/assets/sprites/characters/kai/kai_right.png').convert_alpha()
+            self.image_up = pygame.image.load('assets/sprites/characters/kai/kai_up.png').convert_alpha()
+            self.image_down = pygame.image.load('assets/sprites/characters/kai/kai_down.png').convert_alpha()
+            self.image_left = pygame.image.load('assets/sprites/characters/kai/kai_left.png').convert_alpha()
+            self.image_right = pygame.image.load('assets/sprites/characters/kai/kai_right.png').convert_alpha()
 
             # Use these images for our animations (single frame each direction)
             self.animations['up'] = [self.image_up]
@@ -161,22 +159,9 @@ class Player(pygame.sprite.Sprite):
         self.delivery_cooldown = 0
         self.delivery_cooldown_max = 0.5  # seconds
 
-        # Try to load food truck sprite
-        try:
-            self.food_truck = pygame.image.load(
-                'D:/Jammin eats/assets/sprites/vehicles/food_truck_base.png').convert_alpha()
-            self.has_truck = True
-        except pygame.error as e:
-            print(f"Error loading food truck: {e}")
-            # Create a fallback food truck
-            self.food_truck = pygame.Surface((80, 40))
-            self.food_truck.fill((200, 100, 50))  # Orange-ish truck
-            pygame.draw.rect(self.food_truck, (150, 220, 150), (10, 5, 60, 20))  # Window
-            pygame.draw.rect(self.food_truck, (50, 50, 50), (5, 30, 15, 10))  # Wheel
-            pygame.draw.rect(self.food_truck, (50, 50, 50), (60, 30, 15, 10))  # Wheel
-            self.has_truck = True
-
-        self.truck_rect = self.food_truck.get_rect(center=(x, y + 50))
+        # Food truck is not available yet, so we'll skip it for now
+        self.has_truck = False
+        print("Food truck disabled - will be added later")
 
     def update(self, dt, customers, foods):
         # Previous position for collision resolution
@@ -187,9 +172,6 @@ class Player(pygame.sprite.Sprite):
 
         # Update animation
         self.update_animation(dt)
-
-        # Update food truck position to follow player
-        self.truck_rect.center = (self.rect.centerx, self.rect.centery + 50)
 
         # Update delivery cooldown
         if self.delivery_cooldown > 0:
@@ -314,12 +296,10 @@ class Player(pygame.sprite.Sprite):
             pygame.draw.rect(surface, WHITE, (20, 100, 100, 10), 2)
 
     def draw(self, surface):
-        # Draw food truck first (appears below player)
-        if self.has_truck:
-            surface.blit(self.food_truck, self.truck_rect)
-
-        # Draw player on top
+        # Draw player
         surface.blit(self.image, self.rect)
+
+        # We'll add the food truck drawing later when the sprite is available
 
 
 # Customer class
@@ -628,6 +608,11 @@ def draw_text(surface, text, size, x, y, color=WHITE):
 def main():
     global game_state, score, high_score, game_time
     global customer_spawn_timer, customer_spawn_rate
+    
+    # Make sure the assets directory exists
+    print(f"Current working directory: {os.getcwd()}")
+    if not os.path.exists('assets'):
+        print("Warning: 'assets' directory not found in current working directory.")
 
     # Set initial game state
     game_state = MENU
@@ -769,3 +754,32 @@ def main():
 
             # Draw high score
             draw_text(screen, f"High Score: {high_score}", 36, WIDTH // 2, HEIGHT - 100, WHITE)
+
+        elif game_state == GAME_OVER:
+            # Draw game over screen
+            screen.blit(game_over_background, (0, 0))
+            draw_text(screen, "GAME OVER", 72, WIDTH // 2, HEIGHT // 4, RED)
+            draw_text(screen, f"Score: {score}", 48, WIDTH // 2, HEIGHT // 3, WHITE)
+            draw_text(screen, f"High Score: {high_score}", 36, WIDTH // 2, HEIGHT // 3 + 50, WHITE)
+
+            # Show stats
+            minutes = int(game_time) // 60
+            seconds = int(game_time) % 60
+            draw_text(screen, f"Time Survived: {minutes:02d}:{seconds:02d}", 36, WIDTH // 2, HEIGHT // 2, WHITE)
+            draw_text(screen, f"Deliveries Made: {player.deliveries}", 36, WIDTH // 2, HEIGHT // 2 + 40, WHITE)
+            draw_text(screen, f"Customers Missed: {player.missed_deliveries}", 36, WIDTH // 2, HEIGHT // 2 + 80, WHITE)
+
+            # Update and draw restart button
+            restart_button.update(mouse_pos)
+            restart_button.draw(screen)
+
+        # Update the display
+        pygame.display.flip()
+
+    pygame.quit()
+    sys.exit()
+
+
+# Make sure to actually call the main function to start the game
+if __name__ == '__main__':
+    main()
