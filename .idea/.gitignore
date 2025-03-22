@@ -1,0 +1,108 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribution / Packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Virtual environments
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# === Pygame (general) ===
+*.log
+*.tmp
+*.bak
+
+# === Windows ===
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Visual Studio Code ===
+.vscode/
+
+# === PyCharm ===
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# === SQLite / future DB files ===
+*.sqlite
+*.sqlite3
+*.db
+
+# === Logs and temp files ===
+*.log
+*.tmp
+
+# === Assets backups or user-specific paths (optional) ===
+/assets/**/*.backup
+/assets/**/*.tmp
+
+# === System files ===
+*.swp
+*.swo
+*.swn
+*~
+
+# === GitHub Actions ===
+# Ignore logs and temp cache from local testing of actions
+.github/workflows/*.log
+.github/workflows/*.tmp
+.github/workflows/*.bak
+
+# === Ignore main settings file if sensitive ===
+# config.py  # Uncomment this if it contains API keys or secrets
