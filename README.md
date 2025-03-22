@@ -64,28 +64,70 @@ Active engagement with player feedback to continuously enhance the gaming experi
 📂 Repository Structure
 
 ```
-JamminEats/
+JamminsEats/
 │
 ├── assets/
-│ ├── backgrounds/
-│ │ └── level1/
-│ │     └── level1.png
-│ ├── sprites/
-│ │ └── characters/
-│ │     └── kai/
-│ │         ├── kai_up.png
-│ │         ├── kai_down.png
-│ │         ├── kai_left.png
-│ │         └── kai_right.png
-│ └── sounds/
-│     ├── characters/
-│     │   └── food_throw.wav
-│     ├── vehicles/
-│     │   └── engine_idle.wav
-│     └── ui/
-│         └── button_click.wav
+│   ├── backgrounds/
+│   │   └── level1/
+│   │       └── level1.png
+│   │
+│   ├── sprites/
+│   │   └── characters/
+│   │       └── kai/
+│   │           ├── kai_up.png
+│   │           ├── kai_down.png
+│   │           ├── kai_left.png
+│   │           └── kai_right.png
+│   │
+│   └── sounds/
+│       ├── characters/
+│       │   └── food_throw.wav
+│       ├── vehicles/
+│       │   └── engine_idle.wav
+│       └── ui/
+│           └── button_click.wav
 │
-└── main.py
+├── database/
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── player.py
+│   │   ├── food.py
+│   │   ├── customer.py
+│   │   └── stats.py
+│   │
+│   ├── __init__.py
+│   ├── config.py
+│   └── db_manager.py
+│
+├── src/
+│   ├── __init__.py
+│   ├── game_objects/
+│   │   ├── __init__.py
+│   │   ├── player.py
+│   │   ├── customer.py
+│   │   ├── food.py
+│   │   └── particle.py
+│   │
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── menu.py
+│   │   └── button.py
+│   │
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── asset_loader.py
+│   │   └── helpers.py
+│   │
+│   └── game_states/
+│       ├── __init__.py
+│       ├── menu_state.py
+│       ├── play_state.py
+│       └── game_over_state.py
+│
+├── main.py
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
 
 🖥️ How to Run the Game
