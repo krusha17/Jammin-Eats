@@ -63,7 +63,7 @@ Active engagement with player feedback to continuously enhance the gaming experi
 
 📂 Repository Structure
 
-JamminEats/
+'''JamminEats/
 │
 ├── assets/
 │ ├── backgrounds/
@@ -84,7 +84,7 @@ JamminEats/
 │     └── ui/
 │         └── button_click.wav
 │
-└── main.py
+└── main.py'''
 
 🖥️ How to Run the Game
 
