@@ -200,11 +200,3 @@ CREATE INDEX IX_GameSessions_LevelID ON GameSessions(level_id);
 CREATE INDEX IX_Deliveries_SessionID ON Deliveries(session_id);
 CREATE INDEX IX_PlayerAchievements_PlayerID ON PlayerAchievements(player_id);
 CREATE INDEX IX_CustomerSpawnLocations_LevelID ON CustomerSpawnLocations(level_id);
-
-INSERT INTO Players (username, email, password_hash, date_registered, last_login, high_score, is_active)
-VALUES
-    ('JamminKing', 'jamminKing@example.com', HASHBYTES('SHA2_256', 'securepassword123'), DATEADD(day, -30, GETDATE()), GETDATE(), 15000, 1),
-    ('SkaLover', 'skalover@example.com', HASHBYTES('SHA2_256', 'reggae456'), DATEADD(day, -25, GETDATE()), DATEADD(day, -2, GETDATE()), 12000, 1),
-    ('IslandChef', 'islandchef@example.com', HASHBYTES('SHA2_256', 'tropical789'), DATEADD(day, -15, GETDATE()), DATEADD(day, -1, GETDATE()), 10500, 1),
-    ('FoodRasta', 'foodrasta@example.com', HASHBYTES('SHA2_256', 'jamaican101'), DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE()), 8000, 1),
-    ('TropicalDelivery', 'tropicaldelivery@example.com', HASHBYTES('SHA2_256', 'island202'), DATEADD(day, -5, GETDATE()), DATEADD(day, -3, GETDATE()), 7500, 1);
