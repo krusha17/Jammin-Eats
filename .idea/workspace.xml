@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="7ec39fe8-ad35-4fda-862e-06f52df7762c" name="Changes" comment="Added database file!">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Database/JamminEats-Database.py" beforeDir="false" afterPath="$PROJECT_DIR$/Database/JamminEats-Database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Database/JamminEats-Schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/Database/JamminEats-Schema.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Database/create_jammin_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/Database/create_jammin_db.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +73,12 @@
       <recent name="C:\Users\jerom\AppData\Local\Temp\is-EHJTH.tmp" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.JamminEats-Database">
+  <component name="RunManager" selected="Database Script.JamminEats-Schema.sql">
+    <configuration name="JamminEats-Schema.sql" type="DatabaseScript" editBeforeRun="true" temporary="true" nameIsGenerated="true">
+      <script-file value="$PROJECT_DIR$/Database/JamminEats-Schema.sql" />
+      <script-mode>FILE</script-mode>
+      <method v="2" />
+    </configuration>
     <configuration name="JamminEats-Database" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Jammin eats" />
       <option name="ENV_FILES" value="" />
@@ -170,6 +173,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Database Script.JamminEats-Schema.sql" />
         <item itemvalue="Python.JamminEats-Database" />
         <item itemvalue="Python.create_jammin_db" />
         <item itemvalue="Python.main" />
@@ -202,7 +206,7 @@
       <workItem from="1742674559120" duration="1007000" />
       <workItem from="1742993994678" duration="4636000" />
       <workItem from="1742999311435" duration="797000" />
-      <workItem from="1743000129870" duration="8459000" />
+      <workItem from="1743000129870" duration="10551000" />
     </task>
     <task id="LOCAL-00001" summary="Added database!">
       <option name="closed" value="true" />
@@ -228,7 +232,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743013262644</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Added database file!">
+      <option name="closed" value="true" />
+      <created>1743014360971</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1743014360971</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

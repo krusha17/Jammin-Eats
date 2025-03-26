@@ -1,5 +1,3 @@
-
-
 USE JamminEats;
 GO
 
@@ -203,45 +201,10 @@ CREATE INDEX IX_Deliveries_SessionID ON Deliveries(session_id);
 CREATE INDEX IX_PlayerAchievements_PlayerID ON PlayerAchievements(player_id);
 CREATE INDEX IX_CustomerSpawnLocations_LevelID ON CustomerSpawnLocations(level_id);
 
--- Insert initial game data
-
--- Insert food types from the game code
-INSERT INTO FoodTypes (food_name, display_name, speed, lifespan)
+INSERT INTO Players (username, email, password_hash, date_registered, last_login, high_score, is_active)
 VALUES
-    ('pizza', 'Tropical Pizza Slice', 300, 2.0),
-    ('smoothie', 'Ska Smoothie', 300, 2.0),
-    ('icecream', 'Island Ice Cream Jam', 300, 2.0),
-    ('pudding', 'Rasta Rice Pudding', 300, 2.0);
-
--- Insert initial game level
-INSERT INTO GameLevels (level_name, customer_spawn_rate, missed_deliveries_limit, description)
-VALUES ('Kitchen Chaos', 5.0, 10, 'Level 1 - Serve customers in a chaotic kitchen setting');
-
--- Insert default customer type
-INSERT INTO CustomerTypes (type_name, min_patience, max_patience)
-VALUES ('Regular', 10.0, 20.0);
-
--- Insert game settings
-INSERT INTO GameSettings (setting_name, setting_value, description)
-VALUES
-    ('FPS', '60', 'Frames per second'),
-    ('SCREEN_WIDTH', '768', 'Screen width in pixels'),
-    ('SCREEN_HEIGHT', '768', 'Screen height in pixels');
-
--- Insert sounds from the game code
-INSERT INTO Sounds (sound_name, file_path, volume, is_music)
-VALUES
-    ('pickup_sound', 'assets/sounds/characters/food_throw.wav', 1.0, 0),
-    ('engine_sound', 'assets/sounds/vehicles/engine_idle.wav', 1.0, 0),
-    ('button_sound', 'assets/sounds/ui/button_click.wav', 1.0, 0),
-    ('background_music', 'assets/sounds/characters/food_throw.wav', 0.5, 1);
-
--- Insert achievements
-INSERT INTO Achievements (achievement_name, description, points_value)
-VALUES
-    ('First Delivery', 'Make your first food delivery', 100),
-    ('Speed Demon', 'Complete a level in under 60 seconds', 500),
-    ('Food Maestro', 'Make 50 perfect deliveries', 1000),
-    ('No Customer Left Behind', 'Complete a level with no missed customers', 2000);
-
-GO
+    ('JamminKing', 'jamminKing@example.com', HASHBYTES('SHA2_256', 'securepassword123'), DATEADD(day, -30, GETDATE()), GETDATE(), 15000, 1),
+    ('SkaLover', 'skalover@example.com', HASHBYTES('SHA2_256', 'reggae456'), DATEADD(day, -25, GETDATE()), DATEADD(day, -2, GETDATE()), 12000, 1),
+    ('IslandChef', 'islandchef@example.com', HASHBYTES('SHA2_256', 'tropical789'), DATEADD(day, -15, GETDATE()), DATEADD(day, -1, GETDATE()), 10500, 1),
+    ('FoodRasta', 'foodrasta@example.com', HASHBYTES('SHA2_256', 'jamaican101'), DATEADD(day, -10, GETDATE()), DATEADD(day, -5, GETDATE()), 8000, 1),
+    ('TropicalDelivery', 'tropicaldelivery@example.com', HASHBYTES('SHA2_256', 'island202'), DATEADD(day, -5, GETDATE()), DATEADD(day, -3, GETDATE()), 7500, 1);
