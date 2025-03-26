@@ -1,7 +1,4 @@
 
--- Create the database
-CREATE DATABASE JamminEats;
-GO
 
 USE JamminEats;
 GO
