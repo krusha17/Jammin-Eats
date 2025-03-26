@@ -4,64 +4,36 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7ec39fe8-ad35-4fda-862e-06f52df7762c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/Jammin eats.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/.idea/Code.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/V3/V3source.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/V4/V4.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/V5 (Claude first)/V5.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PDFs for note attachments/Folder_structure_for_assets.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PDFs for note attachments/Original_Game_Idea.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PDFs for note attachments/Project_development_summary.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject/.idea/PythonProject.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/.idea/.name" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/.idea/Jammin_Eats.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/assets/backgrounds/level1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/assets/characters/kai_down.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/assets/characters/kai_left.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/assets/characters/kai_right.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/assets/characters/kai_up.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProject1/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PythonProjectV5/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/backgrounds/level1/level1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/characters/kai/kai_down.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/characters/kai/kai_left.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/characters/kai/kai_right.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/characters/kai/kai_up.png" afterDir="false" />
+    <list default="true" id="7ec39fe8-ad35-4fda-862e-06f52df7762c" name="Changes" comment="Added database file!">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Database/JamminEats-Database.py" beforeDir="false" afterPath="$PROJECT_DIR$/Database/JamminEats-Database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Database/JamminEats-Schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/Database/JamminEats-Schema.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "jkilgore07"
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+        <option value="SQL File" />
+      </list>
+    </option>
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;jkilgore07&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/krusha17/Jammin-Eats",
-    "accountId": "20ba8372-fbf5-4b1e-8131-8681b4b4c5e9"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/krusha17/Jammin-Eats&quot;,
+    &quot;accountId&quot;: &quot;20ba8372-fbf5-4b1e-8131-8681b4b4c5e9&quot;
   }
-}]]></component>
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -74,22 +46,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.V5.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;ignore_missing_gitignore&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Jammin eats/.idea&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.Mappings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.JamminEats-Database.executor": "Run",
+    "Python.V5.executor": "Run",
+    "Python.main.executor": "Debug",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "ignore_missing_gitignore": "true",
+    "last_opened_file_path": "D:/Jammin eats/.idea",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "aDefault",
+    "settings.editor.selected.configurable": "project.propVCSSupport.Mappings",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\Jammin eats\.idea" />
@@ -97,7 +73,30 @@
       <recent name="C:\Users\jerom\AppData\Local\Temp\is-EHJTH.tmp" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.JamminEats-Database">
+    <configuration name="JamminEats-Database" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Jammin eats" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Database" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Database/JamminEats-Database.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="V5" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Jammin eats" />
       <option name="ENV_FILES" value="" />
@@ -121,8 +120,33 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Jammin eats" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.JamminEats-Database" />
+        <item itemvalue="Python.main" />
         <item itemvalue="Python.V5" />
       </list>
     </recent_temporary>
@@ -130,8 +154,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PY-243.25659.43" />
-        <option value="bundled-python-sdk-181015f7ab06-4df51de95216-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.25659.43" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PY-243.26053.29" />
+        <option value="bundled-python-sdk-b1dbf8ef85a6-4df51de95216-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.26053.29" />
       </set>
     </attachedChunks>
   </component>
@@ -150,7 +174,27 @@
       <workItem from="1742671533806" duration="2652000" />
       <workItem from="1742674220513" duration="325000" />
       <workItem from="1742674559120" duration="1007000" />
+      <workItem from="1742993994678" duration="4636000" />
+      <workItem from="1742999311435" duration="797000" />
+      <workItem from="1743000129870" duration="7151000" />
     </task>
+    <task id="LOCAL-00001" summary="Added database!">
+      <option name="closed" value="true" />
+      <created>1742997678984</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1742997678984</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Added database file!">
+      <option name="closed" value="true" />
+      <created>1743010724063</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1743010724064</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -167,6 +211,11 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added database!" />
+    <MESSAGE value="Added database file!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added database file!" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
@@ -175,10 +224,17 @@
           <line>1</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Database/JamminEats-Database.py</url>
+          <line>5</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Jammin_Eats$main.coverage" NAME="main Coverage Results" MODIFIED="1743001581054" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Jammin_eats$V5.coverage" NAME="V5 Coverage Results" MODIFIED="1742664474900" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Code/V5 (Claude first)" />
+    <SUITE FILE_PATH="coverage/Jammin_Eats$JamminEats_Database.coverage" NAME="JamminEats-Database Coverage Results" MODIFIED="1743012984490" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Database" />
   </component>
 </project>
