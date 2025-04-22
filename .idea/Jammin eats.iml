@@ -5,8 +5,9 @@
       <excludeFolder url="file://$MODULE_DIR$/PythonProject1/.venv/Lib" />
       <excludeFolder url="file://$MODULE_DIR$/PythonProject1/.venv/Scripts" />
       <excludeFolder url="file://$MODULE_DIR$/PythonProject1/.venv/include" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.13" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.13 (WorkingCopy)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

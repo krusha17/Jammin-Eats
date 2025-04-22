@@ -1,0 +1,11 @@
+{
+  "image_size": "768x768",
+  "tile_size": 32,
+  "grid_size": "24x24",
+  "total_tiles": 576,
+  "unique_tiles": 469,
+  "duplicates_found": 107,
+  "compression_ratio": "18.58%",
+  "perceptual_matching": true,
+  "similarity_threshold": 5
+}
