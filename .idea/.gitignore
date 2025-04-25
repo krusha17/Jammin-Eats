@@ -1,109 +1,63 @@
-# === Python ===
+# Jammin' Eats .gitignore (2025‑04‑25, concise)
+# ---------------------------------------------
+# Core ignore rules for the Python/Pygame project.
+# Keep code, maps, sprites, and sounds under version control;
+# exclude caches, build artefacts, IDE junk, and your Backups.
+
+# --- Python byte‑code -------------------------
 __pycache__/
 *.py[cod]
 *$py.class
-*.pyo
 
-# Distribution / Packaging
-.Python
+# --- Virtual envs -----------------------------
+venv*/      # venv, venv.bak, env, ENV
+
+# --- Build / dist -----------------------------
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
 *.egg-info/
-.installed.cfg
-*.egg
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
+# --- Tests & coverage -------------------------
 .tox/
 .nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
 .pytest_cache/
+.coverage*
+htmlcov/
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# --- IDE / editor settings --------------------
+.vscode/
+.idea/
+.windsurf/
+.codeium/
 
-# Pyre type checker
-.pyre/
-
-# Virtual environments
-venv/
-ENV/
-env/
-env.bak/
-venv.bak/
-
-# === Pygame (general) ===
-*.log
-*.tmp
-*.bak
-
-# === Windows ===
+# --- OS & editor junk -------------------------
+.DS_Store
 Thumbs.db
-ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# === macOS ===
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# === Visual Studio Code ===
-.vscode/
-
-# === PyCharm ===
-.idea/workspace.xml
-.idea/
-*.iml
-*.iws
-*.ipr
-
-# === SQLite / future DB files ===
-*.sqlite
-*.sqlite3
-*.db
-
-# === Logs and temp files ===
+# --- Logs & temp ------------------------------
 *.log
 *.tmp
+*.bak
+*.swp
+*~
 
-# === Assets backups or user-specific paths (optional) ===
+# --- Local DB files ---------------------------
+*.sqlite*
+*.db
+
+# --- Assets scratch files ---------------------
 /assets/**/*.backup
 /assets/**/*.tmp
 
-# === System files ===
-*.swp
-*.swo
-*.swn
-*~
+# --- Project‑level backups --------------------
+Backups/
 
-# === GitHub Actions ===
-# Ignore logs and temp cache from local testing of actions
+# --- GitHub Actions local logs ---------------
 .github/workflows/*.log
 .github/workflows/*.tmp
-.github/workflows/*.bak
 
-# === Ignore main settings file if sensitive ===
-# config.py  # Uncomment this if it contains API keys or secrets
+# --- Optional secrets -------------------------
+# config.py    # Uncomment if file holds API keys/secrets
+
