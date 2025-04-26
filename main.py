@@ -50,7 +50,7 @@ except:
 
 # Load the background image with error handling (as fallback)
 try:
-    background = pygame.image.load('assets/backgrounds/level1/level1.png').convert()
+    background = pygame.image.load('assets/Maps/level1/Level_1_Frame_1.tmx').convert()
     print("Successfully loaded background image")
 except pygame.error as e:
     print(f"Error loading background image: {e}")
@@ -966,7 +966,7 @@ def main():
     # Initialize tilemap
     game_map = None
     try:
-        map_path = os.path.join('assets', 'Maps', 'level1', 'Level_1_Frame_1.tmx')
+        map_path = r"D:\Jammin eats\assets\Maps\level1\Level_1_Frame_1.tmx"
         print(f"Attempting to load map from: {map_path}")
         if os.path.exists(map_path):
             game_map = TiledMap(map_path)
