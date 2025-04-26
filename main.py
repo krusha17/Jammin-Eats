@@ -33,6 +33,13 @@ score = 0
 high_score = 0
 font = pygame.font.Font(None, 36)
 
+# Create a fallback background in case map loading fails
+fallback_background = pygame.Surface((WIDTH, HEIGHT))
+for y in range(HEIGHT):
+    color_value = int(200 * (1 - y / HEIGHT))
+    color = (0, color_value, color_value + 55)
+    pygame.draw.line(fallback_background, color, (0, y), (WIDTH, y))
+
 # Load sounds with error handling
 try:
     pickup_sound = mixer.Sound('assets/sounds/characters/food_throw.wav')
@@ -79,29 +86,76 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
 
+# Custom resource loader to handle tileset paths
+class ResourceLoader:
+    def __init__(self, base_path):
+        self.base_path = base_path
+        
+    def load(self, filename, colorkey=None, **kwargs):
+        # First, try to construct the absolute path
+        filepath = os.path.join(self.base_path, filename)
+        
+        # Check if the file exists
+        if not os.path.exists(filepath):
+            # Try as an absolute path
+            filepath = filename
+            if not os.path.exists(filepath):
+                print(f"WARNING: Cannot find resource: {filename}")
+                # Return a small colored surface as a placeholder
+                surface = pygame.Surface((32, 32))
+                surface.fill((255, 0, 255))  # Magenta for missing textures
+                return surface
+                
+        # Load the image
+        print(f"Loading resource: {filepath}")
+        return pygame.image.load(filepath)
+
+
 # TiledMap class for handling the TMX map
 class TiledMap:
     def __init__(self, filename):
-        # Load the TMX file
-        self.tmx_data = load_pygame(filename)
-        self.width = self.tmx_data.width * self.tmx_data.tilewidth
-        self.height = self.tmx_data.height * self.tmx_data.tileheight
-        print(f"Map dimensions: {self.width}x{self.height}")
-        
-        # Print tileset information for debugging
-        print(f"Number of tilesets: {len(self.tmx_data.tilesets)}")
-        for tileset in self.tmx_data.tilesets:
-            print(f"Tileset: {tileset.name if hasattr(tileset, 'name') else 'Unknown'}, First GID: {tileset.firstgid}")
-            print(f"Tileset source: {tileset.source if hasattr(tileset, 'source') else 'embedded'}")
-        
-        # Create a surface to render the map on
-        self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        self.render_map()
-        
-        # Collision and interactable objects
-        self.collision_rects = []
-        self.interactable_objects = []
-        self.extract_objects()
+        try:
+            # Store the directory of the TMX file
+            self.map_dir = os.path.dirname(filename)
+            
+            # Create a custom resource loader
+            loader = ResourceLoader(self.map_dir)
+            
+            # Load the TMX file
+            self.tmx_data = load_pygame(filename, image_loader=loader.load)
+            self.width = self.tmx_data.width * self.tmx_data.tilewidth
+            self.height = self.tmx_data.height * self.tmx_data.tileheight
+            print(f"Map dimensions: {self.width}x{self.height}")
+            
+            # Print tileset information for debugging
+            print(f"Number of tilesets: {len(self.tmx_data.tilesets)}")
+            for tileset in self.tmx_data.tilesets:
+                print(f"Tileset: {tileset.name if hasattr(tileset, 'name') else 'Unknown'}, First GID: {tileset.firstgid}")
+                
+                # If the tileset has a source attribute, print and check it
+                if hasattr(tileset, 'source'):
+                    # Get the absolute path to the tileset
+                    tileset_path = os.path.normpath(os.path.join(self.map_dir, tileset.source))
+                    print(f"Tileset source: {tileset_path}")
+                    
+                    # Print whether the tileset file exists
+                    if os.path.exists(tileset_path):
+                        print(f"Tileset file exists at: {tileset_path}")
+                    else:
+                        print(f"WARNING: Tileset file not found at: {tileset_path}")
+            
+            # Create a surface to render the map on
+            self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            self.render_map()
+            
+            # Collision and interactable objects
+            self.collision_rects = []
+            self.interactable_objects = []
+            self.extract_objects()
+            
+        except Exception as e:
+            print(f"Error initializing TiledMap: {e}")
+            raise
     
     def render_map(self):
         """Renders all visible layers to the map surface"""
@@ -300,7 +354,10 @@ class Player(pygame.sprite.Sprite):
             print("Successfully loaded character sprites")
         except pygame.error as e:
             print(f"Error loading character sprites: {e}")
-           
+            # Create a fallback sprite
+            fallback = pygame.Surface((32, 32))
+            fallback.fill((255, 0, 0))  # Red square as fallback
+            pygame.draw.rect(fallback, (255, 255, 255), (8, 8, 16, 16))  # White inner square
 
             for direction in self.animations:
                 self.animations[direction] = [fallback]
@@ -585,6 +642,12 @@ class Customer(pygame.sprite.Sprite):
             print(f"Successfully loaded customer sprites for {self.type}")
         except Exception as e:
             print(f"Error loading customer sprites: {e}")
+            # Create a fallback sprite if loading fails
+            fallback = pygame.Surface((32, 32))
+            fallback.fill((0, 0, 255))  # Blue square as fallback
+            pygame.draw.circle(fallback, (255, 255, 255), (16, 16), 10)  # White circle
+            self.sprites = {'up': fallback, 'down': fallback, 'left': fallback, 'right': fallback}
+            self.image = fallback
             
         self.rect = self.image.get_rect(center=(x, y))
 
@@ -666,6 +729,7 @@ class Customer(pygame.sprite.Sprite):
         # Visual indicator for fed status
         if self.fed:
             happy_face = pygame.Surface((40, 20), pygame.SRCALPHA)
+            pygame.draw.happy_face = pygame.Surface((40, 20), pygame.SRCALPHA)
             pygame.draw.ellipse(happy_face, GREEN, (0, 0, 40, 20))
             surface.blit(happy_face, (self.rect.x, self.rect.top - 20))
 
@@ -731,18 +795,26 @@ class Food(pygame.sprite.Sprite):
             if self.animation_frames:
                 print(f"Successfully loaded {len(self.animation_frames)} frames for {food_type}")
                 self.image = self.animation_frames[0]
-            else: print(f"No frames loaded for {food_type}")
-            self.image = pygame.Surface((20, 20))
-            
+            else:
+                print(f"No frames loaded for {food_type}")
+                # Create a fallback sprite if loading fails
+                self.image = pygame.Surface((20, 20))
+                if food_type == 'pizza':
+                    self.image.fill(YELLOW)
+                elif food_type == 'smoothie':
+                    self.image.fill((150, 0, 255))
+                elif food_type == 'icecream':
+                    self.image.fill((255, 100, 100))
+                else:  # pudding
+                    self.image.fill((160, 120, 60))
+                self.animation_frames = [self.image]
+                
         except Exception as e:
             print(f"Error loading food images: {e}")
             # Create a simple surface for error handling
             self.image = pygame.Surface((20, 20))
+            self.image.fill((255, 255, 255))  # White as fallback
             self.animation_frames = [self.image]
-
-
-
-
 
         self.rect = self.image.get_rect(center=(x, y))
 
@@ -960,7 +1032,8 @@ def main():
     # Initialize tilemap
     game_map = None
     try:
-        map_path = os.path.join('assets', 'Maps', 'level1', 'Level_1_Frame_1.tmx')
+        # Use the absolute path for the map
+        map_path = r"assets\Maps\level1\Level_1_Frame_1.tmx"
         print(f"Attempting to load map from: {map_path}")
         if os.path.exists(map_path):
             game_map = TiledMap(map_path)
@@ -1074,7 +1147,7 @@ def main():
                 # Draw the tilemap
                 game_map.draw(screen)
             else:
-                # Fallback to the old background
+                # Fallback to the fallback background
                 screen.blit(fallback_background, (0, 0))
 
             # Draw customers
@@ -1143,4 +1216,4 @@ def main():
 
 # Make sure to actually call the main function to start the game
 if __name__ == '__main__':
-    main()       
+    main()
