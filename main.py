@@ -731,6 +731,18 @@ class Food(pygame.sprite.Sprite):
             if self.animation_frames:
                 print(f"Successfully loaded {len(self.animation_frames)} frames for {food_type}")
                 self.image = self.animation_frames[0]
+            else: print(f"No frames loaded for {food_type}")
+            self.image = pygame.Surface((20, 20))
+            
+        except Exception as e:
+            print(f"Error loading food images: {e}")
+            # Create a simple surface for error handling
+            self.image = pygame.Surface((20, 20))
+            self.animation_frames = [self.image]
+
+
+
+
 
         self.rect = self.image.get_rect(center=(x, y))
 
