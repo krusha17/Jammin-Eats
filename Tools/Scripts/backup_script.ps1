@@ -10,6 +10,6 @@ $backupPath = Join-Path -Path $backupBasePath -ChildPath $timestamp
 New-Item -ItemType Directory -Path $backupPath -Force
 
 # Copy files
-Copy-Item -Path "$repoPath\*" -Destination $backupPath -Recurse -Force
+Copy-Item -Path "$repoPath\*" -Destination $backupPath -Recurse -Force -Exclude "Backups"
 
 Write-Host "Backup complete!" -ForegroundColor Green
