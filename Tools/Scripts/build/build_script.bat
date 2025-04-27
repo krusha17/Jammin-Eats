@@ -8,12 +8,15 @@ echo Installing PyInstaller if needed...
 %PYTHON_PATH% -m pip install pyinstaller
 
 echo Building executable...
-%PYTHON_PATH% -m PyInstaller --onefile --windowed --add-data "assets;assets" --name "Jammin_Eats" main.py
+%PYTHON_PATH% -m PyInstaller --onefile --windowed ^
+  --add-data "assets;assets" ^
+  --add-data "Database;Database" ^
+  --name "Jammin_Eats" main.py
 
 echo.
 if %errorlevel% neq 0 (
     echo Build failed.
-    echo Check if your assets folder exists and contains the required files.
+    echo Check if your assets and Database folders exist and contain the required files.
 ) else (
     echo Build completed successfully!
     echo The executable can be found in the 'dist' folder.
