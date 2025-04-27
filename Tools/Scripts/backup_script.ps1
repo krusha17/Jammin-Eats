@@ -2,7 +2,7 @@
 Write-Host "Starting backup process..." -ForegroundColor Green
 
 $repoPath = "D:\Jammin eats"
-$backupBasePath = "D:\Jammin eats\Backups"
+$backupBasePath = "D:\Backups"
 
 # Create timestamp and backup directory
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
