@@ -17,6 +17,7 @@ echo Building console-mode executable…
 "%PYTHON_PATH%" -m PyInstaller --onefile --console ^
   --add-data "assets;assets" ^
   --add-data "Database;Database" ^
+  --hidden-import pytmx ^
   --name "Jammin_Eats" main.py
 
 echo.
