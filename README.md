@@ -32,7 +32,6 @@ Reggae-Cyberpunk Theme: Unique visual identity inspired by retro arcade classics
 
 Fully playable prototype with core gameplay loops established.
 Complete sprite animation system for main character and customers.
-Procedurally generated placeholders seamlessly integrated for continuous gameplay testing.
 Functional game states including start menu, gameplay, and score tracking.
 
 📌 Future Development Goals
