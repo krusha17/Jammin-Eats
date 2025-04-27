@@ -15,10 +15,11 @@ echo Installing PyInstaller if needed...
 
 echo Building console-mode executable…
 "%PYTHON_PATH%" -m PyInstaller --onefile --console ^
+
+  --hidden-import=pytmx ^
+  --hidden-import=pytmx.util_pygame ^
   --add-data "assets;assets" ^
-  --add-data "Database;Database" ^
-  --hidden-import pytmx ^
-  --name "Jammin_Eats" main.py
+  main.py
 
 echo.
 if %errorlevel% neq 0 (
