@@ -33,6 +33,13 @@ score = 0
 high_score = 0
 font = pygame.font.Font(None, 36)
 
+# Create a fallback background in case map loading fails
+fallback_background = pygame.Surface((WIDTH, HEIGHT))
+for y in range(HEIGHT):
+    color_value = int(200 * (1 - y / HEIGHT))
+    color = (0, color_value, color_value + 55)
+    pygame.draw.line(fallback_background, color, (0, y), (WIDTH, y))
+
 # Load sounds with error handling
 try:
     pickup_sound = mixer.Sound('assets/sounds/characters/food_throw.wav')
@@ -47,34 +54,6 @@ try:
         print("No background music found, continuing without it")
 except:
     print("Error loading sounds, continuing without audio")
-
-# Load the background image with error handling (as fallback)
-try:
-    background = pygame.image.load('assets/Maps/level1/Level_1_Frame_1.tmx').convert()
-    print("Successfully loaded background image")
-except pygame.error as e:
-    print(f"Error loading background image: {e}")
-    background = pygame.Surface((WIDTH, HEIGHT))
-    # Create a colorful background that matches the game's tropical theme
-    for y in range(HEIGHT):
-        color_value = int(255 * (1 - y / HEIGHT))
-        # Create a gradient from cyan to deep blue
-        color = (0, 150 + color_value // 3, 200 + color_value // 4)
-        pygame.draw.line(background, color, (0, y), (WIDTH, y))
-
-    # Add some decorative elements (palm trees and buildings as rectangles)
-    for _ in range(5):
-        # Draw simple palm trees
-        x = random.randint(50, WIDTH - 50)
-        y = random.randint(50, HEIGHT // 2)
-        pygame.draw.rect(background, (60, 30, 10), (x, y, 10, 30))  # Trunk
-        pygame.draw.circle(background, (0, 180, 0), (x + 5, y - 10), 20)  # Leaves
-
-    # Draw a simple road
-    pygame.draw.rect(background, (80, 80, 80), (0, HEIGHT // 2, WIDTH, 100))
-    # Add road lines
-    for x in range(0, WIDTH, 40):
-        pygame.draw.rect(background, (255, 255, 255), (x, HEIGHT // 2 + 50, 20, 5))
 
 # Create menu background programmatically
 menu_background = pygame.Surface((WIDTH, HEIGHT))
@@ -107,28 +86,84 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
 
+# Custom resource loader to handle tileset paths
+class ResourceLoader:
+    def __init__(self, base_path):
+        self.base_path = base_path
+        
+    def load(self, filename, colorkey=None, **kwargs):
+        # First, try to construct the absolute path
+        filepath = os.path.join(self.base_path, filename)
+        
+        # Check if the file exists
+        if not os.path.exists(filepath):
+            # Try as an absolute path
+            filepath = filename
+            if not os.path.exists(filepath):
+                print(f"WARNING: Cannot find resource: {filename}")
+                # Return a small colored surface as a placeholder
+                surface = pygame.Surface((32, 32))
+                surface.fill((255, 0, 255))  # Magenta for missing textures
+                return surface
+                
+        # Load the image
+        print(f"Loading resource: {filepath}")
+        return pygame.image.load(filepath)
+
+
 # TiledMap class for handling the TMX map
 class TiledMap:
     def __init__(self, filename):
-        # Load the TMX file
-        self.tmx_data = load_pygame(filename)
-        self.width = self.tmx_data.width * self.tmx_data.tilewidth
-        self.height = self.tmx_data.height * self.tmx_data.tileheight
-        print(f"Map dimensions: {self.width}x{self.height}")
-        
-        # Create a surface to render the map on
-        self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        self.render_map()
-        
-        # Collision and interactable objects
-        self.collision_rects = []
-        self.interactable_objects = []
-        self.extract_objects()
+        try:
+            # Store the directory of the TMX file
+            self.map_dir = os.path.dirname(filename)
+            
+            # Create a custom resource loader
+            loader = ResourceLoader(self.map_dir)
+            
+            # Load the TMX file
+            self.tmx_data = load_pygame(filename, image_loader=loader.load)
+            self.width = self.tmx_data.width * self.tmx_data.tilewidth
+            self.height = self.tmx_data.height * self.tmx_data.tileheight
+            print(f"Map dimensions: {self.width}x{self.height}")
+            
+            # Print tileset information for debugging
+            print(f"Number of tilesets: {len(self.tmx_data.tilesets)}")
+            for tileset in self.tmx_data.tilesets:
+                print(f"Tileset: {tileset.name if hasattr(tileset, 'name') else 'Unknown'}, First GID: {tileset.firstgid}")
+                
+                # If the tileset has a source attribute, print and check it
+                if hasattr(tileset, 'source'):
+                    # Get the absolute path to the tileset
+                    tileset_path = os.path.normpath(os.path.join(self.map_dir, tileset.source))
+                    print(f"Tileset source: {tileset_path}")
+                    
+                    # Print whether the tileset file exists
+                    if os.path.exists(tileset_path):
+                        print(f"Tileset file exists at: {tileset_path}")
+                    else:
+                        print(f"WARNING: Tileset file not found at: {tileset_path}")
+            
+            # Create a surface to render the map on
+            self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            self.render_map()
+            
+            # Collision and interactable objects
+            self.collision_rects = []
+            self.interactable_objects = []
+            self.extract_objects()
+            
+        except Exception as e:
+            print(f"Error initializing TiledMap: {e}")
+            raise
     
     def render_map(self):
         """Renders all visible layers to the map surface"""
         # Define the draw order for your layers
         layer_names = ["Sky", "Clouds", "Ocean", "Grass", "Sand", "Sidewalk", "Road", "Interactables"]
+        
+        # Clear the surface
+        self.map_surface.fill((0, 0, 0, 0))  # Fill with transparent
         
         # Check if layers exist and print status
         for layer_name in layer_names:
@@ -146,27 +181,73 @@ class TiledMap:
                 if hasattr(layer, 'name') and layer.name == layer_name:
                     # Skip object layers for now
                     if isinstance(layer, pytmx.TiledTileLayer):
+                        print(f"Rendering layer: {layer_name}")
                         self.render_tile_layer(layer)
     
     def render_tile_layer(self, layer):
         """Renders a single tile layer to the map surface"""
         for x, y, gid in layer:
+            # Skip empty tiles (gid = 0)
+            if gid == 0:
+                continue
+                
             # Get the tile image
             tile = self.tmx_data.get_tile_image_by_gid(gid)
             if tile:
-                # Calculate the position and draw the tile
+                # Calculate the position
                 pos = (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight)
                 self.map_surface.blit(tile, pos)
     
     def extract_objects(self):
         """Extracts collision and interactable objects from the TMX file"""
-        # For now, just print the number of objects found
-        object_count = len(self.tmx_data.objects)
-        print(f"Found {object_count} objects in TMX file")
+        # Clear existing objects
+        self.collision_rects = []
+        self.interactable_objects = []
         
-        # We'll implement this more fully later
-        # For now, just use tile-based collision detection
-        pass
+        # Check for object layers
+        for layer in self.tmx_data.visible_layers:
+            if isinstance(layer, pytmx.TiledObjectGroup):
+                print(f"Found object layer: {layer.name}")
+                for obj in layer:
+                    if obj.type == "collision" or layer.name.lower() == "collision":
+                        self.collision_rects.append(pygame.Rect(
+                            obj.x, obj.y, obj.width, obj.height
+                        ))
+                    elif obj.type == "interactable" or layer.name.lower() == "interactables":
+                        self.interactable_objects.append({
+                            'rect': pygame.Rect(obj.x, obj.y, obj.width, obj.height),
+                            'properties': obj.properties if hasattr(obj, 'properties') else {}
+                        })
+        
+        print(f"Extracted {len(self.collision_rects)} collision rects")
+        print(f"Extracted {len(self.interactable_objects)} interactable objects")
+        
+        # For now, also handle tile-based collision
+        self.extract_tile_collisions()
+    
+    def extract_tile_collisions(self):
+        """Extracts collision information from specific tile layers"""
+        # For now, we'll use Ocean and Interactables layers for collisions
+        collision_layers = ["Ocean", "Interactables"]
+        
+        for layer_name in collision_layers:
+            layer = None
+            for l in self.tmx_data.layers:
+                if hasattr(l, 'name') and l.name == layer_name:
+                    layer = l
+                    break
+            
+            if layer and isinstance(layer, pytmx.TiledTileLayer):
+                print(f"Processing collision tiles from layer: {layer_name}")
+                for x, y, gid in layer:
+                    if gid != 0:  # Non-empty tile
+                        rect = pygame.Rect(
+                            x * self.tmx_data.tilewidth,
+                            y * self.tmx_data.tileheight,
+                            self.tmx_data.tilewidth,
+                            self.tmx_data.tileheight
+                        )
+                        self.collision_rects.append(rect)
     
     def is_walkable(self, x, y):
         """Checks if the specified position is walkable using simple tile-based detection"""
@@ -197,43 +278,51 @@ class TiledMap:
             
             if layer and isinstance(layer, pytmx.TiledTileLayer):
                 # Check if the tile is in the unwalkable list
-                tile_gid = layer.data[tile_y][tile_x]
-                if tile_gid in unwalkable_ids:
-                    return False
+                if hasattr(layer, 'data') and len(layer.data) > tile_y and len(layer.data[tile_y]) > tile_x:
+                    tile_gid = layer.data[tile_y][tile_x]
+                    if tile_gid in unwalkable_ids:
+                        return False
         
         return True
     
     def get_spawn_positions(self, object_name="CustomerSpawn"):
         """Gets spawn positions for customers based on an object name"""
-        # In this simplified version, we'll return fixed positions
-        # Later, we'll implement proper spawn points from the TMX
-        
-        # For now, return fixed positions around the map edges
         spawn_points = []
         
-        # Generate positions along the edges
-        edge_margin = 100
-        # Top edge
-        for x in range(edge_margin, self.width - edge_margin, 100):
-            spawn_points.append((x, edge_margin))
+        # Try to find spawn points from the map objects
+        for layer in self.tmx_data.visible_layers:
+            if isinstance(layer, pytmx.TiledObjectGroup):
+                for obj in layer:
+                    if obj.name == object_name or obj.type == "spawn":
+                        spawn_points.append((obj.x, obj.y))
         
-        # Bottom edge
-        for x in range(edge_margin, self.width - edge_margin, 100):
-            spawn_points.append((x, self.height - edge_margin))
-        
-        # Left edge
-        for y in range(edge_margin, self.height - edge_margin, 100):
-            spawn_points.append((edge_margin, y))
-        
-        # Right edge
-        for y in range(edge_margin, self.height - edge_margin, 100):
-            spawn_points.append((self.width - edge_margin, y))
+        # If no spawn points found, generate some along the edges
+        if not spawn_points:
+            print(f"No {object_name} objects found in map, generating default spawn points")
+            edge_margin = 100
+            
+            # Top edge
+            for x in range(edge_margin, self.width - edge_margin, 100):
+                spawn_points.append((x, edge_margin))
+            
+            # Bottom edge
+            for x in range(edge_margin, self.width - edge_margin, 100):
+                spawn_points.append((x, self.height - edge_margin))
+            
+            # Left edge
+            for y in range(edge_margin, self.height - edge_margin, 100):
+                spawn_points.append((edge_margin, y))
+            
+            # Right edge
+            for y in range(edge_margin, self.height - edge_margin, 100):
+                spawn_points.append((self.width - edge_margin, y))
         
         return spawn_points
     
     def draw(self, surface, camera_pos=(0, 0)):
         """Draws the map to the specified surface with camera offset"""
-        # For now, just draw the whole map without camera logic
+        # For now, we'll just draw the whole map without camera logic
+        # In a future update, you could implement camera scrolling here
         surface.blit(self.map_surface, (0, 0))
 
 
@@ -265,16 +354,15 @@ class Player(pygame.sprite.Sprite):
             print("Successfully loaded character sprites")
         except pygame.error as e:
             print(f"Error loading character sprites: {e}")
-            # Create fallback surfaces
-            fallback = pygame.Surface((50, 50))
-            fallback.fill(WHITE)
-            pygame.draw.circle(fallback, (0, 100, 200), (25, 25), 20)  # Blue circle for player
-            pygame.draw.rect(fallback, (200, 150, 0), (15, 15, 20, 20))  # Yellow face
+            # Create a fallback sprite
+            fallback = pygame.Surface((32, 32))
+            fallback.fill((255, 0, 0))  # Red square as fallback
+            pygame.draw.rect(fallback, (255, 255, 255), (8, 8, 16, 16))  # White inner square
 
             for direction in self.animations:
                 self.animations[direction] = [fallback]
 
-        # Animation variables
+        # Animation variables 
         self.direction = 'down'
         self.animation_index = 0
         self.animation_speed = 0.2  # seconds per frame
@@ -484,7 +572,7 @@ class Customer(pygame.sprite.Sprite):
                     'up': 'Customer_Lady_3_up.png',
                     'down': 'Customer_Lady_3_down.png',
                     'left': 'Customer_Lady_3_left.png',
-                    'right': 'Customer_Lady_3_up.png'  # Note: Using up as fallback since right isn't in your folder structure
+                    'right': 'Customer_Lady_3_up.png'  # Note: Using up as fallback
                 }
             },
             {
@@ -511,7 +599,7 @@ class Customer(pygame.sprite.Sprite):
                     'up': 'Customer_Man_2_up.png',
                     'down': 'Customer_Man_2_down.png',
                     'left': 'Customer_Man_2_left.png',
-                    'right': 'Customer_Man_2_up.png'  # Note: Using up as fallback since right isn't in your folder structure
+                    'right': 'Customer_Man_2_up.png'  # Note: Using up as fallback
                 }
             },
             {
@@ -547,31 +635,20 @@ class Customer(pygame.sprite.Sprite):
                     self.sprites[direction] = pygame.image.load(sprite_path).convert_alpha()
                 else:
                     print(f"Warning: Customer sprite {sprite_path} not found")
-                    # Create a fallback sprite
-                    fallback = pygame.Surface((40, 60), pygame.SRCALPHA)
-                    pygame.draw.ellipse(fallback, (random.randint(150, 255), random.randint(150, 255), random.randint(150, 255)), (10, 10, 20, 20))  # Head
-                    pygame.draw.rect(fallback, (random.randint(150, 255), random.randint(150, 255), random.randint(150, 255)), (10, 30, 20, 30))  # Body
-                    self.sprites[direction] = fallback
-            
+                    
             # Set initial direction and image
             self.direction = 'down'
             self.image = self.sprites[self.direction]
             print(f"Successfully loaded customer sprites for {self.type}")
         except Exception as e:
             print(f"Error loading customer sprites: {e}")
-            # Create a fallback sprite
-            fallback = pygame.Surface((40, 60), pygame.SRCALPHA)
-            self.color = (random.randint(150, 255), random.randint(150, 255), random.randint(150, 255))
-            pygame.draw.ellipse(fallback, self.color, (10, 10, 20, 20))  # Head
-            pygame.draw.rect(fallback, self.color, (10, 30, 20, 30))  # Body
+            # Create a fallback sprite if loading fails
+            fallback = pygame.Surface((32, 32))
+            fallback.fill((0, 0, 255))  # Blue square as fallback
+            pygame.draw.circle(fallback, (255, 255, 255), (16, 16), 10)  # White circle
+            self.sprites = {'up': fallback, 'down': fallback, 'left': fallback, 'right': fallback}
             self.image = fallback
-            self.sprites = {
-                'up': fallback,
-                'down': fallback,
-                'left': fallback,
-                'right': fallback
-            }
-
+            
         self.rect = self.image.get_rect(center=(x, y))
 
         # Customer variables
@@ -652,6 +729,7 @@ class Customer(pygame.sprite.Sprite):
         # Visual indicator for fed status
         if self.fed:
             happy_face = pygame.Surface((40, 20), pygame.SRCALPHA)
+            pygame.draw.happy_face = pygame.Surface((40, 20), pygame.SRCALPHA)
             pygame.draw.ellipse(happy_face, GREEN, (0, 0, 40, 20))
             surface.blit(happy_face, (self.rect.x, self.rect.top - 20))
 
@@ -718,11 +796,25 @@ class Food(pygame.sprite.Sprite):
                 print(f"Successfully loaded {len(self.animation_frames)} frames for {food_type}")
                 self.image = self.animation_frames[0]
             else:
-                print(f"No frames found for {food_type}, creating fallback")
-                self.create_fallback_food_image()
+                print(f"No frames loaded for {food_type}")
+                # Create a fallback sprite if loading fails
+                self.image = pygame.Surface((20, 20))
+                if food_type == 'pizza':
+                    self.image.fill(YELLOW)
+                elif food_type == 'smoothie':
+                    self.image.fill((150, 0, 255))
+                elif food_type == 'icecream':
+                    self.image.fill((255, 100, 100))
+                else:  # pudding
+                    self.image.fill((160, 120, 60))
+                self.animation_frames = [self.image]
+                
         except Exception as e:
             print(f"Error loading food images: {e}")
-            self.create_fallback_food_image()
+            # Create a simple surface for error handling
+            self.image = pygame.Surface((20, 20))
+            self.image.fill((255, 255, 255))  # White as fallback
+            self.animation_frames = [self.image]
 
         self.rect = self.image.get_rect(center=(x, y))
 
@@ -736,32 +828,6 @@ class Food(pygame.sprite.Sprite):
         self.lifespan = 2.0  # seconds
         self.timer = 0
     
-    def create_fallback_food_image(self):
-        """Creates a fallback food image if the asset can't be loaded"""
-        self.image = pygame.Surface((20, 20), pygame.SRCALPHA)
-        self.animation_frames = []  # Clear any partial frames
-
-        if self.food_type == 'pizza':
-            # Pizza slice
-            pygame.draw.polygon(self.image, YELLOW, [(10, 0), (20, 20), (0, 20)])
-            pygame.draw.circle(self.image, RED, (10, 15), 3)  # Pepperoni
-        elif self.food_type == 'smoothie':
-            # Smoothie
-            pygame.draw.rect(self.image, (150, 0, 255), (5, 0, 10, 15))
-            pygame.draw.ellipse(self.image, (200, 0, 255), (0, 0, 20, 5))
-            pygame.draw.line(self.image, WHITE, (10, 0), (10, -5), 2)  # Straw
-        elif self.food_type == 'icecream':
-            # Ice cream
-            pygame.draw.polygon(self.image, (200, 200, 150), [(10, 20), (0, 0), (20, 0)])  # Cone
-            pygame.draw.circle(self.image, (255, 100, 100), (10, 0), 8)  # Scoop
-        else:  # pudding
-            # Rice pudding
-            pygame.draw.rect(self.image, (160, 120, 60), (2, 2, 16, 16))
-            pygame.draw.ellipse(self.image, (180, 140, 70), (0, 0, 20, 5))
-        
-        # Add the fallback image as the only frame
-        self.animation_frames = [self.image]
-
     def update(self, dt):
         # Move food
         self.rect.x += int(self.direction.x * self.speed * dt)
@@ -966,7 +1032,8 @@ def main():
     # Initialize tilemap
     game_map = None
     try:
-        map_path = r"D:\Jammin eats\assets\Maps\level1\Level_1_Frame_1.tmx"
+        # Use the absolute path for the map
+        map_path = r"C:\Users\jerom\Jammin-Eats\assets\Maps\level1\Level_1_Frame_1.tmx"
         print(f"Attempting to load map from: {map_path}")
         if os.path.exists(map_path):
             game_map = TiledMap(map_path)
@@ -975,7 +1042,6 @@ def main():
             print(f"Map file not found at {map_path}")
     except Exception as e:
         print(f"Error loading map: {e}")
-        print("Falling back to static background")
 
     running = True
     while running:
@@ -1081,8 +1147,8 @@ def main():
                 # Draw the tilemap
                 game_map.draw(screen)
             else:
-                # Fallback to the old background
-                screen.blit(background, (0, 0))
+                # Fallback to the fallback background
+                screen.blit(fallback_background, (0, 0))
 
             # Draw customers
             for customer in customers:
