@@ -1,0 +1,65 @@
+Jammin-Eats/
+├── .git/
+├── .gitignore
+├── .idea/
+├── Archive/
+│   ├── main_v1_old.py
+│   └── main_v2_old.py
+├── Backups/
+├── Database/
+│   ├── Data-Deletion.py
+│   ├── JamminEats-Database.py
+│   ├── JamminEats-Schema.sql
+│   └── create_jammin_db.py
+├── Jammin_Eats.spec
+├── Level_1_Frame_1.tmx
+├── PDFs for note attachments/
+│   ├── Current_Folder_Structure.pdf
+│   ├── How_to_play_the_.exe_file.pdf
+│   ├── Level_1.pdf
+│   ├── Original_Game_Idea.pdf
+│   ├── Project_development_Current.pdf
+│   └── Prompt_generator_Prompt.pdf
+├── README.md
+├── Requirements.md
+├── TileSet_1.png
+├── TileSet_1.tsx
+├── Tools/
+│   ├── Output/
+│   ├── Scripts/
+│   │   └── (various scripts, including backup_script.ps1)
+│   ├── level1.png
+│   └── slicer.py
+├── assets/
+│   ├── Food/
+│   │   ├── Island_Ice_Cream/
+│   │   ├── Rasta_Rice_Pudding/
+│   │   ├── Reggae_Rasgulla/
+│   │   ├── Ska_Smoothie/
+│   │   └── Tropical_Pizza_Slice/
+│   ├── Maps/
+│   │   └── level1/
+│   ├── sprites/
+│   │   └── characters/
+│   ├── tiles/
+│   │   ├── Cloud/
+│   │   ├── Decorations/
+│   │   ├── Grass/
+│   │   ├── Road/
+│   │   ├── Sand/
+│   │   ├── Sky/
+│   │   ├── Water/
+│   │   └── sidewalk/
+│   └── tilesets/
+│       ├── TileSet_1.png
+│       └── TileSet_1.tsx
+├── changelog.md
+├── main.py
+├── resource_path.py
+├── source/
+│   ├── .gitignore
+│   ├── Include/
+│   ├── Lib/
+│   ├── Scripts/
+│   └── pyvenv.cfg
+└── venv/
