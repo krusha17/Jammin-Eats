@@ -52,7 +52,7 @@ $RECYCLE.BIN/
 /assets/**/*.tmp
 
 # --- Project‑level backups --------------------
-Backups/
+/Backups/
 
 # --- GitHub Actions local logs ---------------
 .github/workflows/*.log
