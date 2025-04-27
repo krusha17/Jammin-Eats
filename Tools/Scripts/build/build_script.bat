@@ -3,7 +3,7 @@ cd /d "%~dp0\..\.."
 echo Building Jammin' Eats executable...
 echo.
 
-set PYTHON_PATH="C:\Program Files\Python\Python313\python.exe"
+set PYTHON_PATH=C:\Program Files\Python\Python313\python.exe
 
 echo Installing PyInstaller if needed...
 %PYTHON_PATH% -m pip install pyinstaller
