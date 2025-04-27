@@ -3,6 +3,7 @@ import sys
 import random
 import math
 import os
+import pytmx
 from pygame import mixer
 
 # Initialize Pygame
