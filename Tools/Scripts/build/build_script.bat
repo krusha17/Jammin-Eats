@@ -1,15 +1,20 @@
 @echo off
-cd /d "%~dp0\..\.."
+rem ─────────────────────────────────────────────────────────────────────────────
+rem 1) jump to project root (from Tools\Scripts\build)
+cd /d "%~dp0\..\..\.."
+
 echo Building Jammin' Eats executable...
 echo.
 
-set PYTHON_PATH=C:\Program Files\Python\Python313\python.exe
+rem ─────────────────────────────────────────────────────────────────────────────
+rem 2) point at your python.exe
+set "PYTHON_PATH=C:\Program Files\Python\Python313\python.exe"
 
 echo Installing PyInstaller if needed...
-%PYTHON_PATH% -m pip install pyinstaller
+"%PYTHON_PATH%" -m pip install pyinstaller
 
 echo Building executable...
-%PYTHON_PATH% -m PyInstaller --onefile --windowed ^
+"%PYTHON_PATH%" -m PyInstaller --onefile --windowed ^
   --add-data "assets;assets" ^
   --add-data "Database;Database" ^
   --name "Jammin_Eats" main.py
