@@ -56,6 +56,7 @@ except:
     print("Error loading sounds, continuing without audio")
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 # Load the background image with error handling (as fallback)
 try:
@@ -86,6 +87,8 @@ except pygame.error as e:
         pygame.draw.rect(background, (255, 255, 255), (x, HEIGHT // 2 + 50, 20, 5))
 
 >>>>>>> 1241612401cc18010f30df150ecb9b2e3c84b077
+=======
+>>>>>>> fb54cab252ee9a89c15effcc707e116e546a78b7
 # Create menu background programmatically
 menu_background = pygame.Surface((WIDTH, HEIGHT))
 # Create a gradient background
@@ -1064,11 +1067,16 @@ def main():
     game_map = None
     try:
 <<<<<<< HEAD
+<<<<<<< HEAD
         # Use the absolute path for the map
         map_path = r"assets\Maps\level1\Level_1_Frame_1.tmx"
 =======
         map_path = r"D:\Jammin eats\assets\Maps\level1\Level_1_Frame_1.tmx"
 >>>>>>> 1241612401cc18010f30df150ecb9b2e3c84b077
+=======
+        # Use the absolute path for the map
+        map_path = r"C:\Users\jerom\Jammin-Eats\assets\Maps\level1\Level_1_Frame_1.tmx"
+>>>>>>> fb54cab252ee9a89c15effcc707e116e546a78b7
         print(f"Attempting to load map from: {map_path}")
         if os.path.exists(map_path):
             game_map = TiledMap(map_path)
