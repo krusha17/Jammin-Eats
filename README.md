@@ -61,90 +61,79 @@ Online leaderboards and social sharing features
 Support for community-created custom levels
 Active engagement with player feedback to continuously enhance the gaming experience
 
-📂 Repository Structure
+📂 Irie Project Folder Structure
 
-```
-JamminsEats/
-│
+```text
+Jammin-Eats/
 ├── assets/
-│   ├── backgrounds/
-│   │   └── level1/
-│   │       └── level1.png
-│   │
+│   ├── Food/
+│   ├── Maps/
 │   ├── sprites/
 │   │   └── characters/
-│   │       └── kai/
-│   │           ├── kai_up.png
-│   │           ├── kai_down.png
-│   │           ├── kai_left.png
-│   │           └── kai_right.png
-│   │
-│   └── sounds/
-│       ├── characters/
-│       │   └── food_throw.wav
-│       ├── vehicles/
-│       │   └── engine_idle.wav
-│       └── ui/
-│           └── button_click.wav
-│
-├── database/
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── player.py
-│   │   ├── food.py
-│   │   ├── customer.py
-│   │   └── stats.py
-│   │
-│   ├── __init__.py
-│   ├── config.py
-│   └── db_manager.py
-│
-├── src/
-│   ├── __init__.py
-│   ├── game_objects/
-│   │   ├── __init__.py
-│   │   ├── player.py
-│   │   ├── customer.py
-│   │   ├── food.py
-│   │   └── particle.py
-│   │
-│   ├── ui/
-│   │   ├── __init__.py
-│   │   ├── menu.py
-│   │   └── button.py
-│   │
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── asset_loader.py
-│   │   └── helpers.py
-│   │
-│   └── game_states/
-│       ├── __init__.py
-│       ├── menu_state.py
-│       ├── play_state.py
-│       └── game_over_state.py
-│
+│   ├── tiles/
+│   └── tilesets/
+├── Archive/
+├── Backups/
+├── Database/
+├── PDFs for note attachments/
+├── Tools/
+│   ├── Output/
+│   └── Scripts/
+├── changelog.md
+├── Jammin_Eats.spec
+├── Level_1_Frame_1.tmx
 ├── main.py
-├── requirements.txt
+├── README.md
+├── Requirements.md
+├── resource_path.py
 ├── .gitignore
-└── README.md
+├── venv/
+└── ...and more!
 ```
 
-🖥️ How to Run the Game
+> **Heads up!**
+> - The `.gitignore` is tuned to keep your `Backups/` folder out of version control—no worries, no clutter!
+> - The backup script is jammin' too: it skips the `Backups/` folder so you don't back up your backups. Meta!
+> - All your irie assets live in the `assets/` folder—don't break the rhythm, keep the structure!
 
-Clone this repository:
+🖥️ **How to Run the Game (Jammin' Style)**
 
-git clone https://github.com/YourUsername/JamminEats.git
+1. **Clone this reggae adventure:**
+   ```sh
+   git clone https://github.com/YourUsername/Jammin-Eats.git
+   ```
+2. **Install the good vibes (dependencies):**
+   ```sh
+   pip install pygame pyodbc pytmx pyinstaller
+   ```
+3. **Start jammin'!**
+   ```sh
+   python main.py
+   ```
 
-Install dependencies:
+🎛️ **Build the Standalone .exe (for your music producer or friends!)**
 
-pip install pygame pyodbc
+1. Run the build script in `Tools/Scripts/build/` or use PyInstaller directly:
+   ```sh
+   pyinstaller --onefile --windowed --add-data "assets;assets" --name "Jammin_Eats" main.py
+   ```
+2. Find your fresh-baked game in the `dist/` folder—ready to groove!
 
-Launch the game:
+📝 **Dependencies**
+- `pygame`
+- `pyodbc` *(optional, for future database features)*
+- `pytmx`
+- `pyinstaller`
+- See `Requirements.md` for details.
 
-python src/main_game.py
+💻 **Platform**
+- This project is tuned for **Windows** (PowerShell scripts, build process, etc.).
 
-🎖️ Contributing
+🌴 **Contributing & Community**
+
+We're excited to collaborate! Feel free to open issues, submit pull requests, or suggest ideas. Join us in making Jammin' Eats a truly unforgettable gaming experience!
+
+Stay irie, stay jammin'! 🌴🎵🍍🚚
 
 We're excited to collaborate! Feel free to open issues, submit pull requests, or suggest ideas. Join us in making Jammin' Eats a truly unforgettable gaming experience!
 
