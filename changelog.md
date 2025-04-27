@@ -36,6 +36,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporary disabled food truck until sprite is available
 - Implemented procedurally generated elements for missing assets
 
+## [0.2.0] - 2025-04-26
+
+### Added
+- Updated and documented the current folder structure for the project, ensuring all directories and subdirectories are accurately represented.
+- Created a detailed text version of the folder structure for reference and future PDF export.
+
+### Changed
+- Improved the backup script (`backup_script.ps1`) to exclude the `Backups` folder from backups, preventing redundant storage.
+- Updated `.gitignore` to ignore the top-level `Backups` directory, improving version control hygiene.
+- Refined file path resolution for assets, especially TMX map and tileset references, to ensure robust resource loading across environments.
+- Adjusted `Level_1_Frame_1.tmx` to correctly reference the tileset with a relative path fix.
+
+### Fixed
+- Bug where the game could not find the tileset file due to incorrect TMX pathing.
+- File path errors related to map and resource loading in Pygame.
+
 ## [Upcoming]
 
 ### Planned
