@@ -12,3 +12,4 @@
 
 pygame>=2.1.0
 pyodbc>=4.0.30  # Optional: For connecting to SQL Server if needed.
+pytmx
