@@ -55,6 +55,40 @@ try:
 except:
     print("Error loading sounds, continuing without audio")
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+# Load the background image with error handling (as fallback)
+try:
+    background = pygame.image.load('assets/Maps/level1/Level_1_Frame_1.tmx').convert()
+    print("Successfully loaded background image")
+except pygame.error as e:
+    print(f"Error loading background image: {e}")
+    background = pygame.Surface((WIDTH, HEIGHT))
+    # Create a colorful background that matches the game's tropical theme
+    for y in range(HEIGHT):
+        color_value = int(255 * (1 - y / HEIGHT))
+        # Create a gradient from cyan to deep blue
+        color = (0, 150 + color_value // 3, 200 + color_value // 4)
+        pygame.draw.line(background, color, (0, y), (WIDTH, y))
+
+    # Add some decorative elements (palm trees and buildings as rectangles)
+    for _ in range(5):
+        # Draw simple palm trees
+        x = random.randint(50, WIDTH - 50)
+        y = random.randint(50, HEIGHT // 2)
+        pygame.draw.rect(background, (60, 30, 10), (x, y, 10, 30))  # Trunk
+        pygame.draw.circle(background, (0, 180, 0), (x + 5, y - 10), 20)  # Leaves
+
+    # Draw a simple road
+    pygame.draw.rect(background, (80, 80, 80), (0, HEIGHT // 2, WIDTH, 100))
+    # Add road lines
+    for x in range(0, WIDTH, 40):
+        pygame.draw.rect(background, (255, 255, 255), (x, HEIGHT // 2 + 50, 20, 5))
+
+>>>>>>> 1241612401cc18010f30df150ecb9b2e3c84b077
+=======
+>>>>>>> fb54cab252ee9a89c15effcc707e116e546a78b7
 # Create menu background programmatically
 menu_background = pygame.Surface((WIDTH, HEIGHT))
 # Create a gradient background
@@ -1032,8 +1066,17 @@ def main():
     # Initialize tilemap
     game_map = None
     try:
+<<<<<<< HEAD
+<<<<<<< HEAD
+        # Use the absolute path for the map
+        map_path = r"assets\Maps\level1\Level_1_Frame_1.tmx"
+=======
+        map_path = r"D:\Jammin eats\assets\Maps\level1\Level_1_Frame_1.tmx"
+>>>>>>> 1241612401cc18010f30df150ecb9b2e3c84b077
+=======
         # Use the absolute path for the map
         map_path = r"C:\Users\jerom\Jammin-Eats\assets\Maps\level1\Level_1_Frame_1.tmx"
+>>>>>>> fb54cab252ee9a89c15effcc707e116e546a78b7
         print(f"Attempting to load map from: {map_path}")
         if os.path.exists(map_path):
             game_map = TiledMap(map_path)
