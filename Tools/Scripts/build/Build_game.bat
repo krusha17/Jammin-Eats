@@ -1,12 +1,33 @@
 @echo off
-REM === Jammin' Eats Build Script ===
-echo Building JamminEats.exe...
+rem ─────────────────────────────────────────────────────────────────────────────
+rem 1) Jump to project root (from Tools\Scripts\build)
+cd /d "%~dp0\..\..\.."
 
-REM Replace with your correct path to python.exe if needed
-set PYTHON_EXE = "C:\Users\jerom\AppData\Local\Programs\Python\Python313\python.exe"
+echo Building Jammin' Eats executable...
+echo.
 
-REM Run PyInstaller to create a one-file, no-console executable
-%PYTHON_EXE% -m PyInstaller main.py --onefile --noconsole --name JamminEats
+rem ─────────────────────────────────────────────────────────────────────────────
+rem 2) Point at your python.exe (no surrounding quotes in the SET)
+set "PYTHON_PATH=C:\Program Files\Python\Python313\python.exe"
 
-echo Done! Check the "dist" folder for JamminEats.exe
+echo Installing PyInstaller if needed...
+"%PYTHON_PATH%" -m pip install pyinstaller
+
+echo Building console-mode executable…
+"%PYTHON_PATH%" -m PyInstaller --onefile --console ^
+  --add-data "assets;assets" ^
+  --add-data "Database;Database" ^
+  --name "Jammin_Eats" main.py
+
+echo.
+if %errorlevel% neq 0 (
+    echo.
+    echo Build failed.
+    echo Check that your assets and Database folders exist and contain the required files.
+) else (
+    echo.
+    echo Build completed successfully!
+    echo You can run dist\Jammin_Eats.exe from a Command Prompt to see any runtime output.
+)
+
 pause
