@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import time
 import math
 import os
 import pytmx
@@ -164,6 +165,71 @@ class TiledMap:
         print(f"Map dimensions: {self.width}x{self.height}")
         print(f"Extracted {len(self.collision_rects)} collision rects")
         print(f"Extracted {len(self.interactable_objects)} interactable objects")
+    
+        # Create a walkability cache grid
+        self.walkable_cache = {}
+        self.cache_walkable_areas()
+
+    def cache_walkable_areas(self):
+        """Pre-compute walkable areas for better performance"""
+        print("Caching walkable areas...")
+        grid_size = 32  # Cache in 32x32 pixel blocks
+    
+        for x in range(0, self.width, grid_size):
+            for y in range(0, self.height, grid_size):
+                # Cache the center point of each grid cell
+                center_x = x + grid_size // 2
+                center_y = y + grid_size // 2
+            
+                # Skip if out of bounds
+                if center_x >= self.width or center_y >= self.height:
+                    continue
+                
+                # Compute walkability without using the cache
+                self.walkable_cache[(center_x, center_y)] = self._compute_walkable(center_x, center_y)
+    
+        print(f"Walkable cache created with {len(self.walkable_cache)} entries")
+
+    def _compute_walkable(self, x, y):
+        """Raw walkability check without using cache"""
+        # This contains the original walkability logic
+        check_rect = pygame.Rect(x - 8, y - 8, 16, 16)
+    
+        # Check if the position is within map bounds
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            return False
+    
+        # Check for collision with any collision rect
+        for rect in self.collision_rects:
+            if check_rect.colliderect(rect):
+                return False
+    
+        # Check tile-based walkability
+        tile_x = int(x // self.tmx_data.tilewidth)
+        tile_y = int(y // self.tmx_data.tileheight)
+    
+        # Check ocean and water tiles
+        for layer in self.tmx_data.visible_layers:
+            if hasattr(layer, 'name') and layer.name.lower() in ["ocean", "water"]:
+                if isinstance(layer, pytmx.TiledTileLayer):
+                    if layer.data[tile_y][tile_x]:
+                        return False
+    
+        return True
+
+    def is_walkable(self, x, y):
+        """Check if a position is walkable, using cache when possible"""
+        # Convert to grid coordinates
+        grid_size = 32
+        grid_x = (x // grid_size) * grid_size + grid_size // 2
+        grid_y = (y // grid_size) * grid_size + grid_size // 2
+    
+        # Check cache first
+        if (grid_x, grid_y) in self.walkable_cache:
+            return self.walkable_cache[(grid_x, grid_y)]
+    
+        # Fall back to computing directly
+        return self._compute_walkable(x, y)
 
     def _render_layers(self):
         from pytmx import TiledTileLayer
@@ -236,58 +302,129 @@ class TiledMap:
                                 )
                                 self.collision_rects.append(rect)
     
-    def is_walkable(self, x, y):
-        """Checks if the specified position is walkable using collision detection"""
-        player_rect = pygame.Rect(x - 16, y - 16, 32, 32)  # Create a small rect at the position
-        
-        # Check if the position is within map bounds
-        if x < 0 or x >= self.width or y < 0 or y >= self.height:
-            return False
-        
-        # Check for collision with any collision rect
-        for rect in self.collision_rects:
-            if player_rect.colliderect(rect):
-                return False
-        
-        return True
+def is_walkable(self, x, y):
+    """
+    Checks if the specified position is walkable using collision detection.
+    Returns False if the position is:
+    - Out of map bounds
+    - Colliding with any collision rectangle
+    - On an unwalkable tile type (ocean, etc.)
+    """
+    # Create a small rect at the position (smaller than player for better precision)
+    check_rect = pygame.Rect(x - 8, y - 8, 16, 16)
     
-    def get_spawn_positions(self, object_name="CustomerSpawn"):
-        """Gets spawn positions for customers based on an object name"""
-        spawn_points = []
-        
-        # Try to find spawn points from the map objects
-        for layer in self.tmx_data.visible_layers:
-            if isinstance(layer, pytmx.TiledObjectGroup):
+    # Check if the position is within map bounds
+    if x < 0 or x >= self.width or y < 0 or y >= self.height:
+        return False
+    
+    # Check for collision with any collision rect
+    for rect in self.collision_rects:
+        if check_rect.colliderect(rect):
+            return False
+    
+    # Check tile-based walkability for specific layers
+    # Convert to tile coordinates
+    tile_x = int(x // self.tmx_data.tilewidth)
+    tile_y = int(y // self.tmx_data.tileheight)
+    
+    # Check ocean and water tiles
+    for layer in self.tmx_data.visible_layers:
+        if hasattr(layer, 'name') and layer.name.lower() in ["ocean", "water"]:
+            if isinstance(layer, pytmx.TiledTileLayer):
+                # If there's a tile here in the ocean/water layer, it's not walkable
+                if layer.data[tile_y][tile_x]:
+                    return False
+    
+    return True
+    
+def get_spawn_positions(self, object_name="CustomerSpawn"):
+    """Gets spawn positions for customers based on an object name"""
+    spawn_points = []
+    
+    # Try to find spawn points from the map objects
+    for layer in self.tmx_data.visible_layers:
+        if isinstance(layer, pytmx.TiledObjectGroup):
+            # First look for specifically named CustomerSpawns layer
+            if hasattr(layer, 'name') and layer.name == "CustomerSpawns":
+                print(f"Found dedicated CustomerSpawns layer with {len(layer)} objects")
+                for obj in layer:
+                    # Add all points from this layer regardless of name/type
+                    spawn_points.append((obj.x, obj.y))
+            # Then look for any object with matching name or type
+            else:
                 for obj in layer:
                     if obj.name == object_name or obj.type == "spawn":
                         spawn_points.append((obj.x, obj.y))
+    
+    # Filter to ensure all spawn points are walkable
+    valid_spawn_points = []
+    for x, y in spawn_points:
+        if self.is_walkable(x + 16, y + 16):  # Check the center position
+            valid_spawn_points.append((x, y))
+        else:
+            print(f"Warning: Spawn point at ({x}, {y}) is not walkable")
+    
+    # If no valid spawn points found, generate some along the edges - but check walkability
+    if not valid_spawn_points:
+        print(f"No walkable {object_name} objects found in map, generating default spawn points")
+        edge_margin = 100
+        step = 50
         
-        # If no spawn points found, generate some along the edges
-        if not spawn_points:
-            print(f"No {object_name} objects found in map, generating default spawn points")
-            edge_margin = 100
+        # Generate and check points along all four edges
+        for x in range(edge_margin, self.width - edge_margin, step):
+            if self.is_walkable(x, edge_margin):
+                valid_spawn_points.append((x, edge_margin))
             
-            # Top edge
-            for x in range(edge_margin, self.width - edge_margin, 100):
-                spawn_points.append((x, edge_margin))
-            
-            # Bottom edge
-            for x in range(edge_margin, self.width - edge_margin, 100):
-                spawn_points.append((x, self.height - edge_margin))
-            
-            # Left edge
-            for y in range(edge_margin, self.height - edge_margin, 100):
-                spawn_points.append((edge_margin, y))
-            
-            # Right edge
-            for y in range(edge_margin, self.height - edge_margin, 100):
-                spawn_points.append((self.width - edge_margin, y))
+            if self.is_walkable(x, self.height - edge_margin):
+                valid_spawn_points.append((x, self.height - edge_margin))
         
-        return spawn_points
+        for y in range(edge_margin, self.height - edge_margin, step):
+            if self.is_walkable(edge_margin, y):
+                valid_spawn_points.append((edge_margin, y))
+            
+            if self.is_walkable(self.width - edge_margin, y):
+                valid_spawn_points.append((self.width - edge_margin, y))
+        
+        # If still no walkable spawn points, search more of the map
+        if not valid_spawn_points:
+            print("No walkable edge points found, searching the whole map area")
+            grid_size = 80
+            for x in range(grid_size, self.width - grid_size, grid_size):
+                for y in range(grid_size, self.height - grid_size, grid_size):
+                    if self.is_walkable(x, y):
+                        valid_spawn_points.append((x, y))
+                        # Just find a few good points
+                        if len(valid_spawn_points) >= 10:
+                            return valid_spawn_points
+    
+    if not valid_spawn_points:
+        print("WARNING: Could not find ANY valid walkable spawn points")
+    else:
+        print(f"Found {len(valid_spawn_points)} valid walkable spawn points")
+    
+    return valid_spawn_points
     
     def draw(self, surface):
         """Draws the map to the specified surface"""
         surface.blit(self.surface, (0, 0))
+
+
+    def draw_debug_spawn_points(self, surface):
+        """
+        Draw visual indicators for spawn points to help with debugging
+        """
+        spawn_points = self.get_spawn_positions()
+    
+    # Draw all spawn points
+    for x, y in spawn_points:
+        # Draw a circle at each spawn point
+        pygame.draw.circle(surface, (0, 255, 0), (int(x), int(y)), 10, 2)
+        
+        # Draw an X in the middle
+        pygame.draw.line(surface, (0, 255, 0), (x-5, y-5), (x+5, y+5), 2)
+        pygame.draw.line(surface, (0, 255, 0), (x-5, y+5), (x+5, y-5), 2)
+
+
 
 
 # A more detailed Player class with animations
@@ -894,13 +1031,19 @@ restart_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Restart",
 game_time = 0
 customer_spawn_rate = 5  # seconds
 customer_spawn_timer = 0
+debug_mode = False  # Set to True to enable debug mode
 
 
 def spawn_customer(game_map=None):
+    """
+    Spawns a customer at a valid position, prioritizing map-defined spawn points
+    but falling back to algorithmic methods if needed.
+    """
     # Get spawn positions from the map if available
     if game_map:
         # Try to use spawn points defined in the map
-        spawn_points = game_map.get_spawn_positions("CustomerSpawns")
+        spawn_points = game_map.get_spawn_positions("CustomerSpawn")
+        
         if spawn_points:
             # Pick a random spawn point
             x, y = random.choice(spawn_points)
@@ -909,16 +1052,44 @@ def spawn_customer(game_map=None):
             all_sprites.add(customer)
             
             # Add spawn particle effect
-            for _ in range(5):
-                particle = Particle(
-                    x, y, (0, 255, 255), size=random.randint(3, 8), speed=1, lifetime=0.5
-                )
-                particles.add(particle)
-                all_sprites.add(particle)
-            return
+            create_spawn_particles(x, y)
+            print(f"Spawned customer at map-defined point ({x}, {y})")
+            return True
     
-    # Fallback to the old spawn method if no map or no spawn points
-    side = random.randint(0, 3)  # 0: top, 1: right, 2: bottom, 3: left
+    # If we get here, either no game_map exists or no valid spawn points were found
+    
+    # Define edge spawn logic with walkability checks
+    if game_map:
+        # Try up to 10 times to find a valid spawn point along the edges
+        for attempt in range(10):
+            side = random.randint(0, 3)  # 0: top, 1: right, 2: bottom, 3: left
+            
+            if side == 0:  # Top edge
+                x = random.randint(50, WIDTH - 50)
+                y = 50
+            elif side == 1:  # Right edge
+                x = WIDTH - 50
+                y = random.randint(50, HEIGHT - 50)
+            elif side == 2:  # Bottom edge
+                x = random.randint(50, WIDTH - 50)
+                y = HEIGHT - 50
+            else:  # Left edge
+                x = 50
+                y = random.randint(50, HEIGHT - 50)
+            
+            # Check if this position is walkable
+            if game_map.is_walkable(x, y):
+                customer = Customer(x, y)
+                customers.add(customer)
+                all_sprites.add(customer)
+                
+                create_spawn_particles(x, y)
+                print(f"Spawned customer at edge point ({x}, {y}) on attempt {attempt+1}")
+                return True
+    
+    # Final fallback - just use the old method without walkability checks
+    # This ensures customers still spawn even in worst-case scenarios
+    side = random.randint(0, 3)
     
     if side == 0:
         x = random.randint(50, WIDTH - 50)
@@ -937,12 +1108,37 @@ def spawn_customer(game_map=None):
     customers.add(customer)
     all_sprites.add(customer)
     
-    # Add spawn particle effect
+    create_spawn_particles(x, y)
+    print(f"WARNING: Spawned customer at fallback position ({x}, {y}) - could not find walkable spot")
+    return True
+
+def create_spawn_particles(x, y):
+    """Helper function to create particle effects at spawn point"""
     for _ in range(5):
-        particle = Particle(x, y, (0, 255, 255), size=random.randint(3, 8), speed=1, lifetime=0.5)
+        particle = Particle(
+            x, y, (0, 255, 255), size=random.randint(3, 8), speed=1, lifetime=0.5
+        )
         particles.add(particle)
         all_sprites.add(particle)
 
+def validate_customer_positions(customers_group, game_map):
+    """
+    Checks all customers to ensure they're in valid positions.
+    Relocates any that are in invalid positions.
+    """
+    for customer in customers_group:
+        if not game_map.is_walkable(customer.rect.centerx, customer.rect.centery):
+            print(f"Found customer in invalid position at ({customer.rect.centerx}, {customer.rect.centery})")
+            # Try to find a valid position
+            spawn_points = game_map.get_spawn_positions()
+            if spawn_points:
+                x, y = random.choice(spawn_points)
+                customer.rect.center = (x, y)
+                print(f"Relocated customer to ({x}, {y})")
+            else:
+                # If all else fails, remove the customer
+                customer.kill()
+                print("Removed customer in invalid position")
 
 def reset_game(game_map=None):
     global score, game_state, game_time
@@ -1031,6 +1227,11 @@ def main():
                 if event.key == pygame.K_SPACE:
                     player.throw_food(foods)
 
+            # Toggle debug mode with F12
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_F12:
+                debug_mode = not debug_modeprint(f"Debug mode {'enabled' if debug_mode else 'disabled'}")
+
+
             # Check button clicks in menus
             if game_state == MENU:
                 if start_button.is_clicked(event):
@@ -1062,7 +1263,17 @@ def main():
             customer_spawn_timer += dt
             if customer_spawn_timer >= customer_spawn_rate:
                 customer_spawn_timer = 0
-                spawn_customer(game_map)
+                
+                # Don't spawn too many customers
+                if len(customers) < 15:  # Set a reasonable limit
+                    # Measure spawn time for performance monitoring
+                    start_time = time.time()
+                    spawn_customer(game_map)
+                    spawn_time = time.time() - start_time
+            
+            # Only log if spawning takes a long time
+            if spawn_time > 0.01:
+                print(f"Customer spawn took {spawn_time*1000:.1f}ms")
 
             # Update player (pass the game_map to the update method)
             player.update(dt, customers, foods, game_map)
@@ -1070,6 +1281,10 @@ def main():
             # Update customers
             for customer in customers:
                 customer.update(dt)
+
+            # Check for customers in invalid positions - run occasionally
+            if game_time % 5 < 0.1:  # Run approximately every 5 seconds
+                validate_customer_positions(customers, game_map)
 
             # Update foods
             for food in foods:
@@ -1116,6 +1331,11 @@ def main():
             if game_map:
                 # Draw the tilemap
                 game_map.draw(screen)
+                
+                # Draw debug spawn points if debug mode is enabled
+                if debug_mode:
+                    game_map.draw_debug_spawn_points(screen)
+                
             else:
                 # This should not happen with the refactored code
                 screen.fill((0, 0, 0))
