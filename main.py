@@ -1351,10 +1351,15 @@ def main():
                 if event.key == pygame.K_SPACE:
                     player.throw_food(foods)
 
-            # Toggle debug mode with F12
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_F12:
+            # Toggle debug mode with F12 or D key (as an alternative)
+            if event.type == pygame.KEYDOWN and (event.key == pygame.K_F12 or event.key == pygame.K_d):
                 debug_mode = not debug_mode
                 print(f"Debug mode {'enabled' if debug_mode else 'disabled'}")
+                # Play a sound to confirm toggle if possible
+                try:
+                    button_sound.play()
+                except:
+                    pass
 
 
 
@@ -1493,6 +1498,11 @@ def main():
             seconds = int(game_time) % 60
             time_text = font.render(f"Time: {minutes:02d}:{seconds:02d}", True, WHITE)
             screen.blit(time_text, (WIDTH - 150, 60))
+            
+            # Draw debug mode indicator if active
+            if debug_mode:
+                debug_text = font.render("DEBUG MODE", True, (255, 255, 0))
+                screen.blit(debug_text, (WIDTH - 150, 100))
 
         elif game_state == MENU:
             # Draw menu
