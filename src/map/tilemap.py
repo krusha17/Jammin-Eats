@@ -12,8 +12,10 @@ class ResourceLoader:
         self.base_path = base_path
 
     def load(self, filename, **_):
+        print(f"[ResourceLoader] Attempting to load resource: {filename}")
+        print(f"[ResourceLoader] Current working directory: {os.getcwd()}")
         # Handle the specific path pattern we're seeing in the error
-        if '../../tilesets' in filename:
+        if '../../tilesets' in filename or 'TileSet_1.png' in filename:
             # Extract just the filename part
             tileset_name = os.path.basename(filename)
             # Try to find it in various locations
@@ -33,11 +35,12 @@ class ResourceLoader:
             
         # Try each path
         for path in candidates:
+            print(f"[ResourceLoader] Checking path: {path}")
             if os.path.exists(path):
-                print(f"Found resource at: {path}")
+                print(f"[ResourceLoader] Successfully loaded: {path}")
                 return pygame.image.load(path).convert_alpha()
                 
-        print(f"WARNING: missing resource {filename}")
+        print(f"[ResourceLoader] WARNING: missing resource {filename}")
         # Create a fallback tile
         fallback = pygame.Surface((32, 32), pygame.SRCALPHA)
         # Create a checkerboard pattern to indicate missing texture
@@ -52,38 +55,29 @@ class ResourceLoader:
 
 class TiledMap:
     def __init__(self, tmx_path):
-        # Set up the resource loader to handle tileset images
+        print(f"[TiledMap] Loading TMX map from: {tmx_path}")
+        print(f"[TiledMap] Current working directory: {os.getcwd()}")
         loader = ResourceLoader(os.path.dirname(tmx_path))
-        
         try:
-            # Load the TMX file using pytmx
             self.tmx_data = load_pygame(tmx_path, image_loader=loader.load)
+            print(f"[TiledMap] Successfully loaded TMX: {tmx_path}")
             self.width = self.tmx_data.width * self.tmx_data.tilewidth
             self.height = self.tmx_data.height * self.tmx_data.tileheight
-            
-            # Properties for collision detection
             self.collision_rects = []
             self.unwalkable_tiles = []
-            
-            # Properties for spawn points
             self.spawn_points = {}
-            
-            # Extract collision objects and other game objects
             self._extract_objects()
             self._extract_tile_collisions()
-            
-            # Set up walkability caching
             self.walkable_cache = {}
             self.cache_enabled = True
             self.use_cache = True
             self.cache_walkable_areas()
-            
-            # Render the tilemap to a surface for better performance
             self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             self._render_layers()
         except Exception as e:
-            print(f"Error loading map: {e}")
+            print(f"[TiledMap] Error loading map: {e}")
             self._create_fallback_map()
+
         
     def _find_and_load_tmx(self, tmx_path):
         """Attempt to find and load the TMX file using the same approach as original main.py"""
