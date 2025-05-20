@@ -5,6 +5,19 @@ All notable changes to the Jammin' Eats project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-05-17
+
+### Fixed
+- Corrected indentation issues in several class methods in main.py
+- Fixed UnboundLocalError with debug_mode variable by adding it to the global statement in main()
+- Resolved runtime errors related to variable scope
+- Added proper access to global variables in function scope
+
+### Changed
+- Updated requirements.txt to remove unused dependencies (pyodbc)
+- Added version constraints for pytmx (>=3.31) and pyinstaller (>=5.6.2)
+- Reorganized code to ensure proper variable scope
+
 ## [0.1.0] - 2025-03-22
 
 ### Added
