@@ -1335,6 +1335,7 @@ def main():
                 # Draw debug spawn points if debug mode is enabled
                 if debug_mode:
                     game_map.draw_debug_spawn_points(screen)
+                    game_map.draw_debug_walkable(screen)
                 
             else:
                 # This should not happen with the refactored code
