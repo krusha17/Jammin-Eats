@@ -43,6 +43,9 @@ score = 0
 high_score = 0
 font = pygame.font.Font(None, 36)
 
+# Debug mode
+debug_mode = False
+
 # Load sounds with error handling
 try:
     pickup_sound = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'characters', 'food_throw.wav'))
@@ -455,6 +458,12 @@ class TiledMap:
         # Draw green lines for bottom sand rows
         pygame.draw.line(surface,(0,255,0),(0,bottom_sand_y1),(self.width,bottom_sand_y1),2)
         pygame.draw.line(surface,(0,255,0),(0,bottom_sand_y2),(self.width,bottom_sand_y2),2)
+
+        # Add text label
+        font = pygame.font.Font(None, 24)
+        text = font.render("Target Walkable Area", True, (255,255,0))
+        text_rect = text.get_rect(center=(self.width//2, bottom_sand_y1 - 20))
+        surface.blit(text, text_rect)
 
 # A more detailed Player class with animations
 class Player(pygame.sprite.Sprite):
@@ -1365,6 +1374,7 @@ def main():
                 # Draw debug spawn points if debug mode is enabled
                 if debug_mode:
                     game_map.draw_debug_spawn_points(screen)
+                    game_map.draw_debug_walkable(screen)
                 
             else:
                 # This should not happen with the refactored code
