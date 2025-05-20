@@ -19,25 +19,31 @@ class Food(pygame.sprite.Sprite):
         
         # Try to load the food sprite
         try:
-            # Import the asset loader here to avoid circular imports
-            from src.utils.asset_loader import load_image
-            
             base_name = food_base_names.get(food_type, 'food')
+            print(f"Loading food sprite for type: {food_type}, base name: {base_name}")
             
-            # Try multiple possible paths for finding the food image
-            # First try using the food/FoodType format
-            self.image = load_image(f'Food/{base_name}', f'{base_name}.png', fallback_color=(255, 200, 0))
+            # Try to find the food image in the expected locations
+            try_paths = [
+                os.path.join(ASSETS_DIR, 'Food', f"{base_name}.png"),
+                os.path.join(ASSETS_DIR, 'Food', base_name, f"{base_name}.png"),
+                os.path.join(ASSETS_DIR, 'food', f"{base_name}.png"),
+                os.path.join(ASSETS_DIR, 'sprites', 'food', f"{base_name}.png")
+            ]
             
-            # If that didn't work, try just the base name in the Food directory
-            if not self.image or self.image.get_width() == 32 and 'F' in pygame.font.Font(None, 24).render('F', True, (255, 255, 255)).get_size():
-                self.image = load_image('Food', f'{base_name}.png', fallback_color=(255, 200, 0))
-                
-            # If still not found, try a lowercase variant
-            if not self.image or self.image.get_width() == 32 and 'F' in pygame.font.Font(None, 24).render('F', True, (255, 255, 255)).get_size():
-                self.image = load_image('food', f'{base_name.lower()}.png', fallback_color=(255, 200, 0))
+            # Try each path
+            self.image = None
+            for path in try_paths:
+                if os.path.exists(path):
+                    self.image = pygame.image.load(path).convert_alpha()
+                    print(f"Loaded food image from: {path}")
+                    break
             
-            # Scale the image if found
-            self.image = pygame.transform.scale(self.image, (32, 32))  # Scale to appropriate size
+            # If image was found, scale it to the appropriate size
+            if self.image:
+                self.image = pygame.transform.scale(self.image, (32, 32))  # Scale to appropriate size
+            else:
+                # If no image was found, raise an exception to trigger the fallback
+                raise FileNotFoundError(f"Could not find food image for {food_type}")
         except Exception as e:
             print(f"Error loading food sprite: {e}")
             print("Using fallback food sprite")

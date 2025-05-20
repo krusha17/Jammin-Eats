@@ -5,22 +5,17 @@ import pygame
 pygame.init()
 pygame.mixer.init()
 
-# Project directories
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Project directories - Match exactly how paths were calculated in the original main.py
+# This is critical for asset loading to work consistently
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Gets to project root
 
-# We need to make sure we're using the existing assets in the main project directory
+# Use exactly the same relative paths as in the original main.py
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 MAP_DIR = os.path.join(ASSETS_DIR, "Maps", "level1")
 
-# Print paths for debugging
-print(f"Base directory: {BASE_DIR}")
+# Print basic path information, same as in original main.py
 print(f"Assets directory: {ASSETS_DIR}")
 print(f"Map directory: {MAP_DIR}")
-print(f"Assets directory exists: {os.path.exists(ASSETS_DIR)}")
-if os.path.exists(ASSETS_DIR):
-    print(f"Assets contents: {os.listdir(ASSETS_DIR)}")
-else:
-    print("Warning: Assets directory not found! Using fallbacks.")
 
 # Set up the game window
 WIDTH, HEIGHT = 768, 768

@@ -5,6 +5,39 @@ from pygame import mixer
 from src.core.constants import *
 from src.sprites.food import Food
 
+# Create a minimal player for fallback cases where normal loading fails
+def create_fallback_player(x, y):
+    """Create a simplified player object that doesn't require external assets"""
+    # Create a new player instance
+    player = Player(x, y)
+    
+    # Override with very basic animation frames that require no assets
+    for direction in ['up', 'down', 'left', 'right', 'idle']:
+        fallback = pygame.Surface((32, 32), pygame.SRCALPHA)
+        
+        # Draw the player avatar (a circle with a direction indicator)
+        pygame.draw.circle(fallback, (0, 0, 255), (16, 16), 15)  # Blue circle
+        
+        # Draw direction indicator (white triangle)
+        if direction == 'up':
+            pygame.draw.polygon(fallback, (255, 255, 255), [(16, 5), (20, 15), (12, 15)])
+        elif direction == 'down':
+            pygame.draw.polygon(fallback, (255, 255, 255), [(16, 27), (20, 17), (12, 17)])
+        elif direction == 'left':
+            pygame.draw.polygon(fallback, (255, 255, 255), [(5, 16), (15, 20), (15, 12)])
+        elif direction == 'right':
+            pygame.draw.polygon(fallback, (255, 255, 255), [(27, 16), (17, 20), (17, 12)])
+        
+        # Set the fallback animation
+        player.animations[direction] = [fallback]
+    
+    # Ensure we have a valid current frame
+    player.image = player.animations['down'][0]
+    player.direction = 'down'
+    player.frame_index = 0
+    
+    return player
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()

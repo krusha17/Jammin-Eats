@@ -4,6 +4,7 @@ import random
 import os
 import time
 import math
+import traceback
 from pygame import mixer
 
 # Import modules from our refactored structure
@@ -17,6 +18,7 @@ from src.ui.button import Button
 from src.ui.text import draw_text
 from src.utils.sounds import load_sounds
 from src.debug.debug_tools import toggle_debug_mode
+from src.debug.logger import log, log_error, log_asset_load
 
 
 class Game:
@@ -92,6 +94,8 @@ class Game:
     
     def reset_game(self):
         """Reset the game to its initial state"""
+        log("Resetting game to initial state")
+        
         # Clear sprite groups
         self.all_sprites.empty()
         self.customers.empty()
@@ -104,19 +108,62 @@ class Game:
         self.customer_spawn_timer = 0
         
         # Initialize map
+        log("Loading game map...")
         try:
-            map_path = os.path.join(MAP_DIR, "Level_1_Frame_1.tmx")
-            self.game_map = TiledMap(map_path)
+            # Try to load the map from multiple possible locations
+            map_name = "Level_1_Frame_1.tmx"
+            map_paths = [
+                os.path.join(MAP_DIR, map_name),
+                os.path.join(ASSETS_DIR, "Maps", "level1", map_name),
+                os.path.join(ASSETS_DIR, "Maps", map_name)
+            ]
+            
+            # Log the map paths we're trying
+            log(f"Trying to load map from {len(map_paths)} locations")
+            for i, path in enumerate(map_paths):
+                exists = os.path.exists(path)
+                log(f"  {i+1}. {path} (Exists: {exists})")
+            
+            # Try each path until one works
+            map_loaded = False
+            for path in map_paths:
+                if os.path.exists(path):
+                    try:
+                        log(f"Attempting to load map from: {path}")
+                        self.game_map = TiledMap(path)
+                        log("Map loaded successfully")
+                        map_loaded = True
+                        break
+                    except Exception as e:
+                        log_error(f"Error loading map from {path}", e)
+            
+            # If no map was loaded, create a fallback
+            if not map_loaded:
+                log_error("Could not load map from any location, using fallback")
+                self.game_map = TiledMap("fallback")
+        
         except Exception as e:
-            print(f"Error loading map: {e}")
+            log_error("Critical error loading map", e)
             self.game_map = None
         
         # Create player
-        self.player = Player(WIDTH // 2, HEIGHT // 2)
-        self.all_sprites.add(self.player)
+        log("Creating player...")
+        try:
+            self.player = Player(WIDTH // 2, HEIGHT // 2)
+            self.all_sprites.add(self.player)
+            log("Player created successfully")
+        except Exception as e:
+            log_error("Error creating player", e)
+            # Create a simplified player object if regular creation fails
+            # This is a minimal implementation to prevent crashes
+            from src.sprites.player import create_fallback_player
+            self.player = create_fallback_player(WIDTH // 2, HEIGHT // 2)
+            log("Created fallback player")
+            self.all_sprites.add(self.player)
         
         # Change game state to playing
         self.game_state = PLAYING
+        log("Game reset complete, state changed to PLAYING")
     
     def spawn_customer(self):
         """Spawn a customer at a valid position"""

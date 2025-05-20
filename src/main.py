@@ -9,6 +9,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Now import our game modules
 from src.core.game import Game
 from src.debug.debug_tools import toggle_debug_mode, install_exception_handler, log_performance
+from src.debug.logger import init_logger, log, log_error
+
+# Initialize the debug logger first
+init_logger()
+log("=== Jammin' Eats Starting ===")
+log(f"Python version: {sys.version}")
+log(f"Pygame version: {pygame.version.ver}")
 
 # Install the global exception handler for better error reporting
 install_exception_handler()
@@ -16,6 +23,7 @@ install_exception_handler()
 # Initialize performance monitoring
 start_time = time.time()
 log_performance("Module imports completed", start_time)
+log("Module imports completed")
 
 def main():
     """Main entry point for the game"""
