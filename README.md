@@ -60,34 +60,42 @@ Online leaderboards and social sharing features
 Support for community-created custom levels
 Active engagement with player feedback to continuously enhance the gaming experience
 
-📂 Irie Project Folder Structure
+📂 Modular Project Structure
 
 ```text
 Jammin-Eats/
 ├── assets/
-│   ├── Food/
-│   ├── Maps/
+│   ├── Food/              # Food item sprites organized by type
+│   ├── Maps/              # TMX map files for levels
 │   ├── sprites/
-│   │   └── characters/
-│   ├── tiles/
-│   └── tilesets/
-├── Archive/
-├── Backups/
-├── Database/
-├── PDFs for note attachments/
-├── Tools/
-│   ├── Output/
-│   └── Scripts/
-├── changelog.md
-├── Jammin_Eats.spec
-├── Level_1_Frame_1.tmx
-├── main.py
+│   │   └── characters/    # Player and customer character sprites
+│   ├── tiles/             # Tile assets for maps
+│   └── tilesets/          # Tilesets for the map editor
+├── src/                  # Modular source code structure
+│   ├── core/             # Core game engine components
+│   │   ├── constants.py  # Game constants and configuration
+│   │   └── game.py       # Main game engine class
+│   ├── debug/            # Debugging and development tools
+│   │   └── debug_tools.py # Error tracking and debugging utilities
+│   ├── map/              # Map loading and handling
+│   │   └── tilemap.py    # TMX map loader with fallback capabilities
+│   ├── sprites/          # Game entity classes
+│   │   ├── customer.py   # Customer class with AI behaviors
+│   │   ├── food.py       # Food projectile class
+│   │   ├── particle.py   # Visual effects system
+│   │   └── player.py     # Player character with controls
+│   ├── ui/               # User interface components
+│   │   ├── button.py     # Interactive button class
+│   │   └── text.py       # Text rendering utilities
+│   ├── utils/            # Utility functions and helpers
+│   │   ├── asset_loader.py # Centralized asset loading system
+│   │   └── sounds.py     # Sound loading and playback
+│   └── main.py          # Entry point for the modular version
+├── debug_main.py         # Enhanced debugging launcher
+├── main.py               # Original single-file version (legacy)
+├── new_main.py           # Modular version launcher
 ├── README.md
-├── Requirements.md
-├── resource_path.py
-├── .gitignore
-├── venv/
-└── ...and more!
+└── venv/                 # Python virtual environment
 ```
 
 > **Heads up!**

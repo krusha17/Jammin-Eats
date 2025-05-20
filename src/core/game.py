@@ -1,6 +1,9 @@
 import pygame
 import sys
 import random
+import os
+import time
+import math
 from pygame import mixer
 
 # Import modules from our refactored structure

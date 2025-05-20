@@ -2,16 +2,17 @@ import os
 import pygame
 from pygame import mixer
 from src.core.constants import ASSETS_DIR
+from src.utils.asset_loader import load_sound
 
 def load_sounds():
     """Load all game sounds with error handling"""
     sounds = {}
     
     try:
-        # Load sound effects
-        sounds['pickup_sound'] = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'characters', 'food_throw.wav'))
-        sounds['engine_sound'] = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'vehicles', 'engine_idle.wav'))
-        sounds['button_sound'] = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'ui', 'button_click.wav'))
+        # Load sound effects using our asset loader utility
+        sounds['pickup_sound'] = load_sound('characters/food_throw.wav')
+        sounds['engine_sound'] = load_sound('vehicles/engine_idle.wav')
+        sounds['button_sound'] = load_sound('ui/button_click.wav')
         
         # Try to create background music - fallback to looping a sound if needed
         try:

@@ -1,5 +1,14 @@
 import pygame
 import time
+import sys
+import traceback
+import threading
+
+# Global debug state
+DEBUG_MODE = False
+
+# Global error tracking log
+ERROR_LOG = []
 
 def toggle_debug_mode(current_state, sounds=None):
     """Toggle debug mode and play a sound if available"""
@@ -27,6 +36,81 @@ def log_performance(label, start_time=None):
         elapsed = time.time() - start_time
         print(f"[PERFORMANCE] {label}: {elapsed:.4f} seconds")
         return time.time()  # Return new time for chaining measurements
+
+
+def track_exceptions(func):
+    """Decorator to track exceptions in functions"""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            # Get detailed error information
+            error_type = type(e).__name__
+            error_msg = str(e)
+            tb = traceback.format_exc()
+            
+            # Log error details
+            error_info = {
+                'type': error_type,
+                'message': error_msg,
+                'traceback': tb,
+                'time': time.time(),
+                'function': func.__name__
+            }
+            
+            # Add to global error log
+            ERROR_LOG.append(error_info)
+            
+            # Print to console
+            print(f"\n===== ERROR IN {func.__name__} =====")
+            print(f"Type: {error_type}")
+            print(f"Message: {error_msg}")
+            print("\nTraceback:")
+            print(tb)
+            print("===============================\n")
+            
+            # Re-raise the exception
+            raise
+    
+    return wrapper
+
+
+def install_exception_handler():
+    """Install a global exception handler to catch unhandled exceptions"""
+    original_hook = sys.excepthook
+    
+    def exception_handler(exc_type, exc_value, exc_traceback):
+        # Log the exception
+        error_info = {
+            'type': exc_type.__name__,
+            'message': str(exc_value),
+            'traceback': ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)),
+            'time': time.time(),
+            'function': 'global'
+        }
+        
+        ERROR_LOG.append(error_info)
+        
+        # Print a more helpful message
+        print("\n===== UNHANDLED EXCEPTION =====")
+        print(f"Type: {exc_type.__name__}")
+        print(f"Message: {str(exc_value)}")
+        
+        # Check for common errors
+        if exc_type is IndexError:
+            print("\nINDEX ERROR DETECTED: You might be trying to access an item in a list that doesn't exist.")
+            print("Check array bounds and make sure lists are properly initialized.")
+        elif exc_type is AttributeError and "NoneType" in str(exc_value):
+            print("\nNONE ERROR DETECTED: You're trying to use an object that is None.")
+            print("Check if an object was properly initialized or loaded.")
+        
+        # Call the original exception handler
+        original_hook(exc_type, exc_value, exc_traceback)
+    
+    # Set our custom exception handler
+    sys.excepthook = exception_handler
+    
+    return "Exception handler installed"
 
 
 class DebugDisplay:

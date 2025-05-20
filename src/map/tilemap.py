@@ -50,10 +50,39 @@ class ResourceLoader:
 
 class TiledMap:
     def __init__(self, tmx_path):
-        self.loader = ResourceLoader(os.path.dirname(tmx_path))
-        self.tmx_data = load_pygame(tmx_path, image_loader=self.loader.load)
-        self.width = self.tmx_data.width * self.tmx_data.tilewidth
-        self.height = self.tmx_data.height * self.tmx_data.tileheight
+        # Import here to avoid circular imports
+        from src.utils.asset_loader import get_asset_path
+        
+        # Try to find the map file using our asset loader
+        map_name = os.path.basename(tmx_path)
+        map_path = get_asset_path('map', map_name)
+        
+        if map_path:
+            print(f"Found map file at: {map_path}")
+            tmx_path = map_path
+        
+        print(f"TiledMap initializing with path: {tmx_path}")
+        
+        # Check if the TMX file exists before trying to load it
+        if os.path.exists(tmx_path):
+            print(f"TMX file exists: {os.path.exists(tmx_path)}")
+            try:
+                self.loader = ResourceLoader(os.path.dirname(tmx_path))
+                self.tmx_data = load_pygame(tmx_path, image_loader=self.loader.load)
+                self.width = self.tmx_data.width * self.tmx_data.tilewidth
+                self.height = self.tmx_data.height * self.tmx_data.tileheight
+                # Initialize the map successfully
+                self._initialize_map_properties()
+                return
+            except Exception as e:
+                print(f"Error loading TMX file: {e}")
+                print("Creating fallback map instead.")
+        else:
+            print(f"TMX file does not exist: {tmx_path}")
+            print("Creating fallback map instead.")
+        
+        # If we get here, we need to create a fallback map
+        self._create_fallback_map()
         
         # Properties for walkable area caching
         self.walkable_cache = {}
@@ -95,6 +124,104 @@ class TiledMap:
         
         print(f"Walkability cache built with {len(self.walkable_cache)} entries")
     
+    def _initialize_map_properties(self):
+        """Initialize common map properties after loading a TMX file"""
+        # Properties for walkable area caching
+        self.walkable_cache = {}
+        self.cache_enabled = True
+        self.use_cache = True
+        
+        # Properties for collision detection
+        self.collision_rects = []
+        self.unwalkable_tiles = []
+        
+        # Properties for spawn points
+        self.spawn_points = {}
+        
+        # Pre-render the entire tilemap to a surface for better performance
+        self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        self._render_layers()
+        
+        # Extract objects and collision info
+        self._extract_objects()
+        self._extract_tile_collisions()
+        
+        # Pre-compute the walkable areas
+        if self.cache_enabled:
+            self.cache_walkable_areas()
+            
+    def _create_fallback_map(self):
+        """Create a simple fallback map when TMX loading fails"""
+        # Create a basic grid map
+        width, height = 20, 15  # cells (20x15 grid)
+        cell_size = 32  # pixels per cell
+        
+        self.width = width * cell_size
+        self.height = height * cell_size
+        
+        # Initialize a fake TMX data object to avoid attribute errors
+        class FakeTmxData:
+            def __init__(self):
+                self.width = width
+                self.height = height
+                self.tilewidth = cell_size
+                self.tileheight = cell_size
+                self.layers = []
+                self.visible_layers = []  # Add missing attribute
+                self.objectgroups = []
+                
+                # Add additional missing attributes that might be accessed
+                self.layernames = {}
+                self.properties = {}
+                
+            def get_layer_by_name(self, name):
+                return None
+                
+            def get_tile_properties_by_gid(self, gid):
+                return None
+        
+        self.tmx_data = FakeTmxData()
+        
+        # Initialize basic properties
+        self.walkable_cache = {}
+        self.cache_enabled = True
+        self.use_cache = True
+        self.collision_rects = []
+        self.unwalkable_tiles = []
+        self.spawn_points = {}
+        
+        # Create a map surface
+        self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        
+        # Draw a grid
+        for x in range(width):
+            for y in range(height):
+                rect = pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size)
+                # Make the edges of the map unwalkable
+                if x == 0 or y == 0 or x == width-1 or y == height-1:
+                    pygame.draw.rect(self.map_surface, (100, 100, 100), rect)
+                    self.collision_rects.append(rect)
+                else:
+                    # Alternate colors for tiles
+                    if (x + y) % 2 == 0:
+                        color = (200, 230, 200)  # Light green
+                    else:
+                        color = (180, 210, 180)  # Slightly darker green
+                    pygame.draw.rect(self.map_surface, color, rect)
+                    
+                # Draw grid lines
+                pygame.draw.rect(self.map_surface, (150, 150, 150), rect, 1)
+        
+        # Add spawn points around the center
+        center_x, center_y = self.width // 2, self.height // 2
+        self.spawn_points['CustomerSpawn'] = [
+            (center_x - 100, center_y - 100),
+            (center_x + 100, center_y - 100),
+            (center_x - 100, center_y + 100),
+            (center_x + 100, center_y + 100)
+        ]
+        print("Fallback map created successfully")    
+            
     def _compute_walkable(self, x, y):
         """Raw walkability check without using cache"""
         # Check if position is out of map bounds

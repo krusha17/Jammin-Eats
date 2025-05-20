@@ -6,6 +6,7 @@ from src.core.constants import *
 class Customer(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
+        print(f"Initializing Customer at position: {x}, {y}")
         
         # Customer types for random selection
         customer_types = [
@@ -24,31 +25,69 @@ class Customer(pygame.sprite.Sprite):
                     'happy': ['man_1_happy.png'],
                     'angry': ['man_1_angry.png']
                 }
-            },
-            {
-                'type': 'kid_1',
-                'sprites': {
-                    'idle': ['kid_1_idle.png'],
-                    'happy': ['kid_1_happy.png'],
-                    'angry': ['kid_1_angry.png']
-                }
             }
         ]
         
-        # Randomly select a customer type
-        self.customer_info = random.choice(customer_types)
-        self.type = self.customer_info['type']
+        # Safely select a customer type (with fallback)
+        if customer_types:
+            self.customer_info = random.choice(customer_types)
+            self.type = self.customer_info['type']
+        else:
+            # Fallback if list is empty
+            print("WARNING: No customer types defined, using fallback")
+            self.customer_info = {
+                'type': 'default',
+                'sprites': {
+                    'idle': ['default_idle.png'],
+                    'happy': ['default_happy.png'],
+                    'angry': ['default_angry.png']
+                }
+            }
+            self.type = 'default'
         
-        # Try to load customer sprites
+        # Create fallback sprites first to ensure we always have valid sprites
         self.sprites = {'idle': None, 'happy': None, 'angry': None}
+        
+        # Create fallback sprites for each state
+        for state in ['idle', 'happy', 'angry']:
+            fallback = pygame.Surface((48, 64), pygame.SRCALPHA)
+            
+            # Base customer shape with different colors for different states
+            if state == 'idle':
+                color = (0, 150, 200)  # Blue for idle
+            elif state == 'happy':
+                color = (0, 200, 0)    # Green for happy
+            elif state == 'angry':
+                color = (200, 0, 0)    # Red for angry
+            
+            # Draw a simple humanoid figure
+            pygame.draw.ellipse(fallback, color, (12, 12, 24, 24))  # Head
+            pygame.draw.rect(fallback, color, (16, 36, 16, 20))      # Body
+            
+            # Draw limbs
+            pygame.draw.line(fallback, color, (16, 40), (8, 55), 3)   # Left arm
+            pygame.draw.line(fallback, color, (32, 40), (40, 55), 3)  # Right arm
+            pygame.draw.line(fallback, color, (20, 56), (12, 64), 3)  # Left leg
+            pygame.draw.line(fallback, color, (28, 56), (36, 64), 3)  # Right leg
+            
+            # Store the fallback sprite
+            self.sprites[state] = fallback
+        
+        # Now try to load the actual sprites
         try:
+            # Import the asset loader here to avoid circular imports
+            from src.utils.asset_loader import load_image
+            
+            # Load customer sprites using our asset loader
             for state, filenames in self.customer_info['sprites'].items():
-                if filenames:  # Check that we have filenames for this state
-                    path = os.path.join(ASSETS_DIR, 'sprites', 'customers', filenames[0])
-                    self.sprites[state] = pygame.image.load(path).convert_alpha()
+                if filenames and isinstance(filenames, list) and len(filenames) > 0:  # Extra safety checks
+                    img = load_image('customer', filenames[0])
+                    if img:  # Only replace the fallback if we successfully loaded a sprite
+                        self.sprites[state] = img
+            
+            print(f"Successfully loaded customer sprites for {self.type}")
         except Exception as e:
-            print(f"Error loading customer sprites: {e}")
-            print("Using fallback customer sprites")
+            print(f"Keeping fallback customer sprites due to error: {e}")
             
             # Create fallback sprites for each state
             for state in ['idle', 'happy', 'angry']:

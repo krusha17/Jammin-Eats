@@ -10,16 +10,33 @@ class Food(pygame.sprite.Sprite):
         
         # Food types and their corresponding image base names
         food_base_names = {
-            'pizza': 'tropical_pizza',
-            'smoothie': 'ska_smoothie',
-            'icecream': 'island_ice_cream',
-            'pudding': 'rasta_rice_pudding'
+            'pizza': 'Tropical_Pizza_Slice',
+            'smoothie': 'Ska_Smoothie',
+            'icecream': 'Island_Ice_Cream',
+            'pudding': 'Rasta_Rice_Pudding',
+            'rasgulla': 'Reggae_Rasgulla'
         }
         
         # Try to load the food sprite
         try:
+            # Import the asset loader here to avoid circular imports
+            from src.utils.asset_loader import load_image
+            
             base_name = food_base_names.get(food_type, 'food')
-            self.image = pygame.image.load(os.path.join(ASSETS_DIR, 'sprites', 'food', f'{base_name}.png')).convert_alpha()
+            
+            # Try multiple possible paths for finding the food image
+            # First try using the food/FoodType format
+            self.image = load_image(f'Food/{base_name}', f'{base_name}.png', fallback_color=(255, 200, 0))
+            
+            # If that didn't work, try just the base name in the Food directory
+            if not self.image or self.image.get_width() == 32 and 'F' in pygame.font.Font(None, 24).render('F', True, (255, 255, 255)).get_size():
+                self.image = load_image('Food', f'{base_name}.png', fallback_color=(255, 200, 0))
+                
+            # If still not found, try a lowercase variant
+            if not self.image or self.image.get_width() == 32 and 'F' in pygame.font.Font(None, 24).render('F', True, (255, 255, 255)).get_size():
+                self.image = load_image('food', f'{base_name.lower()}.png', fallback_color=(255, 200, 0))
+            
+            # Scale the image if found
             self.image = pygame.transform.scale(self.image, (32, 32))  # Scale to appropriate size
         except Exception as e:
             print(f"Error loading food sprite: {e}")

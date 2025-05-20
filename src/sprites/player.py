@@ -8,39 +8,70 @@ from src.sprites.food import Food
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        # Load directional sprites with error handling
+        # Initialize animation dictionaries with default empty lists
         self.animations = {
             'up': [], 'down': [], 'left': [], 'right': [],
             'idle': []
         }
         
+        # Debug print
+        print("Initializing Player at position:", x, y)
+        
+        # Create simplified player sprites directly as fallbacks
+        # This ensures we always have valid sprites even if loading fails
+    
+        # Import the constants here to avoid circular imports
+        from src.core.constants import BLUE, WHITE
+        
+        # Create fallback sprites first to ensure we always have something
+        for direction in ['up', 'down', 'left', 'right', 'idle']:
+            fallback = pygame.Surface((32, 32), pygame.SRCALPHA)
+            
+            # Draw the player avatar (a circle with a direction indicator)
+            pygame.draw.circle(fallback, BLUE, (16, 16), 15)
+            
+            # Add direction indicator
+            if direction == 'up':
+                pygame.draw.polygon(fallback, WHITE, [(16, 5), (20, 15), (12, 15)])
+            elif direction == 'down':
+                pygame.draw.polygon(fallback, WHITE, [(16, 27), (20, 17), (12, 17)])
+            elif direction == 'left':
+                pygame.draw.polygon(fallback, WHITE, [(5, 16), (15, 20), (15, 12)])
+            elif direction == 'right':
+                pygame.draw.polygon(fallback, WHITE, [(27, 16), (17, 20), (17, 12)])
+            
+            # Add at least one fallback sprite to each direction list
+            self.animations[direction] = [fallback]
+        
+        # Now try to load the actual sprites
         try:
-            # Try to load player sprites from the assets directory
-            for i in range(1, 5):  # Assuming 4 frames per direction
-                # Down animation
-                img_down = pygame.image.load(os.path.join(ASSETS_DIR, 'sprites', 'player', f'down_{i}.png')).convert_alpha()
-                self.animations['down'].append(img_down)
-                
-                # Up animation
-                img_up = pygame.image.load(os.path.join(ASSETS_DIR, 'sprites', 'player', f'up_{i}.png')).convert_alpha()
-                self.animations['up'].append(img_up)
-                
-                # Left animation
-                img_left = pygame.image.load(os.path.join(ASSETS_DIR, 'sprites', 'player', f'left_{i}.png')).convert_alpha()
-                self.animations['left'].append(img_left)
-                
-                # Right animation
-                img_right = pygame.image.load(os.path.join(ASSETS_DIR, 'sprites', 'player', f'right_{i}.png')).convert_alpha()
-                self.animations['right'].append(img_right)
+            # Import the asset loader here to avoid circular imports
+            from src.utils.asset_loader import load_image
             
-            # Add idle animation
-            self.animations['idle'] = [self.animations['down'][0]]  # Just use first frame of down as idle
+            # Try to load the actual sprite files
+            # Updated to match the actual file paths shown in the error logs
+            img_down = load_image('sprites/characters/kai', 'kai_down.png')
+            if img_down:
+                self.animations['down'] = [img_down] * 4
+            
+            img_up = load_image('sprites/characters/kai', 'kai_up.png')
+            if img_up:
+                self.animations['up'] = [img_up] * 4
+            
+            img_left = load_image('sprites/characters/kai', 'kai_left.png')
+            if img_left:
+                self.animations['left'] = [img_left] * 4
+            
+            img_right = load_image('sprites/characters/kai', 'kai_right.png')
+            if img_right:
+                self.animations['right'] = [img_right] * 4
+            
+            # Always use first frame of down as idle
+            self.animations['idle'] = [self.animations['down'][0]]
+            
+            print(f"Successfully loaded player sprites from assets")
         except Exception as e:
-            # If sprite loading fails, create simple geometric fallback
-            print(f"Error loading player sprites: {e}")
-            print("Using fallback player sprite")
-            
-            # Create a simple geometric player sprite
+            print(f"Using fallback player sprites due to error: {str(e)}")
             for direction in ['up', 'down', 'left', 'right', 'idle']:
                 fallback = pygame.Surface((32, 32), pygame.SRCALPHA)
                 
@@ -62,6 +93,9 @@ class Player(pygame.sprite.Sprite):
         
         # Initialize animation variables
         self.direction = 'down'  # Starting direction
+        self.frame_index = 0  # Current animation frame
+        self.animation_timer = 0
+        self.animation_speed = 0.2  # Seconds per frame
         self.frame_index = 0
         self.animation_speed = 0.2  # seconds per frame
         self.animation_timer = 0
@@ -165,13 +199,30 @@ class Player(pygame.sprite.Sprite):
         else:
             current_direction = self.direction
         
+        # Safety check - make sure the animation list exists and is not empty
+        if not self.animations[current_direction]:
+            # If no animations for current direction, default to 'down' or first available
+            for key in ['down', 'up', 'left', 'right', 'idle']:
+                if self.animations[key]:
+                    current_direction = key
+                    break
+        
+        # Another safety check - if still no animations available, don't proceed
+        if not self.animations[current_direction]:
+            return
+        
         # Update animation frame
         if is_moving:
             self.animation_timer += dt
             if self.animation_timer >= self.animation_speed:
                 self.animation_timer = 0
+                # Ensure frame_index stays within bounds
                 self.frame_index = (self.frame_index + 1) % len(self.animations[current_direction])
         
+        # Ensure frame_index is in bounds before accessing
+        if self.frame_index >= len(self.animations[current_direction]):
+            self.frame_index = 0
+            
         # Update image
         self.image = self.animations[current_direction][self.frame_index]
     
