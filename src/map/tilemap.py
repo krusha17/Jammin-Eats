@@ -306,13 +306,22 @@ class TiledMap:
         """Extracts collision and interactable objects from the TMX file"""
         # Process object layers to find collision rectangles and spawn points
         for obj_group in self.tmx_data.objectgroups:
+            # Safely get the group name, using empty string if None
+            group_name = obj_group.name.lower() if obj_group.name else ''
+            
             for obj in obj_group:
-                if obj.type == 'collision' or obj_group.name.lower() == 'collision':
+                # Safely get the object name, using empty string if None
+                obj_name = obj.name.lower() if obj.name else ''
+                obj_type = obj.type if hasattr(obj, 'type') else ''
+                
+                # Check collision objects
+                if obj_type == 'collision' or 'collision' in group_name:
                     # This is a collision object
                     self.collision_rects.append(pygame.Rect(
                         obj.x, obj.y, obj.width, obj.height
                     ))
-                elif 'spawn' in obj.name.lower() or 'spawn' in obj_group.name.lower():
+                # Check spawn points
+                elif 'spawn' in obj_name or 'spawn' in group_name:
                     # This is a spawn point, categorize by name
                     spawn_type = obj.name if obj.name else obj_group.name
                     if spawn_type not in self.spawn_points:
@@ -326,10 +335,13 @@ class TiledMap:
         unwalkable_layer_names = ['collision', 'unwalkable', 'ocean']
         
         for layer in self.tmx_data.visible_layers:
-            if hasattr(layer, 'data') and layer.name.lower() in unwalkable_layer_names:
-                for x, y, gid in layer:
-                    if gid:  # If there's a tile here (non-zero gid)
-                        self.unwalkable_tiles.append((x, y))
+            # Check if it's a tile layer and has a name
+            if hasattr(layer, 'data') and hasattr(layer, 'name') and layer.name is not None:
+                # Now safely check if the name is in our unwalkable list
+                if layer.name.lower() in unwalkable_layer_names:
+                    for x, y, gid in layer:
+                        if gid:  # If there's a tile here (non-zero gid)
+                            self.unwalkable_tiles.append((x, y))
     
     def _check_walkability(self, x, y):
         """Helper method to check if a position is walkable"""
@@ -419,10 +431,13 @@ class TiledMap:
         """Draw visual indicators for spawn points to help with debugging"""
         # Loop through all spawn point categories
         for spawn_type, positions in self.spawn_points.items():
+            # Make sure spawn_type is a string before calling lower()
+            spawn_type_str = str(spawn_type).lower() if spawn_type is not None else ''
+            
             # Use different colors for different spawn types
-            if 'customer' in spawn_type.lower():
+            if 'customer' in spawn_type_str:
                 color = (0, 255, 0)  # Green for customer spawns
-            elif 'player' in spawn_type.lower():
+            elif 'player' in spawn_type_str:
                 color = (0, 0, 255)  # Blue for player spawns
             else:
                 color = (255, 255, 0)  # Yellow for other spawns
