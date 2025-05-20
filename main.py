@@ -424,7 +424,37 @@ class TiledMap:
             pygame.draw.line(surface, (0, 255, 0), (x-5, y-5), (x+5, y+5), 2)
             pygame.draw.line(surface, (0, 255, 0), (x-5, y+5), (x+5, y-5), 2)
 
+    def draw_debug_walkable(self,surface):
+        """Draw walkable/unwalkable areas for debugging"""
+        # Only process a subset of tiles for performance
+        step = 16 #  # Check every 16 pixels instead of every pixel
+        for y in range(0,self.height,step):
+            for x in range(0,self.width,step):
+                if self.is_walkable(x,y):
+                    # Draw a small green dot for walkable tiles
+                    pygame.draw.circle(surface,(0,255,0),(x,y),step//2,1)
+                else:
+                    # Draw a small red X for unwalkable tiles
+                    pygame.draw.line(surface,(255,0,0),
+                    (x-3, y-3), (x+3, y+3), 1)
+                    pygame.draw.line(surface,(255,0,0),
+                    (x-3, y+3), (x+3, y-3), 1)
 
+        # Highlight the bottom sand rows specifically
+        tile_h = self.tmx_data.tileheight
+        # Get bottom of map minus 2-4 rows
+        bottom_sand_y1 = self.height - 4 * tile_h
+        bottom_sand_y2 = self.height - 2 * tile_h
+        
+        # Draw rectangles highlighting the area you want to check
+        highlight_rect = pygame.Rect(0,bottom_sand_y1,self.width, 2*tile_h)
+        pygame.draw.rect(surface,(0,255,0, 128),highlight_rect)
+
+        highlight_rect = pygame.Rect(0,bottom_sand_y2,self.width, 2*tile_h)
+        pygame.draw.rect(surface,(0,255,0, 128),highlight_rect)
+        # Draw green lines for bottom sand rows
+        pygame.draw.line(surface,(0,255,0),(0,bottom_sand_y1),(self.width,bottom_sand_y1),2)
+        pygame.draw.line(surface,(0,255,0),(0,bottom_sand_y2),(self.width,bottom_sand_y2),2)
 
 # A more detailed Player class with animations
 class Player(pygame.sprite.Sprite):
@@ -461,7 +491,7 @@ class Player(pygame.sprite.Sprite):
 
             for direction in self.animations:
                 self.animations[direction] = [fallback]
-
+        
         # Animation variables 
         self.direction = 'down'
         self.animation_index = 0
