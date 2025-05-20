@@ -17,7 +17,7 @@ if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 # Import main function from our modular structure
-from src.main import main
+from core.game import Game
 
 # Set debug flag if needed (can be removed or set via command line in the future)
 # import src.debug.debug_tools as debug
@@ -25,4 +25,5 @@ from src.main import main
 
 # Run the game
 if __name__ == '__main__':
-    main()
+    game = Game()
+    game.run()

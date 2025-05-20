@@ -23,21 +23,21 @@ class Food(pygame.sprite.Sprite):
             print(f"Loading food sprite for type: {food_type}, base name: {base_name}")
             
             # Try to find the food image in the expected locations
-            try_paths = [
-                os.path.join(ASSETS_DIR, 'Food', f"{base_name}.png"),
-                os.path.join(ASSETS_DIR, 'Food', base_name, f"{base_name}.png"),
-                os.path.join(ASSETS_DIR, 'food', f"{base_name}.png"),
-                os.path.join(ASSETS_DIR, 'sprites', 'food', f"{base_name}.png")
-            ]
-            
-            # Try each path
             self.image = None
-            for path in try_paths:
-                if os.path.exists(path):
-                    self.image = pygame.image.load(path).convert_alpha()
-                    print(f"Loaded food image from: {path}")
-                    break
-            
+            # Preferred: Look for <BaseName>1.png in assets/Food/<BaseName>/
+            preferred_path = os.path.join(ASSETS_DIR, 'Food', base_name, f"{base_name}1.png")
+            if os.path.exists(preferred_path):
+                self.image = pygame.image.load(preferred_path).convert_alpha()
+                print(f"Loaded food image from: {preferred_path}")
+            else:
+                # Fallback: Use the first .png file found in that folder
+                food_dir = os.path.join(ASSETS_DIR, 'Food', base_name)
+                if os.path.isdir(food_dir):
+                    png_files = [f for f in os.listdir(food_dir) if f.lower().endswith('.png')]
+                    if png_files:
+                        first_png = os.path.join(food_dir, png_files[0])
+                        self.image = pygame.image.load(first_png).convert_alpha()
+                        print(f"Loaded fallback food image from: {first_png}")
             # If image was found, scale it to the appropriate size
             if self.image:
                 self.image = pygame.transform.scale(self.image, (32, 32))  # Scale to appropriate size
