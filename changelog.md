@@ -5,6 +5,24 @@ All notable changes to the Jammin' Eats project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-05-20
+
+### Fixed
+- Resolved Git merge conflicts in TiledMap class implementation
+- Fixed syntax errors with improperly indented methods from merge conflict
+- Fixed variable scope issue with spawn_time causing runtime errors
+- Improved debug mode functionality for better development experience
+
+### Added
+- Enhanced debug mode toggle to support both F12 and D keys for activation
+- Added visual on-screen indicator when debug mode is active
+- Added sound feedback when toggling debug mode 
+- Created a _check_walkability helper method to improve code organization
+
+### Changed
+- Cleaned up duplicate code in debug visualization
+- Improved error handling for customer spawning system
+
 ## [0.3.0] - 2025-05-17
 
 ### Fixed
