@@ -10,6 +10,7 @@ class Customer(pygame.sprite.Sprite):
         
         # Customer types for random selection
         customer_types = [
+            # Ladies
             {
                 'type': 'lady_1',
                 'sprites': {
@@ -19,11 +20,60 @@ class Customer(pygame.sprite.Sprite):
                 }
             },
             {
+                'type': 'lady_2',
+                'sprites': {
+                    'idle': ['lady_2_idle.png'],
+                    'happy': ['lady_2_happy.png'],
+                    'angry': ['lady_2_angry.png']
+                }
+            },
+            {
+                'type': 'lady_3',
+                'sprites': {
+                    'idle': ['lady_3_idle.png'],
+                    'happy': ['lady_3_happy.png'],
+                    'angry': ['lady_3_angry.png']
+                }
+            },
+            {
+                'type': 'lady_4',
+                'sprites': {
+                    'idle': ['lady_4_idle.png'],
+                    'happy': ['lady_4_happy.png'],
+                    'angry': ['lady_4_angry.png']
+                }
+            },
+            # Men
+            {
                 'type': 'man_1',
                 'sprites': {
                     'idle': ['man_1_idle.png'],
                     'happy': ['man_1_happy.png'],
                     'angry': ['man_1_angry.png']
+                }
+            },
+            {
+                'type': 'man_2',
+                'sprites': {
+                    'idle': ['man_2_idle.png'],
+                    'happy': ['man_2_happy.png'],
+                    'angry': ['man_2_angry.png']
+                }
+            },
+            {
+                'type': 'man_3',
+                'sprites': {
+                    'idle': ['man_3_idle.png'],
+                    'happy': ['man_3_happy.png'],
+                    'angry': ['man_3_angry.png']
+                }
+            },
+            {
+                'type': 'man_4',
+                'sprites': {
+                    'idle': ['man_4_idle.png'],
+                    'happy': ['man_4_happy.png'],
+                    'angry': ['man_4_angry.png']
                 }
             }
         ]

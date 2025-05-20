@@ -85,37 +85,67 @@ def get_asset_path(asset_type, asset_name):
             paths.append(os.path.join(base_dir, 'Food', dir_name, f"{dir_name}.png"))
             paths.append(os.path.join(base_dir, 'Food', dir_name, food_name))
     elif asset_type == 'customer':
-        # Customer sprites are in sprites/characters/Customers
-        # Parse the customer type from the asset name
-        if 'lady_1' in asset_name.lower():
-            base_name = 'Customer_Lady_1'
-        elif 'man_1' in asset_name.lower():
-            base_name = 'Customer_Man_1'
-        elif 'kid_1' in asset_name.lower():
-            base_name = 'Customer_Lady_3'  # Using Lady_3 as a placeholder for kids
-        else:
-            # Default to lady_1 if we can't determine the type
-            base_name = 'Customer_Lady_1'
+        # Handle customer sprites with special mapping
+        # Convert from logical states to file naming
         
-        # Parse the state (idle, happy, angry)
-        if 'idle' in asset_name.lower():
-            # For idle, use the regular down-facing sprite
-            state = '_down.png'
-        elif 'happy' in asset_name.lower():
-            # For happy, use the up-facing sprite (smiling)
-            state = '_up.png'
-        elif 'angry' in asset_name.lower():
-            # For angry, use the left or right facing sprite
-            state = '_left.png'
+        # Parse the customer type (e.g., 'lady_1', 'man_3') from asset_name
+        customer_type = None
+        state = None
+        
+        if '_' in asset_name:
+            parts = asset_name.split('_')
+            gender = parts[0].lower()  # 'lady' or 'man'
+            
+            # Check for valid gender type
+            if gender in ['lady', 'man'] and len(parts) >= 2:
+                # Try to get the customer number
+                try:
+                    number = parts[1]
+                    # If it's just a digit, add it to the gender
+                    if number.isdigit():
+                        customer_type = f"{gender}_{number}"
+                    else:
+                        # It might be 'idle', 'happy', 'angry', etc.
+                        customer_type = f"{gender}_1"  # Default to 1
+                        state = parts[1]
+                except (IndexError, ValueError):
+                    customer_type = f"{gender}_1"  # Default to first customer
+            
+            # If we have more parts, it might include the state (idle, happy, angry)
+            if not state and len(parts) >= 3:
+                state = parts[2]
+        
+        # Fallback if we couldn't determine type or state
+        if not customer_type:
+            customer_type = "man_1"  # Default
+        
+        if not state:
+            state = "idle"  # Default
+        
+        # Convert customer type to proper filename format
+        gender, number = customer_type.split('_')
+        base_name = f"Customer_{gender.capitalize()}_{number}"
+        
+        # Map states to directions for the customer sprite images
+        if state == 'idle' or 'idle' in asset_name.lower():
+            direction = 'down'  # For idle, use the regular down-facing sprite
+        elif state == 'happy' or 'happy' in asset_name.lower():
+            direction = 'up'    # For happy, use the up-facing sprite (smiling)
+        elif state == 'angry' or 'angry' in asset_name.lower():
+            direction = 'left'  # For angry, use the left-facing sprite
         else:
-            # Default to down-facing sprite
-            state = '_down.png'
+            direction = 'down'  # Default direction
         
         # Form the complete filename
-        customer_filename = f"{base_name}{state}"
+        customer_filename = f"{base_name}_{direction}.png"
+        
+        print(f"Looking for customer sprite: {customer_filename} (from {asset_name})")
         
         paths = [
             os.path.join(ASSETS_DIR, 'sprites', 'characters', 'Customers', customer_filename),
+            # Try alternate direction if available
+            os.path.join(ASSETS_DIR, 'sprites', 'characters', 'Customers', f"{base_name}_right.png"),
+            # Try the original asset name as fallback
             os.path.join(ASSETS_DIR, 'sprites', 'characters', 'Customers', asset_name),
         ]
     elif asset_type == 'sound':
