@@ -178,23 +178,48 @@ class Customer(pygame.sprite.Sprite):
         # Food preference (randomly selected)
         self.food_preference = random.choice(['pizza', 'smoothie', 'icecream', 'pudding'])
         
-        # Create speech bubble with food preference
+        # Create speech bubble
         self.bubble = pygame.Surface((80, 60), pygame.SRCALPHA)
         pygame.draw.ellipse(self.bubble, (255, 255, 255), (0, 0, 80, 50))
         pygame.draw.polygon(self.bubble, (255, 255, 255), [(10, 50), (30, 50), (20, 60)])
         
-        # Draw food icon in bubble
-        if self.food_preference == 'pizza':
-            pygame.draw.polygon(self.bubble, YELLOW, [(40, 10), (60, 30), (20, 30)])
-        elif self.food_preference == 'smoothie':
-            pygame.draw.rect(self.bubble, (200, 0, 200), (30, 10, 20, 30))
-            pygame.draw.circle(self.bubble, (255, 255, 255), (40, 15), 8)
-        elif self.food_preference == 'icecream':
-            pygame.draw.polygon(self.bubble, (240, 220, 180), [(30, 35), (50, 35), (40, 15)])
-            pygame.draw.circle(self.bubble, (200, 255, 255), (40, 15), 10)
-        elif self.food_preference == 'pudding':
-            pygame.draw.ellipse(self.bubble, (240, 220, 180), (25, 15, 30, 20))
-            pygame.draw.circle(self.bubble, (150, 50, 0), (40, 25), 5)
+        # Load and display actual food sprite in the bubble
+        try:
+            from src.utils.asset_loader import load_image
+            
+            # Map food preferences to their corresponding food types
+            food_base_names = {
+                'pizza': 'Tropical_Pizza_Slice',
+                'smoothie': 'Ska_Smoothie',
+                'icecream': 'Island_Ice_Cream',
+                'pudding': 'Rasta_Rice_Pudding',
+                'rasgulla': 'Reggae_Rasgulla'
+            }
+            
+            # Get the corresponding base name for the food preference
+            base_name = food_base_names.get(self.food_preference, self.food_preference)
+            
+            # Try to load the food image from the correct folder structure
+            # The structure is: assets/Food/[FoodType]/[FoodType]1.png
+            self.food_image = load_image('Food/' + base_name, f"{base_name}1.png")
+            
+            # If that fails, try the base food directory
+            if not self.food_image:
+                self.food_image = load_image('food', f"{base_name}1.png")
+            
+            # If successful, scale and position the food image in the bubble
+            if self.food_image:
+                # Scale the food image to fit nicely in the bubble
+                self.food_image = pygame.transform.scale(self.food_image, (32, 32))
+                # Position in the center of the bubble (slightly higher)
+                self.bubble.blit(self.food_image, (24, 8))
+            else:
+                # Fallback to basic shapes if image loading fails
+                self._draw_fallback_food_icon()
+        except Exception as e:
+            print(f"Error loading food image for bubble: {e}")
+            # Fallback to basic shapes
+            self._draw_fallback_food_icon()
     
     def update(self, dt):
         # Update patience timer if not fed
@@ -243,6 +268,23 @@ class Customer(pygame.sprite.Sprite):
             # Wrong food, get angry but don't leave yet
             self.state = 'angry'
             self.image = self.sprites[self.state]
+    
+    def _draw_fallback_food_icon(self):
+        """Draw a simple shape-based food icon when the sprite can't be loaded"""
+        if self.food_preference == 'pizza':
+            pygame.draw.polygon(self.bubble, (255, 200, 0), [(40, 10), (60, 30), (20, 30)])
+        elif self.food_preference == 'smoothie':
+            pygame.draw.rect(self.bubble, (200, 0, 200), (30, 10, 20, 30))
+            pygame.draw.circle(self.bubble, (255, 255, 255), (40, 15), 8)
+        elif self.food_preference == 'icecream':
+            pygame.draw.polygon(self.bubble, (240, 220, 180), [(30, 35), (50, 35), (40, 15)])
+            pygame.draw.circle(self.bubble, (200, 255, 255), (40, 15), 10)
+        elif self.food_preference == 'pudding':
+            pygame.draw.ellipse(self.bubble, (240, 220, 180), (25, 15, 30, 20))
+            pygame.draw.circle(self.bubble, (150, 50, 0), (40, 25), 5)
+        else:
+            # Generic food icon for unknown types
+            pygame.draw.circle(self.bubble, (150, 150, 150), (40, 25), 15)
     
     def draw(self, surface):
         # Draw the customer sprite

@@ -154,20 +154,16 @@ class Player(pygame.sprite.Sprite):
         # Update animation
         self.update_animation(dt)
         
-        # Check for key presses to throw food
+        # Check for spacebar to throw food (like in the original main.py)
         keys = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks() / 1000.0  # Convert to seconds
         
         # Check throw cooldown
         if current_time - self.last_throw_time >= self.throw_cooldown:
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                self.throw_food(foods, 'up')
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                self.throw_food(foods, 'down')
-            elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                self.throw_food(foods, 'left')
-            elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                self.throw_food(foods, 'right')
+            # Use spacebar to throw food in the current facing direction
+            if keys[pygame.K_SPACE]:
+                # Throw in the direction the player is facing
+                self.throw_food(foods, self.direction)
     
     def handle_movement(self, dt, game_map=None):
         keys = pygame.key.get_pressed()
