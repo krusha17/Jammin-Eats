@@ -5,6 +5,27 @@ All notable changes to the Jammin' Eats project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-05-20
+
+### Added
+- Complete modular architecture with separate components:
+  - Core game engine module
+  - Sprites module (Player, Customer, Food, Particle)
+  - Map handling module
+  - UI components module
+  - Debug tools module
+  - Utility functions module
+- New entry point (`new_main.py`) for the modular version
+- Improved debugging system with on-screen logs
+- Setup.py for proper packaging and installation
+- Comprehensive documentation in README_MODULAR.md
+
+### Changed
+- Organized code into a professional, maintainable structure
+- Improved error handling and fallbacks throughout the codebase
+- Enhanced debug tools with performance logging
+- Kept original main.py for backward compatibility and reference
+
 ## [0.4.0] - 2025-05-20
 
 ### Fixed

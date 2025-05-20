@@ -1,7 +1,7 @@
 # Simple version of the backup script
 Write-Host "Starting backup process..." -ForegroundColor Green
 
-$repoPath = "D:\Jammin eats"
+$repoPath = "C:\Users\jerom\Jammin-Eats"
 $backupBasePath = "D:\Backups"
 
 # Create timestamp and backup directory
