@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import math
 from src.core.constants import *
 
 class Food(pygame.sprite.Sprite):
@@ -121,6 +122,9 @@ class Food(pygame.sprite.Sprite):
         # Lifespan (despawn after a few seconds)
         self.lifespan = 2.0  # seconds
         self.timer = 0
+        
+        # Set up collision radius for more accurate hit detection
+        self.collision_radius = 12  # Smaller than the sprite's visual size for tighter collisions
     
     def update(self, dt):
         # Move the food
@@ -136,6 +140,19 @@ class Food(pygame.sprite.Sprite):
         if (self.rect.right < 0 or self.rect.left > WIDTH or
             self.rect.bottom < 0 or self.rect.top > HEIGHT):
             self.kill()
+            
+    def collides_with(self, other_sprite):
+        """Better collision detection using circular hitboxes instead of rectangles"""
+        # Calculate distance between centers
+        dx = self.rect.centerx - other_sprite.rect.centerx
+        dy = self.rect.centery - other_sprite.rect.centery
+        distance = math.sqrt(dx*dx + dy*dy)
+        
+        # For the other sprite, use a reasonable collision radius if not defined
+        other_radius = getattr(other_sprite, 'collision_radius', 20)  # Default to 20px if not defined
+        
+        # Return True if the distance is less than the sum of the two collision radii
+        return distance < (self.collision_radius + other_radius)
     
     @staticmethod
     def reset_counters():
