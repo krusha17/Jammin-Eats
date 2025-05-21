@@ -17,27 +17,62 @@ class Food(pygame.sprite.Sprite):
             'rasgulla': 'Reggae_Rasgulla'
         }
         
-        # Try to load the food sprite
+        # Maintain a class-level counter for cycling through food sprites
+        if not hasattr(Food, 'cycle_counter'):
+            Food.cycle_counter = {}
+            
+        # Try to load the food sprite with cycling through variants
         try:
             base_name = food_base_names.get(food_type, 'food')
             print(f"Loading food sprite for type: {food_type}, base name: {base_name}")
             
-            # Try to find the food image in the expected locations
+            # Initialize the cycle counter for this food type if it doesn't exist
+            if food_type not in Food.cycle_counter:
+                Food.cycle_counter[food_type] = 1
+            else:
+                # Cycle to the next number (1-5)
+                Food.cycle_counter[food_type] = (Food.cycle_counter[food_type] % 5) + 1
+            
+            # Get the current cycle number for this food type
+            cycle_num = Food.cycle_counter[food_type]
+            
+            # Try to load the corresponding numbered PNG
             self.image = None
-            # Preferred: Look for <BaseName>1.png in assets/Food/<BaseName>/
-            preferred_path = os.path.join(ASSETS_DIR, 'Food', base_name, f"{base_name}1.png")
+            
+            # Handle special cases with different naming patterns
+            special_cases = {
+                'Ska_Smoothie': 'Ska'  # For Ska_Smoothie, the files are just named Ska1.png, etc.
+            }
+            
+            # Check if this food type has a special naming case
+            file_prefix = special_cases.get(base_name, base_name)
+            
+            # First try with the special case name if applicable
+            preferred_path = os.path.join(ASSETS_DIR, 'Food', base_name, f"{file_prefix}{cycle_num}.png")
+            print(f"Trying to load cycle {cycle_num}: {preferred_path}")
+            
             if os.path.exists(preferred_path):
                 self.image = pygame.image.load(preferred_path).convert_alpha()
-                print(f"Loaded food image from: {preferred_path}")
+                print(f"Loaded food image: {file_prefix}{cycle_num}.png")
             else:
-                # Fallback: Use the first .png file found in that folder
+                # Fallback to other numbers and naming patterns if this one doesn't exist
                 food_dir = os.path.join(ASSETS_DIR, 'Food', base_name)
                 if os.path.isdir(food_dir):
-                    png_files = [f for f in os.listdir(food_dir) if f.lower().endswith('.png')]
-                    if png_files:
-                        first_png = os.path.join(food_dir, png_files[0])
-                        self.image = pygame.image.load(first_png).convert_alpha()
-                        print(f"Loaded fallback food image from: {first_png}")
+                    # First try with special case naming
+                    for i in range(1, 6):
+                        alt_path = os.path.join(food_dir, f"{file_prefix}{i}.png")
+                        if os.path.exists(alt_path):
+                            self.image = pygame.image.load(alt_path).convert_alpha()
+                            print(f"Loaded alternate food image: {file_prefix}{i}.png")
+                            break
+                        
+                    # If still not found, try standard naming as a last resort
+                    if not self.image and file_prefix != base_name:
+                        alt_path = os.path.join(food_dir, f"{base_name}{cycle_num}.png")
+                        if os.path.exists(alt_path):
+                            self.image = pygame.image.load(alt_path).convert_alpha()
+                            print(f"Loaded with standard name: {base_name}{cycle_num}.png")
+            
             # If image was found, scale it to the appropriate size
             if self.image:
                 self.image = pygame.transform.scale(self.image, (32, 32))  # Scale to appropriate size
@@ -101,3 +136,8 @@ class Food(pygame.sprite.Sprite):
         if (self.rect.right < 0 or self.rect.left > WIDTH or
             self.rect.bottom < 0 or self.rect.top > HEIGHT):
             self.kill()
+    
+    @staticmethod
+    def reset_counters():
+        """Reset the cycling counters - useful when starting a new game"""
+        Food.cycle_counter = {}
