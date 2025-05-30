@@ -243,7 +243,16 @@ class TiledMap:
 
     def _render_layers(self):
         """Render all tile layers to a single surface"""
-        # Loop through all visible tile layers and render them
+        # First, fill the entire map surface with a solid color
+        # This ensures no transparency shows through if there are any gaps in the tiles
+        # Choose a color that matches your game's theme (typically blue for sky/water, or green for grass)
+        fill_color = (0, 200, 255)  # Light blue background as a fallback
+        self.map_surface.fill(fill_color)
+        
+        # Log the rendering process
+        log("Rendering map layers...")
+        
+        # Loop through all visible tile layers and render them in order (bottom to top)
         for layer in self.tmx_data.visible_layers:
             if hasattr(layer, 'data'):
                 # This is a tile layer
@@ -254,6 +263,9 @@ class TiledMap:
                         pos_x = x * self.tmx_data.tilewidth
                         pos_y = y * self.tmx_data.tileheight
                         self.map_surface.blit(tile, (pos_x, pos_y))
+        
+        # Log completion
+        log("Map rendering complete")
     
     def cache_walkable_areas(self):
         """Pre-compute walkable areas for better performance"""

@@ -24,7 +24,7 @@ from src.debug.logger import log, log_error, log_asset_load
 class Game:
     def __init__(self):
         # Set up the game window
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("Jammin' Eats")
         self.clock = pygame.time.Clock()
         
