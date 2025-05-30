@@ -362,6 +362,7 @@ class Game:
     
     def _render(self, mouse_pos):
         """Render the game frame based on current game state"""
+        self.screen.fill((BLUE))  # Or your preferred fallback color
         if self.game_state == PLAYING:
             # Draw game elements
             if self.game_map:
