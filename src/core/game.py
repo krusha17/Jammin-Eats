@@ -265,7 +265,7 @@ class Game:
                     # Update the screen surface to the new size
                     self.screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                     # Optionally, store new width/height if you use them elsewhere:
-                    WIDTH, HEIGHT = event.size
+                   # WIDTH, HEIGHT = event.size
 
 
                 if event.type == pygame.KEYDOWN:
