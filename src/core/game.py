@@ -261,6 +261,13 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
                 
+                elif event.type == pygame.VIDEORESIZE:
+                    # Update the screen surface to the new size
+                    self.screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                    # Optionally, store new width/height if you use them elsewhere:
+                    WIDTH, HEIGHT = event.size
+
+
                 if event.type == pygame.KEYDOWN:
                     # Toggle debug mode with F12 or D key
                     if event.key == pygame.K_F12 or event.key == pygame.K_d:
