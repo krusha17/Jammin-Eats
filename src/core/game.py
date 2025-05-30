@@ -362,12 +362,22 @@ class Game:
     
     def _render(self, mouse_pos):
         """Render the game frame based on current game state"""
-        self.screen.fill((BLUE))  # Or your preferred fallback color
+        self.screen.fill((BLACK))  # Or your preferred fallback color
         if self.game_state == PLAYING:
             # Draw game elements
             if self.game_map:
                 # Draw the tilemap
-                self.game_map.draw(self.screen)
+                
+                # Get window and map sizes
+                win_width, win_height = self.screen.get_size()
+                map_width, map_height = self.game_map.map_surface.get_size()
+
+                # Calculate top-left position to center the map
+                blit_x = (win_width - map_width) // 2
+                blit_y = (win_height - map_height) // 2
+
+                # Draw the map centered
+                self.screen.blit(self.game_map.map_surface, (blit_x, blit_y))
                 
                 # Draw debug information if debug mode is enabled
                 if self.debug_mode:
