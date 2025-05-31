@@ -1,0 +1,39 @@
+name: Build Game Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pygame pytmx pyinstaller
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        shell: bash
+          
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile --windowed --add-data "assets;assets" --name "Jammin_Eats_${{ github.event.release.tag_name }}" src/main.py
+        shell: bash
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/Jammin_Eats_${{ github.event.release.tag_name }}.exe
+          asset_name: Jammin_Eats_${{ github.event.release.tag_name }}.exe
+          asset_content_type: application/octet-stream
