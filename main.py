@@ -23,7 +23,10 @@ from core.game import Game
 # import src.debug.debug_tools as debug
 # debug.DEBUG_MODE = True
 
-# Run the game
-if __name__ == '__main__':
+def main():
     game = Game()
     game.run()
+
+# Run the game
+if __name__ == '__main__':
+    main()
