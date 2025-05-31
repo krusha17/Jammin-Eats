@@ -297,5 +297,10 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(surface, (100, 100, 100), (10, 70, 150, 15))
         pygame.draw.rect(surface, (255, 50, 50), (10, 70, warning_width, 15))
     
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
+    def draw(self, surface, offset_x=0, offset_y=0):
+        # Calculate the adjusted position with offset
+        draw_x = self.rect.x + offset_x
+        draw_y = self.rect.y + offset_y
+        
+        # Draw at the adjusted position
+        surface.blit(self.image, (draw_x, draw_y))

@@ -31,3 +31,12 @@ class Particle(pygame.sprite.Sprite):
         # Remove when lifetime expires
         if self.timer >= self.lifetime:
             self.kill()
+    
+    def draw(self, surface, offset_x=0, offset_y=0):
+        """Draw the particle with the specified offset"""
+        # Calculate adjusted position with offset
+        draw_x = self.rect.x + offset_x
+        draw_y = self.rect.y + offset_y
+        
+        # Draw at the adjusted position
+        surface.blit(self.image, (draw_x, draw_y))

@@ -286,16 +286,21 @@ class Customer(pygame.sprite.Sprite):
             # Generic food icon for unknown types
             pygame.draw.circle(self.bubble, (150, 150, 150), (40, 25), 15)
     
-    def draw(self, surface):
+    def draw(self, surface, offset_x=0, offset_y=0):
         # Draw the customer sprite
         if not self.leaving or self.leave_timer < 1.0:  # Only draw if still visible
-            surface.blit(self.image, self.rect)
+            # Calculate adjusted position with offset
+            draw_x = self.rect.x + offset_x
+            draw_y = self.rect.y + offset_y
+            
+            # Draw at the adjusted position
+            surface.blit(self.image, (draw_x, draw_y))
             
             # Draw speech bubble if not fed
             if not self.fed and not self.leaving:
-                # Adjust bubble position above the customer's head
-                bubble_x = self.rect.centerx - 40
-                bubble_y = self.rect.top - 70
+                # Adjust bubble position above the customer's head (with offset)
+                bubble_x = self.rect.centerx - 40 + offset_x
+                bubble_y = self.rect.top - 70 + offset_y
                 
                 # Draw patience indicator (change bubble color based on patience)
                 patience_ratio = self.patience_timer / self.patience

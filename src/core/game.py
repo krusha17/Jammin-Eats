@@ -356,18 +356,86 @@ class Game:
             # Update the display
             pygame.display.flip()
         
-        # Clean up
-        pygame.quit()
-        sys.exit()
+        # Update game state
+        if self.game_state == PLAYING:
+            # Update game time
+            self.game_time += dt
+            
+            # Spawn customers at regular intervals
+            self.customer_spawn_timer += dt
+            if self.customer_spawn_timer >= CUSTOMER_SPAWN_RATE:
+                self.spawn_customer()
+                self.customer_spawn_timer = 0
+            
+            # Update game elements
+            self.player.update(dt, self.customers, self.foods, self.game_map)
+            self.customers.update(dt)
+            self.foods.update(dt)
+            
+            # Check for food-customer collisions
+            for food in list(self.foods):
+                for customer in self.customers:
+                    if food.rect.colliderect(customer.rect):
+                        # Check if customer likes this type of food
+                        if customer.food_preference == food.food_type:
+                            # Correct food delivered
+                            self.score += 100
+                            if 'pickup_sound' in self.sounds and self.sounds['pickup_sound']:
+                                self.sounds['pickup_sound'].play()
+                            
+                            # Customer leaves
+                            customer.feed(food.food_type)
+                            self.player.deliveries += 1
+                            
+                            # Create happy particles
+                            for _ in range(15):
+                                particle = Particle(
+                                    customer.rect.centerx,
+                                    customer.rect.centery,
+                                    GREEN,
+                                    size=random.randint(3, 6),
+                                    speed=2,
+                                    lifetime=0.8
+                                )
+                                self.particles.add(particle)
+                                self.all_sprites.add(particle)
+                        
+                        # Remove the food
+                        food.kill()
+            
+            # Update particles
+            self.particles.update(dt)
+            
+            # Update high score
+            self.high_score = max(self.high_score, self.score)
+            
+            # Check game over condition (optional)
+            if self.player.missed_deliveries >= 10:
+                self.game_state = GAME_OVER
+        
+        # Render frame
+        self._render(mouse_pos)
+        
+        # Update the display
+        pygame.display.flip()
     
+        # Check if we should exit
+        if not running:
+            # Clean up
+            pygame.quit()
+            sys.exit()
+
     def _render(self, mouse_pos):
         """Render the game frame based on current game state"""
         self.screen.fill((BLACK))  # Or your preferred fallback color
+        
+        # PLAYING state - draw the game
         if self.game_state == PLAYING:
-            # Draw game elements
+            # Initialize offset variables for centering
+            blit_x, blit_y = 0, 0
+            
+            # Draw the map if available
             if self.game_map:
-                # Draw the tilemap
-                
                 # Get window and map sizes
                 win_width, win_height = self.screen.get_size()
                 map_width, map_height = self.game_map.map_surface.get_size()
@@ -383,21 +451,32 @@ class Game:
                 if self.debug_mode:
                     self.game_map.draw_debug_spawn_points(self.screen, blit_x, blit_y)
                     self.game_map.draw_debug_walkable(self.screen, blit_x, blit_y)
+                
+                # Draw game entities with offset
+                # Draw customers with offset
+                for customer in self.customers:
+                    customer.draw(self.screen, blit_x, blit_y)
+                
+                # Draw player with offset
+                self.player.draw(self.screen, blit_x, blit_y)
+                
+                # Draw foods with offset (individual draws instead of group draw)
+                for food in self.foods:
+                    food.draw(self.screen, blit_x, blit_y)
+                
+                # Draw particles with offset
+                for particle in self.particles:
+                    particle.draw(self.screen, blit_x, blit_y)
             else:
-                # This should not happen with the refactored code
+                # Fallback without offsets if map failed to load
                 self.screen.fill((0, 0, 0))
                 draw_text(self.screen, "Map failed to load!", 48, WIDTH // 2, HEIGHT // 2, RED)
-            
-            # Draw customers
-            for customer in self.customers:
-                customer.draw(self.screen)
-            
-            # Draw player
-            self.player.draw(self.screen)
-            
-            # Draw foods and particles
-            self.foods.draw(self.screen)
-            self.particles.draw(self.screen)
+      
+                for customer in self.customers:
+                    customer.draw(self.screen)
+                self.player.draw(self.screen)
+                self.foods.draw(self.screen)
+                self.particles.draw(self.screen)
             
             # Draw player stats
             self.player.draw_stats(self.screen)
@@ -417,6 +496,7 @@ class Game:
                 debug_text = self.font.render("DEBUG MODE", True, YELLOW)
                 self.screen.blit(debug_text, (WIDTH - 150, 100))
         
+        # MENU state - draw the menu
         elif self.game_state == MENU:
             # Draw menu
             self.screen.blit(self.menu_background, (0, 0))
@@ -432,6 +512,7 @@ class Game:
             # Draw high score
             draw_text(self.screen, f"High Score: {self.high_score}", 36, WIDTH // 2, HEIGHT - 100, WHITE)
         
+        # GAME_OVER state - draw the game over screen
         elif self.game_state == GAME_OVER:
             # Draw game over screen
             self.screen.blit(self.game_over_background, (0, 0))
