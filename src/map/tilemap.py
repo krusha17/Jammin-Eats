@@ -390,43 +390,49 @@ class TiledMap:
         """Draws the map to the specified surface"""
         surface.blit(self.map_surface, (0, 0))
     
-    def draw_debug_spawn_points(self, surface):
+    def draw_debug_spawn_points(self, surface, offset_x=0, offset_y=0):
         """Draw visual indicators for spawn points to help with debugging"""
-        # Loop through all spawn point categories
+        # Loop through all spawn point categ    ories
         for spawn_type, positions in self.spawn_points.items():
             # Make sure spawn_type is a string before calling lower()
             spawn_type_str = str(spawn_type).lower() if spawn_type is not None else ''
-            
-            # Use different colors for different spawn types
-            if 'customer' in spawn_type_str:
-                color = (0, 255, 0)  # Green for customer spawns
-            elif 'player' in spawn_type_str:
-                color = (0, 0, 255)  # Blue for player spawns
-            else:
-                color = (255, 255, 0)  # Yellow for other spawns
-            
-            # Draw each spawn point
-            for pos in positions:
-                pygame.draw.circle(surface, color, pos, 10, 2)  # Outline
-                pygame.draw.circle(surface, color, pos, 2)      # Center dot
-    
-    def draw_debug_walkable(self, surface):
-        """Draw walkable/unwalkable areas for debugging"""
-        # Use a grid approach instead of checking every pixel
-        grid_size = 20  # Check every 20 pixels
-        rect_size = 5   # Size of the indicator squares
         
-        for x in range(0, self.width, grid_size):
-            for y in range(0, self.height, grid_size):
-                if self.is_walkable(x, y):
-                    # Draw green dot for walkable area
-                    pygame.draw.rect(surface, (0, 255, 0, 128), 
-                                   (x - rect_size//2, y - rect_size//2, rect_size, rect_size))
-                else:
-                    # Draw red X for unwalkable area
-                    pygame.draw.line(surface, (255, 0, 0, 192), 
-                                   (x - rect_size//2, y - rect_size//2), 
-                                   (x + rect_size//2, y + rect_size//2), 2)
-                    pygame.draw.line(surface, (255, 0, 0, 192), 
-                                   (x + rect_size//2, y - rect_size//2), 
-                                   (x - rect_size//2, y + rect_size//2), 2)
+        # Use different colors for different spawn types
+        if 'customer' in spawn_type_str:
+            color = (0, 255, 0)  # Green for customer spawns
+        elif 'player' in spawn_type_str:
+            color = (0, 0, 255)  # Blue for player spawns
+        else:
+            color = (255, 255, 0)  # Yellow for other spawns
+        
+        # Draw each spawn point with offset
+        for pos in positions:
+            # Apply offset to position
+            draw_pos = (pos[0] + offset_x, pos[1] + offset_y)
+            pygame.draw.circle(surface, color, draw_pos, 10, 2)  # Outline
+            pygame.draw.circle(surface, color, draw_pos, 2)      # Center dot
+
+def draw_debug_walkable(self, surface, offset_x=0, offset_y=0):
+    """Draw walkable/unwalkable areas for debugging"""
+    # Use a grid approach instead of checking every pixel
+    grid_size = 20  # Check every 20 pixels
+    rect_size = 5   # Size of the indicator squares
+    
+    for x in range(0, self.width, grid_size):
+        for y in range(0, self.height, grid_size):
+            # Apply offset to coordinates
+            draw_x = x + offset_x
+            draw_y = y + offset_y
+            
+            if self.is_walkable(x, y):
+                # Draw green dot for walkable area
+                pygame.draw.rect(surface, (0, 255, 0, 128), 
+                               (draw_x - rect_size//2, draw_y - rect_size//2, rect_size, rect_size))
+            else:
+                # Draw red X for unwalkable area
+                pygame.draw.line(surface, (255, 0, 0, 192), 
+                               (draw_x - rect_size//2, draw_y - rect_size//2), 
+                               (draw_x + rect_size//2, draw_y + rect_size//2), 2)
+                pygame.draw.line(surface, (255, 0, 0, 192), 
+                               (draw_x + rect_size//2, draw_y - rect_size//2), 
+                               (draw_x - rect_size//2, draw_y + rect_size//2), 2)
