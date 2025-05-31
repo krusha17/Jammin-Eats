@@ -1,5 +1,7 @@
 🎮 Jammin' Eats
 
+> 📋 For workflow instructions, see our [GitHub Workflow Cheat Sheet](docs/github_workflow_cheatsheet.md).
+
 A Neon-Retro, Reggae-Cyberpunk Food Delivery Adventure!
 Welcome to Jammin' Eats, a vibrant and exciting 2D top-down game set in a neon-lit futuristic beach city where reggae rhythms blend harmoniously with cyberpunk aesthetics. Inspired by classic arcade games like Paperboy, Jammin' Eats offers immersive gameplay, dynamic animation, and an infectious tropical vibe!
 
