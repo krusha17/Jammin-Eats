@@ -11,12 +11,15 @@ the modular game components from the src directory.
 import os
 import sys
 
-# Make sure the src directory is in the path so we can import modules from it
-src_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src')
+# Ensure src is in sys.path for both normal and PyInstaller builds
+if getattr(sys, 'frozen', False):
+    # If running as a bundled exe
+    src_dir = os.path.join(sys._MEIPASS, 'src')
+else:
+    src_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src')
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-# Import main function from our modular structure
 from core.game import Game
 
 # Set debug flag if needed (can be removed or set via command line in the future)
