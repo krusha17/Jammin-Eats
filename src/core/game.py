@@ -381,8 +381,8 @@ class Game:
                 
                 # Draw debug information if debug mode is enabled
                 if self.debug_mode:
-                    self.game_map.draw_debug_spawn_points(self.screen)
-                    self.game_map.draw_debug_walkable(self.screen)
+                    self.game_map.draw_debug_spawn_points(self.screen, blit_x, blit_y)
+                    self.game_map.draw_debug_walkable(self.screen, blit_x, blit_y)
             else:
                 # This should not happen with the refactored code
                 self.screen.fill((0, 0, 0))
