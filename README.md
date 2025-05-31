@@ -140,6 +140,26 @@ We're excited to collaborate! Feel free to open issues, submit pull requests, or
 
 Stay irie, stay jammin'! 🌴🎵🍍🚚
 
+🔄 **Development Workflow**
+
+We follow a professional branching strategy to ensure code quality and collaboration:
+
+- `main`: Production-ready code only. Stable releases with version tags.
+- `develop`: Integration branch where completed features are combined.
+- `test`: QA branch for testing before merging to main.
+- `feature/<name>`: For developing new features (e.g., `feature/new-enemy-type`).
+- `bugfix/<name>`: For fixing specific bugs.
+- `hotfix/<name>`: For critical fixes to production code.
+
+**Workflow for Contributors:**
+
+1. Create a new feature or bugfix branch from `develop`.
+2. Implement your changes with descriptive commits.
+3. Open a Pull Request to the `develop` branch.
+4. After code review and approval, your code will be merged.
+5. Periodically, `develop` is merged to `test` for QA.
+6. Once tested, changes are merged to `main` and tagged with a version.
+
 We're excited to collaborate! Feel free to open issues, submit pull requests, or suggest ideas. Join us in making Jammin' Eats a truly unforgettable gaming experience!
 
 Stay Jammin'! 🌴🎵🍍🚚
