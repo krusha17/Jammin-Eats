@@ -18,7 +18,7 @@ Jammin-Eats/
 │   ├── utils/
 │   └── ...
 ├── main.py                # (Legacy, monolithic)
-├── new_main.py            # Modular entry point
+├── main.py            # Modular entry point
 ├── requirements.txt       # Python dependencies
 ├── README.md              # Main documentation
 ├── changelog.md           # Project changelog

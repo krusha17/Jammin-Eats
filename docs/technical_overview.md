@@ -15,7 +15,7 @@ This document provides a high-level summary of the Jammin' Eats codebase and arc
 - PyTMX (Tiled map parsing)
 
 ## Entry Point
-- `new_main.py` (modular version)
+- `main.py` (modular version)
 - (Legacy: `main.py`)
 
 ## Asset Loading

@@ -92,8 +92,6 @@ Jammin-Eats/
 │   │   └── sounds.py     # Sound loading and playback
 │   └── main.py          # Entry point for the modular version
 ├── debug_main.py         # Enhanced debugging launcher
-├── main.py               # Original single-file version (legacy)
-├── new_main.py           # Modular version launcher
 ├── README.md
 └── venv/                 # Python virtual environment
 ```
