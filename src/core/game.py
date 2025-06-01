@@ -19,6 +19,7 @@ from src.ui.text import draw_text
 from src.utils.sounds import load_sounds
 from src.debug.debug_tools import toggle_debug_mode
 from src.debug.logger import log, log_error, log_asset_load
+from src.ui.shop import ShopOverlay
 
 # Import new economy, inventory and database systems
 from src.core.economy import Economy, EconomyPhase
@@ -89,6 +90,17 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
         self.customers = pygame.sprite.Group()
         self.foods = pygame.sprite.Group()
+        
+        # Initialize upgrade system
+        from src.core.upgrade_manager import UpgradeManager
+        self.upgrades = UpgradeManager()
+        
+        # Initialize upgrade-affected attributes
+        import src.core.constants as game_constants  # Direct import for easier access
+        self.player_speed_mul = 1.0
+        self.max_stock = MAX_STOCK
+        self.food_lifespan_bonus = 0.0
+        self.patience_multiplier = 1.0
         self.particles = pygame.sprite.Group()
         
         # UI elements
@@ -142,8 +154,9 @@ class Game:
         
         # Auto-save timer is already initialized in __init__
         
-        # Load font
+        # UI elements
         self.font = pygame.font.Font(None, 36)
+        self.small_font = pygame.font.Font(None, 24)
         
         # Create backgrounds
         self.menu_background = self._create_menu_background()
@@ -189,6 +202,11 @@ class Game:
         self.missed_deliveries = 0
         self.game_time = 0
         self.customer_spawn_timer = 0
+        
+        # Do not reset upgrades - these persist between game sessions
+        # But do re-apply their effects
+        if hasattr(self, 'upgrades'):
+            self.apply_upgrade_effects()
         
         # Reset economy if available
         if self.economy is not None:
@@ -306,10 +324,58 @@ class Game:
             log("Created fallback player")
             self.all_sprites.add(self.player)
         
+        # Initialize shop overlay
+        self.shop = ShopOverlay(self)
+        log("Shop overlay initialized")
+        
         # Change game state to playing
         self.game_state = PLAYING
         log("Game reset complete, state changed to PLAYING")
     
+    def apply_upgrade_effects(self):
+        """Apply effects from all owned upgrades to the game"""
+        if not hasattr(self, 'upgrades'):
+            log("[ERROR] No upgrade manager found")
+            return
+            
+        # Reset to base values first
+        self.player_speed_mul = 1.0
+        self.max_stock = MAX_STOCK
+        self.food_lifespan_bonus = 0.0
+        self.patience_multiplier = 1.0
+        
+        # Have the upgrade manager apply all effects
+        mods = self.upgrades.apply_upgrades(self)
+        
+        # Apply to player if it exists
+        if hasattr(self, 'player') and self.player:
+            self.player.speed_multiplier = self.player_speed_mul
+            log(f"Applied speed multiplier of {self.player_speed_mul}x to player")
+        
+        log(f"Applied all upgrade effects: {mods}")
+    
+    def buy_upgrade(self, upgrade_id):
+        """Attempt to purchase an upgrade"""
+        if not hasattr(self, 'upgrades') or not hasattr(self, 'economy'):
+            log("[ERROR] Cannot buy upgrades: missing upgrade manager or economy")
+            return False
+            
+        # Check if the upgrade is affordable
+        money = self.economy.money
+        if not self.upgrades.affordable(upgrade_id, money):
+            return False
+            
+        # Buy the upgrade
+        cost = self.upgrades.buy(upgrade_id, money)
+        if cost > 0:
+            # Deduct money
+            self.economy.money -= cost
+            # Apply upgrade effects
+            self.apply_upgrade_effects()
+            return True
+            
+        return False
+        
     def log_purchase_transaction(self, food_type, amount):
         """Log a food purchase transaction to the database"""
         # Skip if database is not available
@@ -517,20 +583,34 @@ class Game:
             mouse_pos = pygame.mouse.get_pos()
             
             for event in pygame.event.get():
+                # First, check for quit event
                 if event.type == pygame.QUIT:
                     running = False
+                    return
                 
-                elif event.type == pygame.VIDEORESIZE:
+                # If shop is open, let it handle events first
+                if hasattr(self, 'shop') and self.shop.is_open:
+                    if self.shop.handle_event(event):
+                        continue  # Shop handled the event, skip further processing
+                
+                # Handle resize events
+                if event.type == pygame.VIDEORESIZE:
                     # Update the screen surface to the new size
                     self.screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
-                    # Optionally, store new width/height if you use them elsewhere:
-                   # WIDTH, HEIGHT = event.size
 
 
                 if event.type == pygame.KEYDOWN:
                     # Toggle debug mode with F12 or D key
                     if event.key == pygame.K_F12 or event.key == pygame.K_d:
                         self.debug_mode = toggle_debug_mode(self.debug_mode, self.sounds)
+                    
+                    # Toggle shop with B key (only in PLAYING state)
+                    if event.key == pygame.K_b and self.game_state == PLAYING:
+                        if hasattr(self, 'shop'):
+                            self.shop.toggle()
+                            # Play menu sound if available
+                            if self.sounds and 'menu_select' in self.sounds:
+                                self.sounds['menu_select'].play()
                     
                     # Food selection with number keys (1-4)
                     if self.game_state == PLAYING and self.inventory is not None:
@@ -1004,3 +1084,7 @@ class Game:
             # Update and draw restart button
             self.restart_button.update(mouse_pos)
             self.restart_button.draw(self.screen)
+            
+        # Draw shop overlay if it's open (on top of everything else)
+        if hasattr(self, 'shop') and self.shop.is_open:
+            self.shop.draw(self.screen)

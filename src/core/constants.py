@@ -74,3 +74,16 @@ MAX_MISSED_DELIVERIES = 3      # Game-over after this many
 
 # ---------------- Game economy defaults ----------------
 STARTING_MONEY = 0             # Starting cash for each new game
+
+# ---------------- Upgrade system ----------------
+UPGRADE_DATA = {
+    "UP_SKATE": {"cost": 150, "mod": {"speed_mul": 1.25}, "name": "Skateboard", "desc": "+25% player speed"},
+    "UP_BLADE": {"cost": 200, "mod": {"speed_mul": 1.25}, "requires": ["UP_SKATE"], "name": "Rollerblades", "desc": "+25% player speed (stacks)"},
+    "UP_JETS": {"cost": 350, "mod": {"speed_mul": 1.5}, "requires": ["UP_BLADE"], "name": "Jet-powered Skates", "desc": "+50% player speed (stacks)"},
+    "UP_FOODTRUCK": {"cost": 200, "mod": {"max_stock": 2}, "requires": ["UP_JETS"], "name": "Food Truck", "desc": "+2 inventory capacity"},
+    "UP_TRUCK": {"cost": 300, "mod": {"max_stock": 5}, "requires": ["UP_FOODTRUCK"], "name": "Food-truck Rooftop Table", "desc": "+5 inventory capacity"},
+    "UP_FRIDGE": {"cost": 450, "mod": {"max_stock": 5}, "requires": ["UP_TRUCK"], "name": "Refrigerated Storage", "desc": "+5 inventory capacity"},
+    "UP_FREEZE": {"cost": 600, "mod": {"max_stock": 10}, "requires": ["UP_FRIDGE"], "name": "Industrial Freezer", "desc": "+10 inventory capacity"},
+    "UP_BAG": {"cost": 200, "mod": {"food_lifespan": 2.0}, "name": "Insulated Delivery Bag", "desc": "+2s food lifespan"},
+    "UP_CART": {"cost": 250, "mod": {"patience_mul": 0.75}, "name": "Serving Cart", "desc": "-25% customer patience decay"}
+}

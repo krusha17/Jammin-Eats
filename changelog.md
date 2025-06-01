@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.0-alpha] - 2025-05-31
+
+### Added
+- Progression and upgrade system for player improvements
+- Upgrade shop UI with item catalog
+- Player stat modifier system (speed, inventory capacity)
+- Economic balance for progression pacing
+- Persistent upgrade tracking
+
 ## [0.7.0] - 2025-05-31
 
 ### Added
