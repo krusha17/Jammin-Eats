@@ -1,5 +1,37 @@
 🎮 Jammin' Eats
 
+## Tutorial Mode
+
+Jammin' Eats features a special **Tutorial Mode** designed to help new players learn the game mechanics in a forgiving environment. Here’s how Tutorial Mode works:
+
+### Mechanics in Tutorial Mode
+- **No Penalties for Wrong Food:**
+  - Giving a customer the wrong food will not increase the "Wrong Food" counter or result in a game over.
+  - Customers may still react (e.g., appear angry), but you are free to experiment without failing.
+- **Timer Behavior:**
+  - The in-game timer is still visible and counts up, but there is no time pressure or penalty for slow play.
+- **Economy and Purchases:**
+  - All food is free during the tutorial phase. You cannot run out of money.
+- **Objective:**
+  - The goal is to practice the core game loop and get comfortable with controls and delivery mechanics.
+
+### How to Enable/Disable Tutorial Mode
+- Tutorial Mode is controlled by the `TUTORIAL_MODE` constant in `src/core/constants.py`.
+- To enable Tutorial Mode, set:
+  ```python
+  TUTORIAL_MODE = True
+  ```
+- To disable Tutorial Mode and play the full game with penalties and normal economy, set:
+  ```python
+  TUTORIAL_MODE = False
+  ```
+
+### Why Use Tutorial Mode?
+- Tutorial Mode is ideal for onboarding new players or for testing the game without risk of failure.
+- It allows experimentation and learning before progressing to the full challenge.
+
+---
+
 A Neon-Retro, Reggae-Cyberpunk Food Delivery Adventure!
 Welcome to Jammin' Eats, a vibrant and exciting 2D top-down game set in a neon-lit futuristic beach city where reggae rhythms blend harmoniously with cyberpunk aesthetics. Inspired by classic arcade games like Paperboy, Jammin' Eats offers immersive gameplay, dynamic animation, and an infectious tropical vibe!
 
