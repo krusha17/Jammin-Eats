@@ -759,10 +759,35 @@ class Game:
         
         # MENU state - draw the menu
         elif self.game_state == MENU:
-            # Draw menu
-            self.screen.blit(self.menu_background, (0, 0))
-            draw_text(self.screen, "JAMMIN' EATS", 72, WIDTH // 2, HEIGHT // 4, YELLOW)
-            draw_text(self.screen, "Deliver tasty food to hungry customers!", 36, WIDTH // 2, WIDTH // 3, WHITE)
+            # Get current window size
+            w, h = self.screen.get_size()
+            
+            # Create dynamic menu background based on current window size
+            menu_bg = pygame.Surface((w, h))
+            
+            # Create a gradient background
+            for y in range(h):
+                color_value = int(255 * (1 - y / h))
+                color = (0, color_value // 2, color_value)
+                pygame.draw.line(menu_bg, color, (0, y), (w, y))
+            
+            # Add some decorative elements
+            for _ in range(50):
+                x = random.randint(0, w)
+                y = random.randint(0, h)
+                size = random.randint(1, 3)
+                pygame.draw.circle(menu_bg, (255, 255, 255), (x, y), size)
+                
+            # Draw the dynamically created background
+            self.screen.blit(menu_bg, (0, 0))
+            
+            # Center UI elements based on current window size
+            draw_text(self.screen, "JAMMIN' EATS", 72, w // 2, h // 4, YELLOW)
+            draw_text(self.screen, "Deliver tasty food to hungry customers!", 36, w // 2, h // 3, WHITE)
+            
+            # Reposition buttons
+            self.start_button.rect.center = (w // 2, h // 2)
+            self.exit_button.rect.center = (w // 2, h // 2 + 70)
             
             # Update and draw buttons
             self.start_button.update(mouse_pos)
