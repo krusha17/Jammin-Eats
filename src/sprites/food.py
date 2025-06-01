@@ -30,7 +30,19 @@ class Food(pygame.sprite.Sprite):
             # Initialize the cycle counter for this food type if it doesn't exist
             if food_type not in Food.cycle_counter:
                 Food.cycle_counter[food_type] = 1
-            else:
+            
+            # Only change the cycle counter every 5th time a food is created
+            if not hasattr(Food, 'throw_counter'):
+                Food.throw_counter = {}
+            
+            if food_type not in Food.throw_counter:
+                Food.throw_counter[food_type] = 0
+                
+            # Increment throw counter
+            Food.throw_counter[food_type] = (Food.throw_counter[food_type] + 1) % 5
+            
+            # Only cycle animation when throw counter hits 0
+            if Food.throw_counter[food_type] == 0:
                 # Cycle to the next number (1-5)
                 Food.cycle_counter[food_type] = (Food.cycle_counter[food_type] % 5) + 1
             
@@ -108,8 +120,34 @@ class Food(pygame.sprite.Sprite):
                 color = (255, 0, 0)  # Default red
                 pygame.draw.circle(self.image, color, (16, 16), 16)
         
+        # List to hold animation frames for this food instance
+        self.frames = []
+        # Track current animation frame index
+        self.current_frame = 0
+        # Track timer for determining animation progression
+        self.frame_timer = 0.0
+        
+        # Attempt to load up to 5 numbered frames for smooth animation
+        base_dir = os.path.join(ASSETS_DIR, 'Food', base_name)
+        if os.path.isdir(base_dir):
+            for i in range(1, 6):
+                frame_path = os.path.join(base_dir, f"{file_prefix}{i}.png")
+                if os.path.exists(frame_path):
+                    frame_surf = pygame.image.load(frame_path).convert_alpha()
+                    frame_surf = pygame.transform.scale(frame_surf, (32, 32))
+                    self.frames.append(frame_surf)
+        # If no specific frames found, fall back to repeating the primary image
+        if not self.frames:
+            self.frames = [self.image] * 5
+        
+        # Ensure current image matches first frame
+        self.image = self.frames[0]
+        
         # Set up the food rectangle
         self.rect = self.image.get_rect(center=(x, y))
+        
+        # Store starting position to gauge travel progress (for animation pacing)
+        self.start_pos = pygame.math.Vector2(x, y)
         
         # Velocity components (in pixels per frame)
         self.direction = pygame.math.Vector2(dx, dy)
@@ -140,7 +178,17 @@ class Food(pygame.sprite.Sprite):
         if (self.rect.right < 0 or self.rect.left > WIDTH or
             self.rect.bottom < 0 or self.rect.top > HEIGHT):
             self.kill()
-            
+        
+        # Determine animation frame based on progress towards lifespan
+        if len(self.frames) > 1:
+            progress_ratio = min(self.timer / self.lifespan, 1.0)
+            target_index = int(progress_ratio * (len(self.frames) - 1))
+            if target_index != self.current_frame:
+                self.current_frame = target_index
+                current_center = self.rect.center  # preserve position when image size differs
+                self.image = self.frames[self.current_frame]
+                self.rect = self.image.get_rect(center=current_center)
+    
     def collides_with(self, other_sprite):
         """Better collision detection using circular hitboxes instead of rectangles"""
         # Calculate distance between centers

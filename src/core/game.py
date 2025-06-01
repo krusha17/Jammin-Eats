@@ -255,14 +255,16 @@ class Game:
         log("Creating player...")
         try:
             self.player = Player(WIDTH // 2, HEIGHT // 2)
+            # Set reference to game object so player can access inventory
+            self.player.game = self
             self.all_sprites.add(self.player)
             log("Player created successfully")
         except Exception as e:
             log_error("Error creating player", e)
             # Create a simplified player object if regular creation fails
-            # This is a minimal implementation to prevent crashes
             from src.sprites.player import create_fallback_player
             self.player = create_fallback_player(WIDTH // 2, HEIGHT // 2)
+            self.player.game = self  # Even fallback player needs game reference
             log("Created fallback player")
             self.all_sprites.add(self.player)
         
@@ -509,26 +511,31 @@ class Game:
                                 # Play a selection sound if available
                                 if 'select_sound' in self.sounds and self.sounds['select_sound']:
                                     self.sounds['select_sound'].play()
-                                    # Restock selected food with R key
-                                    if event.key == pygame.K_r and self.game_state == PLAYING and self.inventory is not None and self.economy is not None:
-                                        # Mapping of display names to economy short names
-                                        short_map = {
-                                            'Tropical Pizza Slice': 'pizza',
-                                            'Ska Smoothie': 'smoothie',
-                                            'Island Ice Cream': 'icecream',
-                                            'Rasta Rice Pudding': 'pudding'
-                                        }
-                                        short_name = short_map.get(self.selected_food)
-                                        if short_name and self.economy.can_afford_food(short_name, 1):
-                                            price = self.economy.get_food_price(short_name, 'buy')
-                                            if self.economy.purchase_food(short_name, 1):
-                                                self.inventory.add(self.selected_food, 1)
-                                                self.log_purchase_transaction(self.selected_food, price)
-                                                if 'restock_sound' in self.sounds and self.sounds['restock_sound']:
-                                                    self.sounds['restock_sound'].play()
-                                        else:
-                                            if self.debug_mode:
-                                                print(f"[INVENTORY] Cannot restock {self.selected_food} - insufficient funds")
+                                print(f"[DEBUG] Selected food: {self.selected_food}")
+                        
+                        # Restock selected food with R key
+                        if event.key == pygame.K_r:
+                            # Mapping of display names to economy short names
+                            short_map = {
+                                'Tropical Pizza Slice': 'pizza',
+                                'Ska Smoothie': 'smoothie',
+                                'Island Ice Cream': 'icecream',
+                                'Rasta Rice Pudding': 'pudding'
+                            }
+                            short_name = short_map.get(self.selected_food)
+                            
+                            if short_name and self.economy and self.economy.can_afford_food(short_name, 1):
+                                price = self.economy.get_food_price(short_name, 'buy')
+                                if self.economy.purchase_food(short_name, 1):
+                                    self.inventory.add(self.selected_food, 1)
+                                    if self.game_database:
+                                        self.log_purchase_transaction(self.selected_food, price)
+                                    print(f"[DEBUG] Restocked 1 {self.selected_food} for ${price}")
+                                    if 'restock_sound' in self.sounds and self.sounds['restock_sound']:
+                                        self.sounds['restock_sound'].play()
+                            else:
+                                if self.debug_mode:
+                                    print(f"[INVENTORY] Cannot restock {self.selected_food} - insufficient funds")
                 
                 # Handle button clicks
                 if self.game_state == MENU:
@@ -795,14 +802,8 @@ class Game:
                 phase_text = self.font.render(f"Phase: {phase_name}", True, YELLOW)
                 self.screen.blit(phase_text, (20, 60))
             
-            # Display inventory information if available
+            # Inventory information is now only displayed at the bottom of the screen
             if self.inventory is not None and hasattr(self, 'selected_food') and self.selected_food:
-                # Current selected food and its quantity
-                inventory_text = self.font.render(
-                    f"Selected: {self.selected_food} (Stock: {self.inventory.qty(self.selected_food)})", 
-                    True, WHITE)
-                self.screen.blit(inventory_text, (20, 100))
-                
                 # Show full inventory status at the bottom of the screen
                 y_position = HEIGHT - 120
                 self.screen.blit(self.font.render("INVENTORY:", True, WHITE), (20, y_position))

@@ -147,9 +147,15 @@ class Player(pygame.sprite.Sprite):
                 # Use spacebar to throw food in the current facing direction
                 if keys[pygame.K_SPACE]:
                     # Throw in the direction the player is facing
-                    # Pass the game object from the player's current context if available
+                    # Ensure we have a reference to the game object
                     game_obj = getattr(self, 'game', None)
-                    self.throw_food(foods, self.direction, game_obj)
+                    if game_obj is None:
+                        print("[WARNING] Player has no reference to game object! Food selection and inventory won't work.")
+                    result = self.throw_food(foods, self.direction, game_obj)
+                    if result:
+                        print("[DEBUG] Food was thrown successfully")
+                    else:
+                        print("[DEBUG] Food throw failed - possibly out of stock or inventory issues")
         except Exception as e:
             print(f"[ERROR] Player.update error: {str(e)}")  # Log errors instead of crashing
 
@@ -263,6 +269,10 @@ class Player(pygame.sprite.Sprite):
         # Get selected food from inventory if available
         food_type = 'pizza'  # Default fallback
         
+        # Try to get game reference from self if not provided
+        if game is None and hasattr(self, 'game'):
+            game = self.game
+        
         if game and hasattr(game, 'inventory') and game.inventory is not None and hasattr(game, 'selected_food'):
             selected_food = game.selected_food
             
@@ -277,7 +287,8 @@ class Player(pygame.sprite.Sprite):
             # Check if the selected food is in stock
             if game.inventory.in_stock(selected_food):
                 # Consume one unit from inventory
-                if game.inventory.consume(selected_food):
+                consumed = game.inventory.consume(selected_food)
+                if consumed:
                     food_type = food_name_mapping.get(selected_food, "pizza")
                     
                     # Create the food object
@@ -305,17 +316,21 @@ class Player(pygame.sprite.Sprite):
                 if hasattr(game, 'debug_mode') and game.debug_mode:
                     print(f"[INVENTORY] Out of stock: {selected_food}")
         else:
-            # Legacy fallback behavior if inventory system isn't active
-            # This ensures backward compatibility with the original game design
-            food_choices = ['pizza', 'smoothie', 'icecream', 'pudding']
-            food_type = food_choices[pygame.time.get_ticks() % len(food_choices)]
-            
-            food = Food(self.rect.centerx, self.rect.centery, dx, dy, food_type)
-            foods.add(food)
-            
-            # Update throw cooldown
-            self.last_throw_time = pygame.time.get_ticks() / 1000.0
-            return True
+            # Only use fallback if truly necessary - the inventory system is not available
+            if not game or not hasattr(game, 'inventory') or game.inventory is None:
+                # Legacy fallback behavior if inventory system isn't active
+                food_choices = ['pizza', 'smoothie', 'icecream', 'pudding']
+                food_type = food_choices[pygame.time.get_ticks() % len(food_choices)]
+                
+                food = Food(self.rect.centerx, self.rect.centery, dx, dy, food_type)
+                foods.add(food)
+                
+                # Update throw cooldown
+                self.last_throw_time = pygame.time.get_ticks() / 1000.0
+                return True
+            else:
+                # Inventory system exists but we don't have selected food or it's out of stock
+                return False
         
         return False
 
