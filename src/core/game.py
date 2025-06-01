@@ -28,6 +28,9 @@ from src.core.inventory import Inventory
 # Import the new persistence layer
 from src.persistence.game_persistence import GamePersistence
 
+# Import game states and tutorial flag checker
+from src.states import TitleState, TutorialState
+from src.persistence.dal import is_tutorial_complete
 
 class Game:
     def __init__(self, screen_width=WIDTH, screen_height=HEIGHT):
@@ -130,6 +133,12 @@ class Game:
         
         # Initialize upgrade shop overlay
         self.shop = ShopOverlay(self)
+        
+        # Setup tutorial flow
+        if not is_tutorial_complete(self.persistence.player_id):
+            self.tutorial_state = TutorialState(self)
+        else:
+            self.tutorial_state = None
         
         # Database initialization is now handled by the persistence layer
         # self.persistence is initialized above
@@ -449,16 +458,52 @@ class Game:
 
 
     def run(self):
-        """Main game loop"""
         running = True
+        # Tutorial Phase
+        if self.tutorial_state:
+            state = self.tutorial_state
+            state.enter()
+            while running:
+                dt = self.clock.tick(FPS) / 1000.0
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        return
+                    if state.handle_event(event):
+                        if state.next_state:
+                            state.exit()
+                            state = state.next_state
+                            state.enter()
+                        continue
+                state.update(dt)
+                state.draw(self.screen)
+                pygame.display.flip()
+                # After overlay, break when heading to TitleState
+                from src.states.tutorial_complete_state import TutorialCompleteState
+                if isinstance(state, TitleState):
+                    break
+
+        # Title Phase
+        title_state = TitleState(self)
+        title_state.enter()
+        while running and self.game_state != PLAYING:
+            dt = self.clock.tick(FPS) / 1000.0
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
+                if title_state.handle_event(event):
+                    if self.game_state == PLAYING:
+                        break
+            title_state.update(dt)
+            title_state.draw(self.screen)
+            pygame.display.flip()
+
+        # Gameplay Phase (existing logic)
         while running:
             dt = self.clock.tick(FPS) / 1000.0
             mouse_pos = pygame.mouse.get_pos()
             for event in pygame.event.get():
-                # Let shop overlay handle events first
                 if hasattr(self, 'shop') and self.shop.handle_event(event):
                     continue
-                # Toggle shop on B key
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
                     self.shop.toggle()
                     continue

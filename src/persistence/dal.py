@@ -415,3 +415,43 @@ def check_database_health():
     except sqlite3.Error as e:
         log_error(f"Database health check failed: {e}")
         return False, str(e)
+
+
+# ---------- Tutorial Status Functions ----------
+
+def is_tutorial_complete(player_id=1):
+    """Check if the tutorial has been completed for the player."""
+    try:
+        with get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT tutorial_complete FROM player_profile WHERE player_id = ?",
+                (player_id,)
+            )
+            row = cursor.fetchone()
+            # Convert to boolean (0 = False, 1 = True)
+            return bool(row and row['tutorial_complete'])
+    except sqlite3.Error as e:
+        log_error(f"Failed to check tutorial status: {e}")
+        return False  # Default to tutorial not being completed
+
+
+def mark_tutorial_complete(player_id=1):
+    """Mark the tutorial as completed for the player."""
+    try:
+        with get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE player_profile SET tutorial_complete = 1 WHERE player_id = ?",
+                (player_id,)
+            )
+            conn.commit()
+            # Update constant to reflect the tutorial is complete
+            global TUTORIAL_MODE  # Global declaration must come before import and assignment
+            from src.core.constants import TUTORIAL_MODE
+            TUTORIAL_MODE = False
+            log(f"Tutorial marked as complete for player {player_id}")
+            return True
+    except sqlite3.Error as e:
+        log_error(f"Failed to mark tutorial as complete: {e}")
+        return False
