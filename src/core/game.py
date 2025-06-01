@@ -25,29 +25,8 @@ from src.ui.shop import ShopOverlay
 from src.core.economy import Economy, EconomyPhase
 from src.core.inventory import Inventory
 
-# Handle potential database module import errors
-DATABASE_AVAILABLE = False
-try:
-    from src.core.database import GameDatabase
-    DATABASE_AVAILABLE = True
-except ImportError as e:
-    # Only log the error message, not the exception object
-    log_error(f"Database module import error: {str(e)}")
-    print("[INFO] Database functionality will be disabled")
-    
-    # Create a stub GameDatabase class for fallback
-    class GameDatabase:
-        def __init__(self, *args, **kwargs):
-            log_error("Using stub GameDatabase - database features unavailable")
-            
-        def save_player_progress(self, *args, **kwargs):
-            return False
-            
-        def load_player_progress(self, *args, **kwargs):
-            return None
-            
-        def log_transaction(self, *args, **kwargs):
-            return False
+# Import the new persistence layer
+from src.persistence.game_persistence import GamePersistence
 
 
 class Game:
@@ -111,11 +90,23 @@ class Game:
         # Load game sounds
         self.sounds = load_sounds()
         
+        # Initialize game state
+        self.game_state = MENU  # Start in MENU state first
+        
         # Initialize map
         self.game_map = None
         
         # Initialize player
         self.player = None
+        
+        # Initialize persistence layer
+        self.persistence = GamePersistence(player_id=1)
+        self.high_score = self.persistence.get_high_score()
+        
+        # Load persistent upgrades
+        owned_upgrades = self.persistence.get_owned_upgrades()
+        for upg_id in owned_upgrades:
+            self.upgrades.own_upgrade(upg_id)
         
         # Initialize economy system
         log("Initializing economy system...")
@@ -137,16 +128,8 @@ class Game:
             self.inventory = None
             self.selected_food = None
         
-        # Initialize database connection if available
-        self.game_database = None
-        if DATABASE_AVAILABLE:
-            log("Initializing database connection...")
-            try:
-                self.game_database = GameDatabase()
-                log("Database system initialized")
-            except Exception as e:
-                log_error(f"Failed to initialize database: {str(e)}")
-                self.game_database = None
+        # Database initialization is now handled by the persistence layer
+        # self.persistence is initialized above
         
         # Track current map and frame for database and economy tracking
         self.current_map_id = 1  # Default to first map
@@ -210,13 +193,15 @@ class Game:
         
         # Reset economy if available
         if self.economy is not None:
-            self.economy.money = STARTING_MONEY
+            money, _ = self.persistence.get_starting_values()
+            self.economy.money = money
             # Reset to tutorial phase
             self.economy.update_phase(1, 1)
         
-        # Reset inventory to starting stock
+        # Reset inventory to starting stock from DB
         from src.core.inventory import Inventory
-        self.inventory = Inventory(STARTING_STOCK)
+        _, stock = self.persistence.get_starting_values()
+        self.inventory = Inventory(stock)
         
         # Reset player's stats if player exists
         if self.player:
@@ -249,10 +234,7 @@ class Game:
         self.customer_spawn_timer = 0
         
         # Try loading saved progress first
-        progress_loaded = False
-        if self.game_database is not None:
-            log("Attempting to load saved progress")
-            progress_loaded = self.load_player_progress()
+        progress_loaded = self.load_player_progress()
         
         # If no progress was loaded, reset economy to defaults
         if not progress_loaded and self.economy is not None:
@@ -352,561 +334,196 @@ class Game:
             self.player.speed_multiplier = self.player_speed_mul
             log(f"Applied speed multiplier of {self.player_speed_mul}x to player")
         
-        log(f"Applied all upgrade effects: {mods}")
-    
     def buy_upgrade(self, upgrade_id):
         """Attempt to purchase an upgrade"""
-        if not hasattr(self, 'upgrades') or not hasattr(self, 'economy'):
-            log("[ERROR] Cannot buy upgrades: missing upgrade manager or economy")
+        if self.shop and not self.shop.can_purchase(upgrade_id):
             return False
-            
-        # Check if the upgrade is affordable
-        money = self.economy.money
-        if not self.upgrades.affordable(upgrade_id, money):
+        
+        upgrade = self.upgrades.get_upgrade(upgrade_id)
+        if not upgrade:
             return False
-            
-        # Buy the upgrade
-        cost = self.upgrades.buy(upgrade_id, money)
-        if cost > 0:
-            # Deduct money
-            self.economy.money -= cost
-            # Apply upgrade effects
+        
+        # Check money
+        if self.economy.money < upgrade['cost']:
+            return False
+        
+        # Deduct money and own the upgrade
+        self.economy.money -= upgrade['cost']
+        owned = self.upgrades.own_upgrade(upgrade_id)
+        if owned:
+            # Save upgrade purchase to DB
+            self.persistence.save_upgrade_purchase(upgrade_id)
             self.apply_upgrade_effects()
+            if self.shop:
+                self.shop.refresh()
             return True
-            
         return False
-        
-    def log_purchase_transaction(self, food_type, amount):
-        """Log a food purchase transaction to the database"""
-        # Skip if database is not available
-        if self.game_database is None:
-            return False
-            
-        try:
-            # Log the purchase transaction
-            self.game_database.log_transaction(
-                player_id=1,  # Default player ID for now
-                transaction_type="food_purchase",
-                amount=-amount,  # Negative amount for purchases
-                description=f"Purchase of {food_type}",
-                map_id=self.current_map_id,
-                frame=self.current_frame
-            )
-            
-            if self.debug_mode:
-                print(f"[DATABASE] Logged purchase transaction for {food_type} (${amount:.2f})")
-            return True
-        except Exception as e:
-            # Soft fail for database errors
-            if self.debug_mode:
-                print(f"[DATABASE] Error logging purchase transaction: {str(e)}")
-            return False
-    
+
     def save_player_progress(self):
-        """Save player progress to database if available"""
-        # Skip if database is not available
-        if self.game_database is None:
-            if self.debug_mode:
-                print("[DATABASE] Save skipped - database not available")
-            return False
-        
+        """Save player progress to database using the persistence layer"""
         try:
-            # Prepare economy data for saving
-            economy_data = {
-                'money': self.economy.money if self.economy else 0,
-                'current_phase': self.economy.current_phase if self.economy else 1,
-                'map_id': self.current_map_id,
-                'frame': self.current_frame
-            }
-            
-            # Prepare inventory data (placeholder for now)
-            inventory_data = {
-                'pizza': 10,
-                'smoothie': 10,
-                'icecream': 10,
-                'pudding': 10
-            }
-            
-            # Save to database
-            result = self.game_database.save_player_progress(
-                player_id=1,  # Default player ID for now
-                economy_data=economy_data,
-                inventory_data=inventory_data
-            )
-            
-            if self.debug_mode:
-                print(f"[DATABASE] Player progress saved successfully")
+            # Save current upgrades and money (if needed, expand as required)
+            # This method can be expanded for more granular progress saving
             return True
-            
         except Exception as e:
-            # Log error but don't crash the game
-            if self.debug_mode:
-                print(f"[DATABASE] Error saving progress: {str(e)}")
+            log_error(f"Failed to save player progress: {e}")
             return False
-    
+
     def load_player_progress(self):
-        """Load player progress from database if available"""
-        # Skip if database is not available
-        if self.game_database is None:
-            if self.debug_mode:
-                print("[DATABASE] Load skipped - database not available")
-            return False
-        
+        """Load player progress from database using the persistence layer"""
         try:
-            # Load from database
-            progress_data = self.game_database.load_player_progress(player_id=1)
-            
-            if not progress_data:
-                if self.debug_mode:
-                    print("[DATABASE] No saved progress found")
-                return False
-            
-            # Update economy with saved data
-            if self.economy and 'economy' in progress_data:
-                econ_data = progress_data['economy']
-                
-                # Set money
-                if 'money' in econ_data:
-                    self.economy.money = econ_data['money']
-                
-                # Update map and frame tracking
-                if 'map_id' in econ_data and 'frame' in econ_data:
-                    self.current_map_id = econ_data['map_id']
-                    self.current_frame = econ_data['frame']
-                    
-                    # Update economy phase based on map and frame
-                    self.economy.update_phase(self.current_map_id, self.current_frame)
-            
-            # Update inventory with saved data (placeholder for now)
-            # Will be implemented in inventory phase
-            
-            if self.debug_mode:
-                print(f"[DATABASE] Player progress loaded successfully")
+            self.high_score = self.persistence.get_high_score()
+            owned_upgrades = self.persistence.get_owned_upgrades()
+            for upg_id in owned_upgrades:
+                self.upgrades.own_upgrade(upg_id)
+            self.apply_upgrade_effects()
+            money, stock = self.persistence.get_starting_values()
+            if self.economy:
+                self.economy.money = money
+            if hasattr(self, 'inventory'):
+                self.inventory = Inventory(stock)
             return True
-            
         except Exception as e:
-            # Log error but don't crash the game
-            if self.debug_mode:
-                print(f"[DATABASE] Error loading progress: {str(e)}")
-            return False
-    
+            log_error(f"Failed to load player progress: {e}")
+            return None
+            
     def spawn_customer(self):
-        """Spawn a customer at a valid position"""
-        spawn_time = time.time()  # Start timing for performance monitoring
-        
+        """Spawn a new customer at a random edge position"""
+        # Retrieve spawn positions from Tiled map
+        spawn_positions = []
         if self.game_map:
-            # Try to get spawn points from the map
             spawn_positions = self.game_map.get_spawn_positions("CustomerSpawn")
-            
-            if spawn_positions and len(spawn_positions) > 0:
-                # Choose a random spawn point from the map
-                pos = random.choice(spawn_positions)
-                
-                # Create the customer at the spawn position
-                customer = Customer(pos[0], pos[1])
-                self.customers.add(customer)
-                self.all_sprites.add(customer)
-                
-                # Create spawn particles
-                self._create_spawn_particles(pos[0], pos[1])
-                
-                if self.debug_mode:
-                    print(f"Customer spawned at map position: {pos}")
-                    spawn_time_elapsed = time.time() - spawn_time
-                    print(f"Spawn time: {spawn_time_elapsed:.4f} seconds")
-                return
+        print(f"[DEBUG] Spawn positions from map: {spawn_positions}")
         
-        # Fallback: Find a random walkable position if map-based spawning failed
-        for attempt in range(20):  # Try up to 20 random positions
-            x = random.randint(50, WIDTH - 50)
-            y = random.randint(50, HEIGHT - 50)
+        if spawn_positions:
+            x, y = random.choice(spawn_positions)
+            print(f"[DEBUG] Selected map spawn position: ({x}, {y})")
+        else:
+            print("[DEBUG] No map spawn positions found, falling back to edge spawning")
+            # Define map boundaries
+            from src.core.constants import WIDTH, HEIGHT  # Import locally to avoid circular imports
             
-            # Check if the position is walkable
-            if not self.game_map or self.game_map.is_walkable(x, y):
-                customer = Customer(x, y)
-                self.customers.add(customer)
-                self.all_sprites.add(customer)
-                
-                # Create spawn particles
-                self._create_spawn_particles(x, y)
-                
-                if self.debug_mode:
-                    print(f"Customer spawned at random position: ({x}, {y})")
-                    if 'spawn_time' in locals():
-                        spawn_time_elapsed = time.time() - spawn_time
-                        print(f"Spawn time: {spawn_time_elapsed:.4f} seconds")
-                return
+            print("[DEBUG] Attempting to spawn customer...")
+            
+            # Choose edge placement (0=top, 1=right, 2=bottom, 3=left)
+            edge = random.randint(0, 3)
+            
+            if edge == 0:  # Top edge
+                x = random.randint(50, WIDTH - 50)
+                y = 50
+            elif edge == 1:  # Right edge
+                x = WIDTH - 50
+                y = random.randint(50, HEIGHT - 50)
+            elif edge == 2:  # Bottom edge
+                x = random.randint(50, WIDTH - 50)
+                y = HEIGHT - 50
+            else:  # Left edge
+                x = 50
+                y = random.randint(50, HEIGHT - 50)
+            print(f"[DEBUG] Fallback spawn position: ({x}, {y})")
         
-        if self.debug_mode:
-            print("Failed to spawn customer: No valid spawn positions found")
-    
-    def _create_spawn_particles(self, x, y):
-        """Helper function to create particle effects at spawn point"""
-        for _ in range(10):
-            particle = Particle(x, y, (255, 255, 255), size=random.randint(2, 5), speed=1.5, lifetime=0.5)
-            self.particles.add(particle)
-            self.all_sprites.add(particle)
-    
-    def validate_customer_positions(self):
-        """Checks all customers to ensure they're in valid positions"""
-        for customer in self.customers:
-            if self.game_map and not self.game_map.is_walkable(customer.rect.centerx, customer.rect.centery):
-                # Try to find a valid position nearby
-                for attempt in range(10):
-                    offset_x = random.randint(-50, 50)
-                    offset_y = random.randint(-50, 50)
-                    new_x = customer.rect.centerx + offset_x
-                    new_y = customer.rect.centery + offset_y
-                    
-                    if self.game_map.is_walkable(new_x, new_y):
-                        customer.rect.centerx = new_x
-                        customer.rect.centery = new_y
-                        if self.debug_mode:
-                            print(f"Relocated customer to valid position: ({new_x}, {new_y})")
-                        break
-    
+        # Create customer with food preferences
+        customer = Customer(x, y)
+        
+        # Randomly assign food preference
+        food_types = ["pizza", "smoothie", "icecream", "pudding"]
+        customer.food_preference = random.choice(food_types)
+        print(f"[DEBUG] Customer food preference assigned: {customer.food_preference}")
+        
+        # Set up customer patience based on difficulty and upgrades
+        base_patience = 10.0  # seconds
+        customer.patience = base_patience * self.patience_multiplier
+        customer.patience_timer = 0  # reset timer so they don't immediately leave
+        
+        print(f"[DEBUG] Customer patience: {customer.patience} seconds")
+        
+        # Add to sprite groups
+        self.customers.add(customer)
+        self.all_sprites.add(customer)
+        
+        print(f"[DEBUG] Customer added to sprite groups. Total customers: {len(self.customers)}")
+        
+        # Play spawn sound if available
+        if 'customer_appear' in self.sounds and self.sounds['customer_appear']:
+            self.sounds['customer_appear'].play()
+        
+        print("[DEBUG] Customer spawning complete")
+
+
+
     def run(self):
         """Main game loop"""
         running = True
-        
-        # Initialize game elements
-        if self.game_state == MENU:
-            # Create UI buttons (re-create them to ensure they're at the right position)
-            self.start_button = Button(WIDTH // 2 - 100, HEIGHT // 2, 200, 50, "Start", GREEN, (100, 255, 100))
-            self.exit_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 70, 200, 50, "Exit", RED, (255, 100, 100))
-        
         while running:
-            # Calculate delta time for frame-rate independent physics
             dt = self.clock.tick(FPS) / 1000.0
-            
-            # Process events
             mouse_pos = pygame.mouse.get_pos()
-            
             for event in pygame.event.get():
-                # First, check for quit event
                 if event.type == pygame.QUIT:
                     running = False
-                    return
-                
-                # If shop is open, let it handle events first
-                if hasattr(self, 'shop') and self.shop.is_open:
-                    if self.shop.handle_event(event):
-                        continue  # Shop handled the event, skip further processing
-                
-                # Handle resize events
-                if event.type == pygame.VIDEORESIZE:
-                    # Update the screen surface to the new size
-                    self.screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
-
-
-                if event.type == pygame.KEYDOWN:
-                    # Toggle debug mode with F12 or D key
-                    if event.key == pygame.K_F12 or event.key == pygame.K_d:
-                        self.debug_mode = toggle_debug_mode(self.debug_mode, self.sounds)
-                    
-                    # Toggle shop with B key (only in PLAYING state)
-                    if event.key == pygame.K_b and self.game_state == PLAYING:
-                        if hasattr(self, 'shop'):
-                            self.shop.toggle()
-                            # Play menu sound if available
-                            if self.sounds and 'menu_select' in self.sounds:
-                                self.sounds['menu_select'].play()
-                    
-                    # Food selection with number keys (1-4)
-                    if self.game_state == PLAYING and self.inventory is not None:
-                        # Define mapping of keys to food types
-                        FOOD_KEYS = {
+                if self.game_state == MENU:
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if self.start_button.is_clicked(event):
+                            print("[DEBUG] Start button clicked")
+                            if self.player is None:
+                                print("[DEBUG] Resetting game (new game)")
+                                self.reset_game()
+                            else:
+                                print("[DEBUG] Resetting state (continuing game)")
+                                self.reset_state()
+                            print(f"[DEBUG] Changing game state from {self.game_state} to PLAYING ({PLAYING})")
+                            self.game_state = PLAYING
+                            print(f"[DEBUG] Game state is now: {self.game_state}")
+                        if self.exit_button.is_clicked(event):
+                            running = False
+                elif self.game_state == PLAYING:
+                    # Handle food selection keys
+                    if event.type == pygame.KEYDOWN:
+                        # Debug key to manually spawn a customer with T key
+                        if event.key == pygame.K_t:
+                            print("[DEBUG] Manually spawning test customer")
+                            self.spawn_customer()
+                            
+                        food_keys = {
                             pygame.K_1: "Tropical Pizza Slice",
                             pygame.K_2: "Ska Smoothie",
                             pygame.K_3: "Island Ice Cream",
                             pygame.K_4: "Rasta Rice Pudding"
                         }
-                        
-                        # Check if any of the number keys were pressed
-                        for key, food in FOOD_KEYS.items():
-                            if event.key == key:
-                                self.selected_food = food
-                                # Play a selection sound if available
-                                if 'select_sound' in self.sounds and self.sounds['select_sound']:
-                                    self.sounds['select_sound'].play()
-                                print(f"[DEBUG] Selected food: {self.selected_food}")
-                        
-                        # Restock selected food with R key
-                        if event.key == pygame.K_r:
-                            # Mapping of display names to economy short names
-                            short_map = {
-                                'Tropical Pizza Slice': 'pizza',
-                                'Ska Smoothie': 'smoothie',
-                                'Island Ice Cream': 'icecream',
-                                'Rasta Rice Pudding': 'pudding'
-                            }
-                            short_name = short_map.get(self.selected_food)
-                            
-                            if short_name and self.economy and self.economy.can_afford_food(short_name, 1):
-                                price = self.economy.get_food_price(short_name, 'buy')
-                                if self.economy.purchase_food(short_name, 1):
-                                    self.inventory.add(self.selected_food, 1)
-                                    if self.game_database:
-                                        self.log_purchase_transaction(self.selected_food, price)
-                                    print(f"[DEBUG] Restocked 1 {self.selected_food} for ${price}")
-                                    if 'restock_sound' in self.sounds and self.sounds['restock_sound']:
-                                        self.sounds['restock_sound'].play()
-                            else:
-                                if self.debug_mode:
-                                    print(f"[INVENTORY] Cannot restock {self.selected_food} - insufficient funds")
-                
-                # Handle button clicks
-                if self.game_state == MENU:
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        if self.start_button.is_clicked(event):
-                            if 'button_sound' in self.sounds and self.sounds['button_sound']:
-                                self.sounds['button_sound'].play()
-                            # Initialize game objects first if this is the first start
-                            if not self.player:
-                                self.reset_game()
-                            else:
-                                self.reset_state()
-                        
-                        if self.exit_button.is_clicked(event):
-                            if 'button_sound' in self.sounds and self.sounds['button_sound']:
-                                self.sounds['button_sound'].play()
-                            running = False
-                
-                elif self.game_state == GAME_OVER:
-                    # Restart game with R key press
-                    if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                        if 'button_sound' in self.sounds and self.sounds['button_sound']:
-                            self.sounds['button_sound'].play()
-                        self.reset_state()
-                        
-                    # Restart game with button click
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        if self.restart_button.is_clicked(event):
-                            if 'button_sound' in self.sounds and self.sounds['button_sound']:
-                                self.sounds['button_sound'].play()
-                            self.reset_state()
-            
-            # Update game state
+                        if event.key in food_keys:
+                            self.selected_food = food_keys[event.key]
+                            if 'select_sound' in self.sounds and self.sounds['select_sound']:
+                                self.sounds['select_sound'].play()
+            # --- PLAYING state logic ---
             if self.game_state == PLAYING:
-                # Update game time
-                self.game_time += dt
-                
-                # Check if it's time to auto-save progress
-                current_time = pygame.time.get_ticks() / 1000.0
-                if current_time - self.last_save_time >= self.auto_save_interval:
-                    self.save_player_progress()
-                    self.last_save_time = current_time
+                # Make sure customer_spawn_timer is initialized
+                if not hasattr(self, 'customer_spawn_timer'):
+                    print("[DEBUG] Initializing missing customer_spawn_timer")
+                    self.customer_spawn_timer = 0
                 
                 # Spawn customers at regular intervals
                 self.customer_spawn_timer += dt
+                print(f"[DEBUG] customer_spawn_timer: {self.customer_spawn_timer:.2f}/{CUSTOMER_SPAWN_RATE}")
+                
                 if self.customer_spawn_timer >= CUSTOMER_SPAWN_RATE:
+                    print("[DEBUG] Time to spawn a customer!")
                     self.spawn_customer()
                     self.customer_spawn_timer = 0
-                
-                # Update game elements
+            # Update game state, sprites, etc.
+            if self.player:
                 self.player.update(dt, self.customers, self.foods, self.game_map)
-                self.customers.update(dt)
-                self.foods.update(dt)
-                
-                # Check for food-customer collisions
-                for food in list(self.foods):
-                    food_collided = False
-                    # First check if food hit any customer
-                    for customer in self.customers:
-                        if food.rect.colliderect(customer.rect):
-                            food_collided = True
-                            # Check if customer likes this type of food
-                            if customer.food_preference == food.food_type:
-                                # Determine delivery quality based on customer patience
-                                patience_percent = customer.patience_timer / customer.patience
-                                if patience_percent < 0.3:
-                                    delivery_quality = "perfect_delivery"
-                                else:
-                                    delivery_quality = "standard_delivery"
-                                
-                                # Calculate payment through economy system if available
-                                if self.economy is not None:
-                                    # Calculate payment based on food type and delivery quality
-                                    payment = self.economy.calculate_delivery_payment(
-                                        food.food_type, delivery_quality)
-                                    self.economy.add_money(
-                                        payment, f"Delivery of {food.food_type} ({delivery_quality})")
-                                    
-                                    # Log transaction in database if available
-                                    if self.game_database is not None:
-                                        try:
-                                            # Log transaction with current map and frame info
-                                            self.game_database.log_transaction(
-                                                player_id=1,  # Default player ID for now
-                                                transaction_type="delivery_payment",
-                                                amount=payment,
-                                                description=f"Delivery of {food.food_type} ({delivery_quality})",
-                                                map_id=self.current_map_id,
-                                                frame=self.current_frame
-                                            )
-                                        except Exception as e:
-                                            # Soft fail for database errors - log but continue gameplay
-                                            if self.debug_mode:
-                                                print(f"[DATABASE] Error logging transaction: {str(e)}")
-                                    
-                                    # Log in debug mode
-                                    if self.debug_mode:
-                                        print(f"[ECONOMY] Earned ${payment:.2f} for {food.food_type} delivery")
-                                
-                                # Traditional scoring still in place during transition
-                                self.score += 100
-                                if 'pickup_sound' in self.sounds and self.sounds['pickup_sound']:
-                                    self.sounds['pickup_sound'].play()
-                                
-                                # Customer leaves
-                                customer.feed(food.food_type)
-                                self.player.deliveries += 1
-                                
-                                # Create happy particles
-                                for _ in range(15):
-                                    particle = Particle(
-                                        customer.rect.centerx,
-                                        customer.rect.centery,
-                                        GREEN,
-                                        size=random.randint(3, 6),
-                                        speed=2,
-                                        lifetime=0.8
-                                    )
-                                    self.particles.add(particle)
-                                    self.all_sprites.add(particle)
-                                
-                                # Successful delivery - remove food
-                                food.kill()
-                                break  # Exit the customer loop once we've handled this food item
-                            else:
-                                # Wrong food penalty - only apply if the food actually hit a customer
-                                if not TUTORIAL_MODE:
-                                    # Apply monetary and score penalties
-                                    if self.economy is not None:
-                                        self.economy.money = max(0, self.economy.money - WRONG_FOOD_PENALTY_MONEY)
-                                    
-                                    self.score = max(0, self.score - WRONG_FOOD_PENALTY_SCORE)
-                                    self.missed += 1
-                                    
-                                    # Play error sound
-                                    if 'error_sound' in self.sounds and self.sounds['error_sound']:
-                                        self.sounds['error_sound'].play()
-                                    
-                                    # Debug feedback
-                                    if self.debug_mode:
-                                        print(f"[PENALTY] Wrong food: {food.food_type} to customer wanting {customer.food_preference}")
-                                        print(f"[PENALTY] Money: -${WRONG_FOOD_PENALTY_MONEY}, Score: -{WRONG_FOOD_PENALTY_SCORE}, Missed: {self.missed}/{MAX_MISSED_DELIVERIES}")
-                                    
-                                    # Create error particles
-                                    for _ in range(10):
-                                        particle = Particle(
-                                            customer.rect.centerx,
-                                            customer.rect.centery,
-                                            RED,
-                                            size=random.randint(2, 5),
-                                            speed=3,
-                                            lifetime=0.5
-                                        )
-                                        self.particles.add(particle)
-                                        self.all_sprites.add(particle)
-                                    
-                                    # Check for game over condition
-                                    if self.missed >= MAX_MISSED_DELIVERIES:
-                                        self.game_state = GAME_OVER
-                                        if self.debug_mode:
-                                            print(f"[GAME] Game over: too many wrong food deliveries ({self.missed}/{MAX_MISSED_DELIVERIES})")
-                                
-                                # Set customer to angry state
-                                customer.feed(food.food_type)  # This will make them angry since it's the wrong food
-                                food.kill()
-                                break  # Exit the customer loop once we've handled this food item
-                    
-                    # If food didn't collide with any customer, it continues to fly
-                
-                # Update particles
-                self.particles.update(dt)
-                
-                # Update high score
-                self.high_score = max(self.high_score, self.score)
-                
-                # Check game over condition (optional)
-                if self.player.missed_deliveries >= 10:
-                    self.game_state = GAME_OVER
-            
-            # Render frame
-            self._render(mouse_pos)
-            
-            # Update the display
-            pygame.display.flip()
-        
-        # Update game state
-        if self.game_state == PLAYING:
-            # Update game time
-            self.game_time += dt
-            
-            # Spawn customers at regular intervals
-            self.customer_spawn_timer += dt
-            if self.customer_spawn_timer >= CUSTOMER_SPAWN_RATE:
-                self.spawn_customer()
-                self.customer_spawn_timer = 0
-            
-            # Update game elements
-            self.player.update(dt, self.customers, self.foods, self.game_map)
             self.customers.update(dt)
             self.foods.update(dt)
-            
-            # Check for food-customer collisions
+            # Food-customer collision detection
             for food in list(self.foods):
-                for customer in self.customers:
-                    if food.rect.colliderect(customer.rect):
-                        # Check if customer likes this type of food
-                        if customer.food_preference == food.food_type:
-                            # Correct food delivered
-                            self.score += 100
-                            if 'pickup_sound' in self.sounds and self.sounds['pickup_sound']:
-                                self.sounds['pickup_sound'].play()
-                            
-                            # Customer leaves
-                            customer.feed(food.food_type)
-                            self.player.deliveries += 1
-                            
-                            # Create happy particles
-                            for _ in range(15):
-                                particle = Particle(
-                                    customer.rect.centerx,
-                                    customer.rect.centery,
-                                    GREEN,
-                                    size=random.randint(3, 6),
-                                    speed=2,
-                                    lifetime=0.8
-                                )
-                                self.particles.add(particle)
-                                self.all_sprites.add(particle)
-                        
-                        # Remove the food
+                for customer in list(self.customers):
+                    if food.collides_with(customer):
+                        print(f"[DEBUG] Food {food.food_type} collided with {customer.type}")
+                        customer.feed(food.food_type)
                         food.kill()
-            
-            # Update particles
-            self.particles.update(dt)
-            
-            # Update high score
-            self.high_score = max(self.high_score, self.score)
-            
-            # Check game over condition (optional)
-            if self.player.missed_deliveries >= 10:
-                self.game_state = GAME_OVER
-        
-        # Render frame
-        self._render(mouse_pos)
-        
-        # Update the display
-        pygame.display.flip()
-    
-        # Check if we should exit
-        if not running:
-            # Clean up
-            pygame.quit()
-            sys.exit()
+            self.particles.update(dt) if hasattr(self, 'particles') else None
+            # Render everything
+            self._render(mouse_pos)
+            pygame.display.flip()
 
     def _render(self, mouse_pos):
         """Render the game frame based on current game state"""

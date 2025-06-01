@@ -392,60 +392,39 @@ class TiledMap:
             
     def get_spawn_positions(self, object_name="CustomerSpawn"):
         """Gets spawn positions for customers based on an object name"""
+        # Match map-defined spawn points case-insensitively by spawn type
         spawn_points = []
-        
-        # Try to find spawn points from the map objects
-        if hasattr(self, 'spawn_points') and object_name in self.spawn_points:
-            # Found spawn points in the cached object list
-            potential_spawns = self.spawn_points[object_name]
-            
-            # Filter to only include walkable spawn points
-            for pos in potential_spawns:
-                if self.is_walkable(pos[0], pos[1]):
-                    spawn_points.append(pos)
-                elif self.debug_mode:
-                    print(f"Spawn point at ({pos[0]}, {pos[1]}) is not walkable")
-        
-        # If no spawn points were found in the object layer, try looking for objects directly
-        if not spawn_points:
-            for obj_group in self.tmx_data.objectgroups:
-                for obj in obj_group:
-                    if object_name.lower() in obj.name.lower() or object_name.lower() in obj_group.name.lower():
-                        # This is a spawn object
-                        pos = (obj.x, obj.y)
-                        
-                        # Check if the spawn point is walkable
-                        if self.is_walkable(pos[0], pos[1]):
-                            spawn_points.append(pos)
-                        elif self.debug_mode:
-                            print(f"Spawn point at ({pos[0]}, {pos[1]}) is not walkable")
-        
-        # If still no spawn points, generate some algorithmically
-        if not spawn_points:
-            # Generate spawn points at the edges of the map
-            margin = 100  # Pixel margin from the edge
-            step = 50    # Spacing between spawn points
-            
-            # Top edge
-            for x in range(margin, self.width - margin, step):
-                if self.is_walkable(x, margin):
-                    spawn_points.append((x, margin))
-            
-            # Bottom edge
-            for x in range(margin, self.width - margin, step):
-                if self.is_walkable(x, self.height - margin):
-                    spawn_points.append((x, self.height - margin))
-            
-            # Left edge
-            for y in range(margin, self.height - margin, step):
-                if self.is_walkable(margin, y):
-                    spawn_points.append((margin, y))
-            
-            # Right edge
-            for y in range(margin, self.height - margin, step):
-                if self.is_walkable(self.width - margin, y):
-                    spawn_points.append((self.width - margin, y))
-        
+        key_lower = object_name.lower()
+        for spawn_type, positions in self.spawn_points.items():
+            if key_lower in str(spawn_type).lower():
+                print(f"[TiledMap] Found spawn type '{spawn_type}' with positions {positions}")
+                for pos in positions:
+                    if self.is_walkable(pos[0], pos[1]):
+                        spawn_points.append(pos)
+                    elif self.debug_mode:
+                        print(f"[TiledMap] Spawn point at ({pos[0]}, {pos[1]}) not walkable")
+                return spawn_points
+        # Fallback to direct object scanning if none matched
+        for obj_group in self.tmx_data.objectgroups:
+            for obj in obj_group:
+                name_lower = (obj.name or '').lower()
+                group_lower = (obj_group.name or '').lower()
+                if key_lower in name_lower or key_lower in group_lower:
+                    pos = (obj.x, obj.y)
+                    if self.is_walkable(pos[0], pos[1]):
+                        spawn_points.append(pos)
+                    elif self.debug_mode:
+                        print(f"[TiledMap] Object spawn point at ({pos[0]}, {pos[1]}) not walkable")
+        if spawn_points:
+            return spawn_points
+        # Final fallback: generate edge-based spawn points
+        margin, step = 100, 50
+        for x in range(margin, self.width - margin, step):
+            if self.is_walkable(x, margin): spawn_points.append((x, margin))
+            if self.is_walkable(x, self.height - margin): spawn_points.append((x, self.height - margin))
+        for y in range(margin, self.height - margin, step):
+            if self.is_walkable(margin, y): spawn_points.append((margin, y))
+            if self.is_walkable(self.width - margin, y): spawn_points.append((self.width - margin, y))
         return spawn_points
     
     def draw(self, surface):
@@ -454,7 +433,7 @@ class TiledMap:
     
     def draw_debug_spawn_points(self, surface, offset_x=0, offset_y=0):
         """Draw visual indicators for spawn points to help with debugging"""
-        # Loop through all spawn point categ    ories
+        # Loop through all spawn point categories
         for spawn_type, positions in self.spawn_points.items():
             # Make sure spawn_type is a string before calling lower()
             spawn_type_str = str(spawn_type).lower() if spawn_type is not None else ''
