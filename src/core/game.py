@@ -72,6 +72,7 @@ class Game:
         # Track player stats
         self.deliveries = 0
         self.missed_deliveries = 0
+        self.missed = 0  # Counter for wrong food penalties
         
         # Map and frame tracking for economy/database integration
         self.current_map_id = 1
@@ -177,6 +178,43 @@ class Game:
             
         return background
     
+    def reset_state(self):
+        """Reset all game state variables but keep the same Game instance"""
+        log("Resetting game state variables")
+        
+        # Reset all core gameplay variables
+        self.score = 0
+        self.missed = 0  # Reset wrong food penalty counter
+        self.deliveries = 0
+        self.missed_deliveries = 0
+        self.game_time = 0
+        self.customer_spawn_timer = 0
+        
+        # Reset economy if available
+        if self.economy is not None:
+            self.economy.money = STARTING_MONEY
+            # Reset to tutorial phase
+            self.economy.update_phase(1, 1)
+        
+        # Reset inventory to starting stock
+        from src.core.inventory import Inventory
+        self.inventory = Inventory(STARTING_STOCK)
+        
+        # Reset player's stats if player exists
+        if self.player:
+            self.player.deliveries = 0
+            self.player.missed_deliveries = 0
+        
+        # Clear all active game entities
+        self.customers.empty()
+        self.foods.empty()
+        self.particles.empty()
+        
+        # Switch back to active play
+        self.game_state = PLAYING
+        
+        log("Game state reset complete")
+
     def reset_game(self):
         """Reset the game to its initial state"""
         log("Resetting game to initial state")
@@ -543,7 +581,11 @@ class Game:
                         if self.start_button.is_clicked(event):
                             if 'button_sound' in self.sounds and self.sounds['button_sound']:
                                 self.sounds['button_sound'].play()
-                            self.reset_game()
+                            # Initialize game objects first if this is the first start
+                            if not self.player:
+                                self.reset_game()
+                            else:
+                                self.reset_state()
                         
                         if self.exit_button.is_clicked(event):
                             if 'button_sound' in self.sounds and self.sounds['button_sound']:
@@ -551,11 +593,18 @@ class Game:
                             running = False
                 
                 elif self.game_state == GAME_OVER:
+                    # Restart game with R key press
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                        if 'button_sound' in self.sounds and self.sounds['button_sound']:
+                            self.sounds['button_sound'].play()
+                        self.reset_state()
+                        
+                    # Restart game with button click
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                         if self.restart_button.is_clicked(event):
                             if 'button_sound' in self.sounds and self.sounds['button_sound']:
                                 self.sounds['button_sound'].play()
-                            self.reset_game()
+                            self.reset_state()
             
             # Update game state
             if self.game_state == PLAYING:
@@ -581,8 +630,11 @@ class Game:
                 
                 # Check for food-customer collisions
                 for food in list(self.foods):
+                    food_collided = False
+                    # First check if food hit any customer
                     for customer in self.customers:
                         if food.rect.colliderect(customer.rect):
+                            food_collided = True
                             # Check if customer likes this type of food
                             if customer.food_preference == food.food_type:
                                 # Determine delivery quality based on customer patience
@@ -642,9 +694,54 @@ class Game:
                                     )
                                     self.particles.add(particle)
                                     self.all_sprites.add(particle)
-                            
-                            # Remove the food
-                            food.kill()
+                                
+                                # Successful delivery - remove food
+                                food.kill()
+                                break  # Exit the customer loop once we've handled this food item
+                            else:
+                                # Wrong food penalty - only apply if the food actually hit a customer
+                                if not TUTORIAL_MODE:
+                                    # Apply monetary and score penalties
+                                    if self.economy is not None:
+                                        self.economy.money = max(0, self.economy.money - WRONG_FOOD_PENALTY_MONEY)
+                                    
+                                    self.score = max(0, self.score - WRONG_FOOD_PENALTY_SCORE)
+                                    self.missed += 1
+                                    
+                                    # Play error sound
+                                    if 'error_sound' in self.sounds and self.sounds['error_sound']:
+                                        self.sounds['error_sound'].play()
+                                    
+                                    # Debug feedback
+                                    if self.debug_mode:
+                                        print(f"[PENALTY] Wrong food: {food.food_type} to customer wanting {customer.food_preference}")
+                                        print(f"[PENALTY] Money: -${WRONG_FOOD_PENALTY_MONEY}, Score: -{WRONG_FOOD_PENALTY_SCORE}, Missed: {self.missed}/{MAX_MISSED_DELIVERIES}")
+                                    
+                                    # Create error particles
+                                    for _ in range(10):
+                                        particle = Particle(
+                                            customer.rect.centerx,
+                                            customer.rect.centery,
+                                            RED,
+                                            size=random.randint(2, 5),
+                                            speed=3,
+                                            lifetime=0.5
+                                        )
+                                        self.particles.add(particle)
+                                        self.all_sprites.add(particle)
+                                    
+                                    # Check for game over condition
+                                    if self.missed >= MAX_MISSED_DELIVERIES:
+                                        self.game_state = GAME_OVER
+                                        if self.debug_mode:
+                                            print(f"[GAME] Game over: too many wrong food deliveries ({self.missed}/{MAX_MISSED_DELIVERIES})")
+                                
+                                # Set customer to angry state
+                                customer.feed(food.food_type)  # This will make them angry since it's the wrong food
+                                food.kill()
+                                break  # Exit the customer loop once we've handled this food item
+                    
+                    # If food didn't collide with any customer, it continues to fly
                 
                 # Update particles
                 self.particles.update(dt)
@@ -801,6 +898,16 @@ class Game:
                 phase_name = self.economy.phase.name if hasattr(self.economy.phase, 'name') else str(self.economy.phase)
                 phase_text = self.font.render(f"Phase: {phase_name}", True, YELLOW)
                 self.screen.blit(phase_text, (20, 60))
+                
+                # Display missed deliveries counter (penalty system)
+                if not TUTORIAL_MODE:
+                    color = YELLOW if self.missed < MAX_MISSED_DELIVERIES-1 else RED
+                    missed_text = self.font.render(f"Wrong Food: {self.missed}/{MAX_MISSED_DELIVERIES}", True, color)
+                    self.screen.blit(missed_text, (WIDTH - 250, 20))
+                else:
+                    # Show tutorial mode indicator
+                    tutorial_text = self.font.render("TUTORIAL MODE", True, GREEN)
+                    self.screen.blit(tutorial_text, (WIDTH - 250, 20))
             
             # Inventory information is now only displayed at the bottom of the screen
             if self.inventory is not None and hasattr(self, 'selected_food') and self.selected_food:

@@ -65,3 +65,12 @@ FOOD_PRICES = {
         "sell_price": 4
     }
 }
+
+# ---------------- Tutorial toggle & penalties ----------------
+TUTORIAL_MODE = False          # Flip to True during onboarding
+WRONG_FOOD_PENALTY_MONEY = 2   # Dollars lost per bad throw
+WRONG_FOOD_PENALTY_SCORE = 5   # Points lost per bad throw
+MAX_MISSED_DELIVERIES = 3      # Game-over after this many
+
+# ---------------- Game economy defaults ----------------
+STARTING_MONEY = 0             # Starting cash for each new game
