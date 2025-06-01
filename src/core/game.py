@@ -128,6 +128,9 @@ class Game:
             self.inventory = None
             self.selected_food = None
         
+        # Initialize upgrade shop overlay
+        self.shop = ShopOverlay(self)
+        
         # Database initialization is now handled by the persistence layer
         # self.persistence is initialized above
         
@@ -307,7 +310,6 @@ class Game:
             self.all_sprites.add(self.player)
         
         # Initialize shop overlay
-        self.shop = ShopOverlay(self)
         log("Shop overlay initialized")
         
         # Change game state to playing
@@ -430,6 +432,9 @@ class Game:
         customer.food_preference = random.choice(food_types)
         print(f"[DEBUG] Customer food preference assigned: {customer.food_preference}")
         
+        # Redraw speech bubble icon for new preference
+        customer._draw_fallback_food_icon()
+        
         # Set up customer patience based on difficulty and upgrades
         base_patience = 10.0  # seconds
         customer.patience = base_patience * self.patience_multiplier
@@ -458,6 +463,13 @@ class Game:
             dt = self.clock.tick(FPS) / 1000.0
             mouse_pos = pygame.mouse.get_pos()
             for event in pygame.event.get():
+                # Let shop overlay handle events first
+                if hasattr(self, 'shop') and self.shop.handle_event(event):
+                    continue
+                # Toggle shop on B key
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+                    self.shop.toggle()
+                    continue
                 if event.type == pygame.QUIT:
                     running = False
                 if self.game_state == MENU:
@@ -517,9 +529,22 @@ class Game:
             for food in list(self.foods):
                 for customer in list(self.customers):
                     if food.collides_with(customer):
-                        print(f"[DEBUG] Food {food.food_type} collided with {customer.type}")
+                        food_match = food.food_type == customer.food_preference
+                        print(f"[DEBUG] Food {food.food_type} collided with {customer.type} who wants {customer.food_preference} - MATCH: {food_match}")
+                        
+                        # Save the 'fed' state before feeding to detect changes
+                        was_fed_before = getattr(customer, 'fed', False)
+                        
+                        # Feed the customer and remove the food
                         customer.feed(food.food_type)
                         food.kill()
+                        
+                        # Economy update: Only add money if customer was fed the correct food
+                        if hasattr(customer, 'fed') and customer.fed and not was_fed_before:
+                            payment = self.economy.calculate_delivery_payment(food.food_type, "perfect_delivery")
+                            self.economy.add_money(payment, reason=f"Delivery to {customer.type}")
+                            print(f"[DEBUG][ECONOMY] Added ${payment:.2f} for delivery of {food.food_type} to {customer.type}")
+                            print(f"[DEBUG] Customer is now {customer.state} and leaving: {customer.leaving}")
             self.particles.update(dt) if hasattr(self, 'particles') else None
             # Render everything
             self._render(mouse_pos)
