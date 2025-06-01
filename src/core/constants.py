@@ -36,3 +36,32 @@ YELLOW = (255, 255, 0)
 
 # Game variables
 CUSTOMER_SPAWN_RATE = 5  # seconds
+
+# Inventory / stock (units in player's truck)
+STARTING_STOCK = {
+    "Tropical Pizza Slice": 5,
+    "Ska Smoothie": 5,
+    "Island Ice Cream": 5,
+    "Rasta Rice Pudding": 5,
+}
+MAX_STOCK = 10  # for future upgrades
+
+# Food prices for economy
+FOOD_PRICES = {
+    "Tropical Pizza Slice": {
+        "buy_price": 2,
+        "sell_price": 5
+    },
+    "Ska Smoothie": {
+        "buy_price": 1,
+        "sell_price": 3
+    },
+    "Island Ice Cream": {
+        "buy_price": 1,
+        "sell_price": 4
+    },
+    "Rasta Rice Pudding": {
+        "buy_price": 2,
+        "sell_price": 4
+    }
+}

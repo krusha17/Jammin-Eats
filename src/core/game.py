@@ -20,8 +20,9 @@ from src.utils.sounds import load_sounds
 from src.debug.debug_tools import toggle_debug_mode
 from src.debug.logger import log, log_error, log_asset_load
 
-# Import new economy and database systems
+# Import new economy, inventory and database systems
 from src.core.economy import Economy, EconomyPhase
+from src.core.inventory import Inventory
 
 # Handle potential database module import errors
 DATABASE_AVAILABLE = False
@@ -111,6 +112,17 @@ class Game:
         except Exception as e:
             log_error("Failed to initialize economy", e)
             self.economy = None
+        
+        # Initialize inventory system
+        log("Initializing inventory system...")
+        try:
+            self.inventory = Inventory(STARTING_STOCK)
+            self.selected_food = "Tropical Pizza Slice"  # default selection
+            log("Inventory system initialized")
+        except Exception as e:
+            log_error("Failed to initialize inventory", e)
+            self.inventory = None
+            self.selected_food = None
         
         # Initialize database connection if available
         self.game_database = None
@@ -479,6 +491,44 @@ class Game:
                     # Toggle debug mode with F12 or D key
                     if event.key == pygame.K_F12 or event.key == pygame.K_d:
                         self.debug_mode = toggle_debug_mode(self.debug_mode, self.sounds)
+                    
+                    # Food selection with number keys (1-4)
+                    if self.game_state == PLAYING and self.inventory is not None:
+                        # Define mapping of keys to food types
+                        FOOD_KEYS = {
+                            pygame.K_1: "Tropical Pizza Slice",
+                            pygame.K_2: "Ska Smoothie",
+                            pygame.K_3: "Island Ice Cream",
+                            pygame.K_4: "Rasta Rice Pudding"
+                        }
+                        
+                        # Check if any of the number keys were pressed
+                        for key, food in FOOD_KEYS.items():
+                            if event.key == key:
+                                self.selected_food = food
+                                # Play a selection sound if available
+                                if 'select_sound' in self.sounds and self.sounds['select_sound']:
+                                    self.sounds['select_sound'].play()
+                                    # Restock selected food with R key
+                                    if event.key == pygame.K_r and self.game_state == PLAYING and self.inventory is not None and self.economy is not None:
+                                        # Mapping of display names to economy short names
+                                        short_map = {
+                                            'Tropical Pizza Slice': 'pizza',
+                                            'Ska Smoothie': 'smoothie',
+                                            'Island Ice Cream': 'icecream',
+                                            'Rasta Rice Pudding': 'pudding'
+                                        }
+                                        short_name = short_map.get(self.selected_food)
+                                        if short_name and self.economy.can_afford_food(short_name, 1):
+                                            price = self.economy.get_food_price(short_name, 'buy')
+                                            if self.economy.purchase_food(short_name, 1):
+                                                self.inventory.add(self.selected_food, 1)
+                                                self.log_purchase_transaction(self.selected_food, price)
+                                                if 'restock_sound' in self.sounds and self.sounds['restock_sound']:
+                                                    self.sounds['restock_sound'].play()
+                                        else:
+                                            if self.debug_mode:
+                                                print(f"[INVENTORY] Cannot restock {self.selected_food} - insufficient funds")
                 
                 # Handle button clicks
                 if self.game_state == MENU:
@@ -744,6 +794,37 @@ class Game:
                 phase_name = self.economy.phase.name if hasattr(self.economy.phase, 'name') else str(self.economy.phase)
                 phase_text = self.font.render(f"Phase: {phase_name}", True, YELLOW)
                 self.screen.blit(phase_text, (20, 60))
+            
+            # Display inventory information if available
+            if self.inventory is not None and hasattr(self, 'selected_food') and self.selected_food:
+                # Current selected food and its quantity
+                inventory_text = self.font.render(
+                    f"Selected: {self.selected_food} (Stock: {self.inventory.qty(self.selected_food)})", 
+                    True, WHITE)
+                self.screen.blit(inventory_text, (20, 100))
+                
+                # Show full inventory status at the bottom of the screen
+                y_position = HEIGHT - 120
+                self.screen.blit(self.font.render("INVENTORY:", True, WHITE), (20, y_position))
+                
+                # Map number keys to food types for display
+                key_map = {
+                    "1": "Tropical Pizza Slice",
+                    "2": "Ska Smoothie",
+                    "3": "Island Ice Cream",
+                    "4": "Rasta Rice Pudding"
+                }
+                
+                # Show each food type with its key binding and current stock
+                for i, (key, food) in enumerate(key_map.items()):
+                    color = GREEN if food == self.selected_food else WHITE
+                    if self.inventory.qty(food) == 0:
+                        color = RED  # Show in red if out of stock
+                        
+                    item_text = self.font.render(
+                        f"[{key}] {food}: {self.inventory.qty(food)}", 
+                        True, color)
+                    self.screen.blit(item_text, (20, y_position + 30 + i * 25))
             
             # Draw debug mode indicator if active
             if self.debug_mode:

@@ -260,31 +260,56 @@ class Player(pygame.sprite.Sprite):
         else:
             return  # Invalid direction
         
-        # Randomly choose a food type (for variety)
-        food_choices = ['pizza', 'smoothie', 'icecream', 'pudding']
-        food_type = food_choices[pygame.time.get_ticks() % len(food_choices)]
+        # Get selected food from inventory if available
+        food_type = 'pizza'  # Default fallback
         
-        # Check if economy system is available and handle purchase
-        purchased = True  # Default to True for backward compatibility
-        if game and hasattr(game, 'economy') and game.economy is not None:
-            # Try to purchase the food from the economy system
-            purchased = game.economy.purchase_food(food_type)
+        if game and hasattr(game, 'inventory') and game.inventory is not None and hasattr(game, 'selected_food'):
+            selected_food = game.selected_food
             
-            # If purchase was successful, log the transaction in the database
-            if purchased and hasattr(game, 'game_database') and game.game_database is not None:
-                # Get the price estimate for this food type (since purchase_food just returns boolean)
-                estimated_price = game.economy.get_food_price(food_type, 'buy') if hasattr(game.economy, 'get_food_price') else 1.0
+            # Get equivalent short name for the food type
+            food_name_mapping = {
+                "Tropical Pizza Slice": "pizza",
+                "Ska Smoothie": "smoothie",
+                "Island Ice Cream": "icecream",
+                "Rasta Rice Pudding": "pudding"
+            }
+            
+            # Check if the selected food is in stock
+            if game.inventory.in_stock(selected_food):
+                # Consume one unit from inventory
+                if game.inventory.consume(selected_food):
+                    food_type = food_name_mapping.get(selected_food, "pizza")
+                    
+                    # Create the food object
+                    food = Food(self.rect.centerx, self.rect.centery, dx, dy, food_type)
+                    foods.add(food)
+                    
+                    # Update throw cooldown
+                    self.last_throw_time = pygame.time.get_ticks() / 1000.0
+                    
+                    # Log the transaction in database if available
+                    if hasattr(game, 'game_database') and game.game_database is not None:
+                        # Use the appropriate price if available in constants
+                        from src.core.constants import FOOD_PRICES
+                        if selected_food in FOOD_PRICES:
+                            estimated_price = FOOD_PRICES[selected_food]["buy_price"]
+                            game.log_purchase_transaction(selected_food, estimated_price)
+                    
+                    return True
+            else:
+                # Play error sound if no stock available
+                if 'error_sound' in game.sounds and game.sounds['error_sound']:
+                    game.sounds['error_sound'].play()
                 
-                # Log the transaction
-                game.log_purchase_transaction(food_type, estimated_price)
+                # Debug feedback
+                if hasattr(game, 'debug_mode') and game.debug_mode:
+                    print(f"[INVENTORY] Out of stock: {selected_food}")
+        else:
+            # Legacy fallback behavior if inventory system isn't active
+            # This ensures backward compatibility with the original game design
+            food_choices = ['pizza', 'smoothie', 'icecream', 'pudding']
+            food_type = food_choices[pygame.time.get_ticks() % len(food_choices)]
             
-            # Debug feedback if purchase failed
-            if not purchased and hasattr(game, 'debug_mode') and game.debug_mode:
-                print(f"[ECONOMY] Cannot afford {food_type} - Need more money!")
-        
-        # Only throw food if the purchase was successful or no economy system
-        if purchased:
-            # Create the food object
             food = Food(self.rect.centerx, self.rect.centery, dx, dy, food_type)
             foods.add(food)
             
