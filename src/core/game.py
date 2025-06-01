@@ -20,21 +20,59 @@ from src.utils.sounds import load_sounds
 from src.debug.debug_tools import toggle_debug_mode
 from src.debug.logger import log, log_error, log_asset_load
 
+# Import new economy and database systems
+from src.core.economy import Economy, EconomyPhase
+try:
+    from src.core.database import GameDatabase
+    DATABASE_AVAILABLE = True
+except ImportError as e:
+    log_error("Database module import error", e)
+    DATABASE_AVAILABLE = False
+
 
 class Game:
-    def __init__(self):
-        # Set up the game window
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    def __init__(self, screen_width=WIDTH, screen_height=HEIGHT):
+        # Initialize pygame
+        pygame.init()
+        pygame.mixer.init()
+        
+        # Create the screen
+        self.screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
         pygame.display.set_caption("Jammin' Eats")
+        
+        # Set up the clock
         self.clock = pygame.time.Clock()
         
-        # Game state variables
-        self.game_state = MENU
-        self.score = 0
-        self.high_score = 0
-        self.game_time = 0
-        self.customer_spawn_timer = 0
+        # Debug mode
         self.debug_mode = False
+        
+        # Initialize economy system
+        log("Initializing economy system...")
+        try:
+            self.economy = Economy()
+            log("Economy system initialized")
+        except Exception as e:
+            log_error("Failed to initialize economy", e)
+            self.economy = None
+        
+        # Initialize database connection if available
+        self.game_database = None
+        if DATABASE_AVAILABLE:
+            log("Initializing database connection...")
+            try:
+                self.game_database = GameDatabase()
+                # Don't connect yet - will connect when needed
+                log("Database system initialized")
+            except Exception as e:
+                log_error("Failed to initialize database", e)
+                
+        # Track current map and frame for database and economy tracking
+        self.current_map_id = 1  # Default to first map
+        self.current_frame = 1   # Default to first frame
+        
+        # Auto-save timer
+        self.last_save_time = 0
+        self.auto_save_interval = 60  # Auto-save every 60 seconds
         
         # Load font
         self.font = pygame.font.Font(None, 36)
@@ -107,6 +145,26 @@ class Game:
         self.game_time = 0
         self.customer_spawn_timer = 0
         
+        # Try loading saved progress first
+        progress_loaded = False
+        if self.game_database is not None:
+            log("Attempting to load saved progress")
+            progress_loaded = self.load_player_progress()
+        
+        # If no progress was loaded, reset economy to defaults
+        if not progress_loaded and self.economy is not None:
+            log("No saved progress found, resetting economy to tutorial phase")
+            # Update our map and frame tracking
+            self.current_map_id = 1
+            self.current_frame = 1
+            # Reset economy to tutorial phase
+            self.economy.update_phase(self.current_map_id, self.current_frame)
+        elif progress_loaded:
+            log(f"Loaded saved progress: Map {self.current_map_id}, Frame {self.current_frame}")
+        
+        # Reset auto-save timer
+        self.last_save_time = pygame.time.get_ticks() / 1000.0
+        
         # Initialize map
         log("Loading game map...")
         try:
@@ -164,6 +222,120 @@ class Game:
         # Change game state to playing
         self.game_state = PLAYING
         log("Game reset complete, state changed to PLAYING")
+    
+    def log_purchase_transaction(self, food_type, amount):
+        """Log a food purchase transaction to the database"""
+        # Skip if database is not available
+        if self.game_database is None:
+            return False
+            
+        try:
+            # Log the purchase transaction
+            self.game_database.log_transaction(
+                player_id=1,  # Default player ID for now
+                transaction_type="food_purchase",
+                amount=-amount,  # Negative amount for purchases
+                description=f"Purchase of {food_type}",
+                map_id=self.current_map_id,
+                frame=self.current_frame
+            )
+            
+            if self.debug_mode:
+                print(f"[DATABASE] Logged purchase transaction for {food_type} (${amount:.2f})")
+            return True
+        except Exception as e:
+            # Soft fail for database errors
+            if self.debug_mode:
+                print(f"[DATABASE] Error logging purchase transaction: {str(e)}")
+            return False
+    
+    def save_player_progress(self):
+        """Save player progress to database if available"""
+        # Skip if database is not available
+        if self.game_database is None:
+            if self.debug_mode:
+                print("[DATABASE] Save skipped - database not available")
+            return False
+        
+        try:
+            # Prepare economy data for saving
+            economy_data = {
+                'money': self.economy.money if self.economy else 0,
+                'current_phase': self.economy.current_phase if self.economy else 1,
+                'map_id': self.current_map_id,
+                'frame': self.current_frame
+            }
+            
+            # Prepare inventory data (placeholder for now)
+            inventory_data = {
+                'pizza': 10,
+                'smoothie': 10,
+                'icecream': 10,
+                'pudding': 10
+            }
+            
+            # Save to database
+            result = self.game_database.save_player_progress(
+                player_id=1,  # Default player ID for now
+                economy_data=economy_data,
+                inventory_data=inventory_data
+            )
+            
+            if self.debug_mode:
+                print(f"[DATABASE] Player progress saved successfully")
+            return True
+            
+        except Exception as e:
+            # Log error but don't crash the game
+            if self.debug_mode:
+                print(f"[DATABASE] Error saving progress: {str(e)}")
+            return False
+    
+    def load_player_progress(self):
+        """Load player progress from database if available"""
+        # Skip if database is not available
+        if self.game_database is None:
+            if self.debug_mode:
+                print("[DATABASE] Load skipped - database not available")
+            return False
+        
+        try:
+            # Load from database
+            progress_data = self.game_database.load_player_progress(player_id=1)
+            
+            if not progress_data:
+                if self.debug_mode:
+                    print("[DATABASE] No saved progress found")
+                return False
+            
+            # Update economy with saved data
+            if self.economy and 'economy' in progress_data:
+                econ_data = progress_data['economy']
+                
+                # Set money
+                if 'money' in econ_data:
+                    self.economy.money = econ_data['money']
+                
+                # Update map and frame tracking
+                if 'map_id' in econ_data and 'frame' in econ_data:
+                    self.current_map_id = econ_data['map_id']
+                    self.current_frame = econ_data['frame']
+                    
+                    # Update economy phase based on map and frame
+                    self.economy.update_phase(self.current_map_id, self.current_frame)
+            
+            # Update inventory with saved data (placeholder for now)
+            # Will be implemented in inventory phase
+            
+            if self.debug_mode:
+                print(f"[DATABASE] Player progress loaded successfully")
+            return True
+            
+        except Exception as e:
+            # Log error but don't crash the game
+            if self.debug_mode:
+                print(f"[DATABASE] Error loading progress: {str(e)}")
+            return False
     
     def spawn_customer(self):
         """Spawn a customer at a valid position"""
@@ -298,6 +470,12 @@ class Game:
                 # Update game time
                 self.game_time += dt
                 
+                # Check if it's time to auto-save progress
+                current_time = pygame.time.get_ticks() / 1000.0
+                if current_time - self.last_save_time >= self.auto_save_interval:
+                    self.save_player_progress()
+                    self.last_save_time = current_time
+                
                 # Spawn customers at regular intervals
                 self.customer_spawn_timer += dt
                 if self.customer_spawn_timer >= CUSTOMER_SPAWN_RATE:
@@ -315,7 +493,43 @@ class Game:
                         if food.rect.colliderect(customer.rect):
                             # Check if customer likes this type of food
                             if customer.food_preference == food.food_type:
-                                # Correct food delivered
+                                # Determine delivery quality based on customer patience
+                                patience_percent = customer.patience_timer / customer.patience
+                                if patience_percent < 0.3:
+                                    delivery_quality = "perfect_delivery"
+                                else:
+                                    delivery_quality = "standard_delivery"
+                                
+                                # Calculate payment through economy system if available
+                                if self.economy is not None:
+                                    # Calculate payment based on food type and delivery quality
+                                    payment = self.economy.calculate_delivery_payment(
+                                        food.food_type, delivery_quality)
+                                    self.economy.add_money(
+                                        payment, f"Delivery of {food.food_type} ({delivery_quality})")
+                                    
+                                    # Log transaction in database if available
+                                    if self.game_database is not None:
+                                        try:
+                                            # Log transaction with current map and frame info
+                                            self.game_database.log_transaction(
+                                                player_id=1,  # Default player ID for now
+                                                transaction_type="delivery_payment",
+                                                amount=payment,
+                                                description=f"Delivery of {food.food_type} ({delivery_quality})",
+                                                map_id=self.current_map_id,
+                                                frame=self.current_frame
+                                            )
+                                        except Exception as e:
+                                            # Soft fail for database errors - log but continue gameplay
+                                            if self.debug_mode:
+                                                print(f"[DATABASE] Error logging transaction: {str(e)}")
+                                    
+                                    # Log in debug mode
+                                    if self.debug_mode:
+                                        print(f"[ECONOMY] Earned ${payment:.2f} for {food.food_type} delivery")
+                                
+                                # Traditional scoring still in place during transition
                                 self.score += 100
                                 if 'pickup_sound' in self.sounds and self.sounds['pickup_sound']:
                                     self.sounds['pickup_sound'].play()
@@ -491,10 +705,27 @@ class Game:
             time_text = self.font.render(f"Time: {minutes:02d}:{seconds:02d}", True, WHITE)
             self.screen.blit(time_text, (WIDTH - 150, 60))
             
+            # Draw economy information if available
+            if self.economy is not None:
+                # Display money
+                money_text = self.font.render(f"Money: ${self.economy.money:.2f}", True, GREEN)
+                self.screen.blit(money_text, (20, 20))
+                
+                # Display current phase
+                phase_text = self.font.render(f"Phase: {self.economy.current_phase.name}", True, YELLOW)
+                self.screen.blit(phase_text, (20, 60))
+            
             # Draw debug mode indicator if active
             if self.debug_mode:
                 debug_text = self.font.render("DEBUG MODE", True, YELLOW)
                 self.screen.blit(debug_text, (WIDTH - 150, 100))
+                
+                # Draw additional economy debug info if available
+                if self.economy is not None:
+                    debug_econ_text = self.font.render(
+                        f"Phase Mult: {self.economy.current_phase.price_multiplier:.2f}x", 
+                        True, YELLOW)
+                    self.screen.blit(debug_econ_text, (20, 100))
         
         # MENU state - draw the menu
         elif self.game_state == MENU:

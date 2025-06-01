@@ -261,14 +261,6 @@ class Player(pygame.sprite.Sprite):
             # Try to purchase the food from the economy system
             purchased = game.economy.purchase_food(food_type)
             
-            # If purchase was successful, log the transaction in the database
-            if purchased and hasattr(game, 'game_database') and game.game_database is not None:
-                # Get the price estimate for this food type (since purchase_food just returns boolean)
-                estimated_price = game.economy.get_food_price(food_type, 'buy') if hasattr(game.economy, 'get_food_price') else 1.0
-                
-                # Log the transaction
-                game.log_purchase_transaction(food_type, estimated_price)
-            
             # Debug feedback if purchase failed
             if not purchased and hasattr(game, 'debug_mode') and game.debug_mode:
                 print(f"[ECONOMY] Cannot afford {food_type} - Need more money!")
