@@ -152,65 +152,41 @@ class Customer(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x, y))
         self.collision_radius = 25  # For collision detection with food
         
-        # Set a random food preference
+        # Choose food preference and build bubble
         food_types = ['pizza', 'smoothie', 'icecream', 'pudding', 'rasgulla']
         self.food_preference = random.choice(food_types)
         print(f"[DEBUG] Customer {self.type} wants {self.food_preference}")
-        
-        # Create speech bubble for showing food preference
-        self.bubble = pygame.Surface((80, 50), pygame.SRCALPHA)
-        pygame.draw.ellipse(self.bubble, (255, 255, 255), (0, 0, 80, 40))
-        pygame.draw.polygon(self.bubble, (255, 255, 255), [(30, 40), (40, 60), (50, 40)])
-        
-        # Draw the requested food icon inside the bubble
-        self._draw_fallback_food_icon()
-        self.leave_timer = 0
-        
-        # Food preference (randomly selected)
-        self.food_preference = random.choice(['pizza', 'smoothie', 'icecream', 'pudding'])
-        
-        # Create speech bubble
+
+        # Speech bubble creation
         self.bubble = pygame.Surface((80, 60), pygame.SRCALPHA)
         pygame.draw.ellipse(self.bubble, (255, 255, 255), (0, 0, 80, 50))
         pygame.draw.polygon(self.bubble, (255, 255, 255), [(10, 50), (30, 50), (20, 60)])
-        
-        # Load and display actual food sprite in the bubble
+
+        # Load the food icon for the bubble
         try:
             from src.utils.asset_loader import load_image
-            
-            # Map food preferences to their corresponding food types
-            food_base_names = {
+            # Map preference to asset folder name
+            food_map = {
                 'pizza': 'Tropical_Pizza_Slice',
                 'smoothie': 'Ska_Smoothie',
                 'icecream': 'Island_Ice_Cream',
                 'pudding': 'Rasta_Rice_Pudding',
                 'rasgulla': 'Reggae_Rasgulla'
             }
-            
-            # Get the corresponding base name for the food preference
-            base_name = food_base_names.get(self.food_preference, self.food_preference)
-            
-            # Try to load the food image from the correct folder structure
-            # The structure is: assets/Food/[FoodType]/[FoodType]1.png
-            self.food_image = load_image('Food/' + base_name, f"{base_name}1.png")
-            
-            # If that fails, try the base food directory
-            if not self.food_image:
-                self.food_image = load_image('food', f"{base_name}1.png")
-            
-            # If successful, scale and position the food image in the bubble
+            base_name = food_map.get(self.food_preference, self.food_preference)
+            # Attempt specific then generic
+            self.food_image = load_image(f'food/{base_name}', f'{base_name}1.png') or load_image('food', f'{base_name}1.png')
             if self.food_image:
-                # Scale the food image to fit nicely in the bubble
                 self.food_image = pygame.transform.scale(self.food_image, (32, 32))
-                # Position in the center of the bubble (slightly higher)
                 self.bubble.blit(self.food_image, (24, 8))
+                print(f"[DEBUG] Loaded food icon for {self.food_preference}")
             else:
-                # Fallback to basic shapes if image loading fails
+                print(f"[DEBUG] Icon missing, using fallback for {self.food_preference}")
                 self._draw_fallback_food_icon()
         except Exception as e:
-            print(f"Error loading food image for bubble: {e}")
-            # Fallback to basic shapes
+            print(f"[DEBUG] Error loading food icon: {e}")
             self._draw_fallback_food_icon()
+        self.leave_timer = 0
     
     def greet(self):
         # Optional: Play a greeting sound or animation

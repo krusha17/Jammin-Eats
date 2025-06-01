@@ -424,16 +424,8 @@ class Game:
                 y = random.randint(50, HEIGHT - 50)
             print(f"[DEBUG] Fallback spawn position: ({x}, {y})")
         
-        # Create customer with food preferences
+        # Create customer
         customer = Customer(x, y)
-        
-        # Randomly assign food preference
-        food_types = ["pizza", "smoothie", "icecream", "pudding"]
-        customer.food_preference = random.choice(food_types)
-        print(f"[DEBUG] Customer food preference assigned: {customer.food_preference}")
-        
-        # Redraw speech bubble icon for new preference
-        customer._draw_fallback_food_icon()
         
         # Set up customer patience based on difficulty and upgrades
         base_patience = 10.0  # seconds
