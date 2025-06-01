@@ -126,6 +126,8 @@ class Food(pygame.sprite.Sprite):
         self.current_frame = 0
         # Track timer for determining animation progression
         self.frame_timer = 0.0
+        self.animation_speed = 0.09  # seconds per frame
+        self.hold_last_frame_time = 0.15  # seconds to hold last frame before despawn
         
         # Attempt to load up to 3 numbered frames for smooth animation
         base_dir = os.path.join(ASSETS_DIR, 'Food', base_name)
@@ -178,12 +180,21 @@ class Food(pygame.sprite.Sprite):
             self.rect.bottom < 0 or self.rect.top > HEIGHT):
             self.kill()
         
-        # Determine animation frame based on progress towards lifespan (using 3 frames)
+        # Animate food frames at a fixed, fast rate, looping until the last part of lifespan
         frame_count = 3 if len(self.frames) >= 3 else len(self.frames)
         if frame_count > 1:
-            progress_ratio = min(self.timer / self.lifespan, 1.0)
-            target_index = int(progress_ratio * (frame_count - 1))
-            if target_index != self.current_frame:
+            time_left = self.lifespan - self.timer
+            # If we're in the last X seconds, hold on the last frame (explosion)
+            if time_left <= self.hold_last_frame_time:
+                target_index = frame_count - 1
+            else:
+                # Cycle through frames at a fixed rate
+                self.frame_timer += dt
+                if self.frame_timer >= self.animation_speed:
+                    self.frame_timer = 0.0
+                    self.current_frame = (self.current_frame + 1) % frame_count  # loop through all frames
+                target_index = self.current_frame
+            if target_index != self.current_frame or self.image != self.frames[target_index]:
                 self.current_frame = target_index
                 current_center = self.rect.center  # preserve position when image size differs
                 self.image = self.frames[self.current_frame]

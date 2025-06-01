@@ -16,13 +16,18 @@ Interactive Customers: Serve diverse characters with unique tastes, preferences,
 Food Throwing Mechanic: Deliver delicious dishes like Tropical Pizza Slice, Ska Smoothie, and Rasta Rice Pudding with fun, satisfying mechanics.
 Dynamic Game States: Navigate seamlessly through menus, active gameplay, and game-over screens with immersive visual feedback.
 
+🍕 Food Animation System
+
+- Each food item cycles smoothly through 3 animation frames as it flies, with a visually distinct explosion or impact frame.
+- Animation speed is decoupled from projectile lifespan for a polished, responsive feel.
+- Asset management is streamlined: only 3 PNGs per food type are required, with fallback logic if assets are missing.
+
+🧩 HUD & Inventory
+
+- The selected food is now displayed only in the bottom inventory HUD, keeping the main HUD clean and focused.
+- Inventory status shows key bindings, stock counts, and highlights out-of-stock items in red and current selection in green.
+
 💡 Technical Highlights
-
-Developed using Python and Pygame, ensuring fluid gameplay and easy scalability.
-Integrated particle effects and visual indicators for enhanced player feedback.
-Structured for future database integration using SQL Server (SSMS) and PyODBC, enabling robust game state management.
-
-🎨 Visual & Artistic Direction
 
 Pixel-Perfect Graphics: Stunning top-down pixel art infused with neon-cyberpunk and tropical island aesthetics.
 Vibrant, Seamless Environments: Procedurally generated backgrounds and assets designed to scale effortlessly.
@@ -31,11 +36,13 @@ Reggae-Cyberpunk Theme: Unique visual identity inspired by retro arcade classics
 🧑‍💻 Modular Architecture & Error Handling
 
 - **Codebase is fully modularized** under `src/` with clear separation for core logic, sprites, maps, utilities, and debug tools.
+- **Professional, maintainable structure**: All gameplay, animation, and economy logic is modular and extensible.
 - **Robust asset loading**: All assets are loaded relative to project root; missing assets trigger fallback visuals/sounds.
 - **Fallback map system**: If a TMX map fails to load, a fallback map is generated to keep the game running.
 - **Database integration**: If the database module is missing or fails, the game continues with persistence/logging disabled.
 - **Sound loading**: Missing sound files are logged but do not crash the game.
 - **Comprehensive error handling**: All critical game loop and rendering logic is wrapped to prevent crashes from unexpected exceptions.
+- **Gameplay polish**: Food animation, collision, and inventory feedback are thoroughly tested for smoothness and clarity.
 - **Debug mode**: Toggle with F12 or D for verbose error and event output.
 
 🆘 Troubleshooting

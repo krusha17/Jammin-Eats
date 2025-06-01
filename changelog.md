@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0] - 2025-05-31
+
+### Added
+- New food animation system: Each food cycles through 3 frames, with a distinct explosion/impact frame at the end of its flight.
+- Animation speed is now decoupled from projectile lifespan for a smoother, more polished look.
+- Inventory HUD improvements: Selected food is only shown in the bottom HUD, with clear key bindings, stock counts, and color-coded status.
+- Improved gameplay polish: Animation, collision, and inventory feedback are thoroughly tested for clarity and smoothness.
+
+### Changed
+- Modular code structure further improved for maintainability and extensibility.
+- Enhanced error handling and fallback logic throughout all modules.
+- Updated README to reflect new features and gameplay improvements.
+
 ## [0.6.0] - 2025-05-31
 
 ### Fixed
