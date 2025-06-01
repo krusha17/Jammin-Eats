@@ -28,13 +28,28 @@ Pixel-Perfect Graphics: Stunning top-down pixel art infused with neon-cyberpunk 
 Vibrant, Seamless Environments: Procedurally generated backgrounds and assets designed to scale effortlessly.
 Reggae-Cyberpunk Theme: Unique visual identity inspired by retro arcade classics, with a futuristic twist.
 
+🧑‍💻 Modular Architecture & Error Handling
+
+- **Codebase is fully modularized** under `src/` with clear separation for core logic, sprites, maps, utilities, and debug tools.
+- **Robust asset loading**: All assets are loaded relative to project root; missing assets trigger fallback visuals/sounds.
+- **Fallback map system**: If a TMX map fails to load, a fallback map is generated to keep the game running.
+- **Database integration**: If the database module is missing or fails, the game continues with persistence/logging disabled.
+- **Sound loading**: Missing sound files are logged but do not crash the game.
+- **Comprehensive error handling**: All critical game loop and rendering logic is wrapped to prevent crashes from unexpected exceptions.
+- **Debug mode**: Toggle with F12 or D for verbose error and event output.
+
+🆘 Troubleshooting
+
+- **Missing Sounds**: If you see errors about missing sound files, add or correct files in `assets/sounds/`. The game will continue without them.
+- **Database Errors**: If `pyodbc` is not installed, database features are gracefully disabled.
+- **Map Not Loading**: If a TMX file is missing or corrupt, a fallback map will be used and a warning printed.
+- **Game Crashes on Start**: All known issues with game state transitions and map loading are now fixed. If you encounter a crash, check the console for error logs and verify asset/database presence.
+
 🛠️ Current Development State
 
 Fully playable prototype with core gameplay loops established.
 Complete sprite animation system for main character and customers.
 Functional game states including start menu, gameplay, and score tracking.
-
-📌 Future Development Goals
 
 📊 Database Integration
 

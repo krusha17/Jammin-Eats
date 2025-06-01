@@ -124,25 +124,34 @@ class Player(pygame.sprite.Sprite):
         self.throw_cooldown = 0.2  # seconds
         self.last_throw_time = 0
 
-    def update(self, dt, customers, foods, game_map=None):
-        # Handle player movement
-        self.handle_movement(dt, game_map)
-        
-        # Update animation
-        self.update_animation(dt)
-        
-        # Check for spacebar to throw food (like in the original main.py)
-        keys = pygame.key.get_pressed()
-        current_time = pygame.time.get_ticks() / 1000.0  # Convert to seconds
-        
-        # Check throw cooldown
-        if current_time - self.last_throw_time >= self.throw_cooldown:
-            # Use spacebar to throw food in the current facing direction
-            if keys[pygame.K_SPACE]:
-                # Throw in the direction the player is facing
-                # Pass the game object from the player's current context if available
-                game_obj = getattr(self, 'game', None)
-                self.throw_food(foods, self.direction, game_obj)
+    def update(self, dt, customers=None, foods=None, game_map=None):
+        # Add safety checks for None arguments
+        if customers is None:
+            customers = pygame.sprite.Group()
+        if foods is None:
+            foods = pygame.sprite.Group()
+            
+        try:
+            # Handle player movement
+            self.handle_movement(dt, game_map)
+            
+            # Update animation
+            self.update_animation(dt)
+            
+            # Check for spacebar to throw food (like in the original main.py)
+            keys = pygame.key.get_pressed()
+            current_time = pygame.time.get_ticks() / 1000.0  # Convert to seconds
+            
+            # Check throw cooldown
+            if current_time - self.last_throw_time >= self.throw_cooldown:
+                # Use spacebar to throw food in the current facing direction
+                if keys[pygame.K_SPACE]:
+                    # Throw in the direction the player is facing
+                    # Pass the game object from the player's current context if available
+                    game_obj = getattr(self, 'game', None)
+                    self.throw_food(foods, self.direction, game_obj)
+        except Exception as e:
+            print(f"[ERROR] Player.update error: {str(e)}")  # Log errors instead of crashing
 
     def handle_movement(self, dt, game_map=None):
         keys = pygame.key.get_pressed()

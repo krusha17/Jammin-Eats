@@ -22,12 +22,30 @@ from src.debug.logger import log, log_error, log_asset_load
 
 # Import new economy and database systems
 from src.core.economy import Economy, EconomyPhase
+
+# Handle potential database module import errors
+DATABASE_AVAILABLE = False
 try:
     from src.core.database import GameDatabase
     DATABASE_AVAILABLE = True
 except ImportError as e:
-    log_error("Database module import error", e)
-    DATABASE_AVAILABLE = False
+    # Only log the error message, not the exception object
+    log_error(f"Database module import error: {str(e)}")
+    print("[INFO] Database functionality will be disabled")
+    
+    # Create a stub GameDatabase class for fallback
+    class GameDatabase:
+        def __init__(self, *args, **kwargs):
+            log_error("Using stub GameDatabase - database features unavailable")
+            
+        def save_player_progress(self, *args, **kwargs):
+            return False
+            
+        def load_player_progress(self, *args, **kwargs):
+            return None
+            
+        def log_transaction(self, *args, **kwargs):
+            return False
 
 
 class Game:
@@ -43,8 +61,47 @@ class Game:
         # Set up the clock
         self.clock = pygame.time.Clock()
         
+        # Game state variables
+        self.game_state = MENU  # Start at menu
+        self.score = 0
+        self.high_score = 0
+        self.game_time = 0
+        self.customer_spawn_timer = 0
+        
+        # Track player stats
+        self.deliveries = 0
+        self.missed_deliveries = 0
+        
+        # Map and frame tracking for economy/database integration
+        self.current_map_id = 1
+        self.current_frame = 1
+        
+        # Auto-save functionality
+        self.last_save_time = pygame.time.get_ticks() / 1000.0
+        self.auto_save_interval = 60  # Auto-save every 60 seconds
+        
         # Debug mode
         self.debug_mode = False
+        
+        # Initialize sprite groups
+        self.all_sprites = pygame.sprite.Group()
+        self.customers = pygame.sprite.Group()
+        self.foods = pygame.sprite.Group()
+        self.particles = pygame.sprite.Group()
+        
+        # UI elements
+        self.start_button = Button(WIDTH // 2 - 100, HEIGHT // 2, 200, 50, "Start", GREEN, (100, 255, 100))
+        self.exit_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 70, 200, 50, "Exit", RED, (255, 100, 100))
+        self.restart_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Restart", GREEN, (100, 255, 100))
+        
+        # Load game sounds
+        self.sounds = load_sounds()
+        
+        # Initialize map
+        self.game_map = None
+        
+        # Initialize player
+        self.player = None
         
         # Initialize economy system
         log("Initializing economy system...")
@@ -61,45 +118,23 @@ class Game:
             log("Initializing database connection...")
             try:
                 self.game_database = GameDatabase()
-                # Don't connect yet - will connect when needed
                 log("Database system initialized")
             except Exception as e:
-                log_error("Failed to initialize database", e)
-                
+                log_error(f"Failed to initialize database: {str(e)}")
+                self.game_database = None
+        
         # Track current map and frame for database and economy tracking
         self.current_map_id = 1  # Default to first map
         self.current_frame = 1   # Default to first frame
         
-        # Auto-save timer
-        self.last_save_time = 0
-        self.auto_save_interval = 60  # Auto-save every 60 seconds
+        # Auto-save timer is already initialized in __init__
         
         # Load font
         self.font = pygame.font.Font(None, 36)
         
-        # Load sounds
-        self.sounds = load_sounds()
-        
         # Create backgrounds
         self.menu_background = self._create_menu_background()
         self.game_over_background = self._create_game_over_background()
-        
-        # Create sprite groups
-        self.all_sprites = pygame.sprite.Group()
-        self.customers = pygame.sprite.Group()
-        self.foods = pygame.sprite.Group()
-        self.particles = pygame.sprite.Group()
-        
-        # Create UI buttons
-        self.start_button = Button(WIDTH // 2 - 100, HEIGHT // 2, 200, 50, "Start", GREEN, (100, 255, 100))
-        self.exit_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 70, 200, 50, "Exit", RED, (255, 100, 100))
-        self.restart_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Restart", GREEN, (100, 255, 100))
-        
-        # Initialize map
-        self.game_map = None
-        
-        # Initialize player
-        self.player = None
     
     def _create_menu_background(self):
         # Create menu background programmatically
@@ -712,7 +747,9 @@ class Game:
                 self.screen.blit(money_text, (20, 20))
                 
                 # Display current phase
-                phase_text = self.font.render(f"Phase: {self.economy.current_phase.name}", True, YELLOW)
+                # Fix: use self.economy.phase (and .name if it's an enum)
+                phase_name = self.economy.phase.name if hasattr(self.economy.phase, 'name') else str(self.economy.phase)
+                phase_text = self.font.render(f"Phase: {phase_name}", True, YELLOW)
                 self.screen.blit(phase_text, (20, 60))
             
             # Draw debug mode indicator if active

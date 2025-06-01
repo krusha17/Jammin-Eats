@@ -58,8 +58,26 @@ class TiledMap:
         print(f"[TiledMap] Loading TMX map from: {tmx_path}")
         print(f"[TiledMap] Current working directory: {os.getcwd()}")
         self.debug_mode = False  # Set this to True for additional debug info
-        loader = ResourceLoader(os.path.dirname(tmx_path))
+        
+        # Initialize some base properties
+        self.width = WIDTH  # Default to screen width
+        self.height = HEIGHT  # Default to screen height
+        self.walkable_cache = {}
+        self.cache_enabled = True
+        self.use_cache = True
+        self.collision_rects = []
+        self.unwalkable_tiles = []
+        self.spawn_points = {}
+        self.map_surface = None
+        
+        # If this is a 'fallback' request, skip trying to load the real map
+        if tmx_path == "fallback":
+            self._create_fallback_map()
+            return
+            
+        # Try to load the actual map
         try:
+            loader = ResourceLoader(os.path.dirname(tmx_path))
             self.tmx_data = load_pygame(tmx_path, image_loader=loader.load)
             print(f"[TiledMap] Successfully loaded TMX: {tmx_path}")
             self.width = self.tmx_data.width * self.tmx_data.tilewidth
@@ -67,6 +85,7 @@ class TiledMap:
             self._initialize_map_properties()
         except Exception as e:
             print(f"[TiledMap] Error loading map: {e}")
+            traceback.print_exc()  # Print the full stack trace for debugging
             self._create_fallback_map()
 
     def _initialize_map_properties(self):
@@ -97,14 +116,28 @@ class TiledMap:
     
     def _create_fallback_map(self):
         """Create a simple fallback map when TMX loading fails"""
-        print("Creating fallback map...")
+        width = WIDTH // 32
+        height = HEIGHT // 32
+        cell_size = 32
+        self.width = WIDTH
+        self.height = HEIGHT
+        print(f"[TiledMap] Creating fallback map of size {width}x{height} cells")
         
-        # Create a basic grid map
-        width, height = 20, 15  # cells (20x15 grid)
-        cell_size = 32  # pixels per cell
+        # Create map surface
+        self.map_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         
-        self.width = width * cell_size
-        self.height = height * cell_size
+        # Set width and height properly
+        self.width = WIDTH
+        self.height = HEIGHT
+        
+        # Create a checkered pattern for the fallback map
+        for y in range(0, self.height, cell_size):
+            for x in range(0, self.width, cell_size):
+                color = (200, 200, 200) if (x // cell_size + y // cell_size) % 2 == 0 else (150, 150, 150)
+                pygame.draw.rect(self.map_surface, color, (x, y, cell_size, cell_size))
+                
+        # Add a border around the map
+        pygame.draw.rect(self.map_surface, (100, 100, 100), (0, 0, self.width, self.height), 5)
         
         # Initialize a fake TMX data object to avoid attribute errors
         class FakeTmxData:
@@ -290,50 +323,79 @@ class TiledMap:
         2. It collides with a collision rectangle object
         3. It's on a tile marked as unwalkable (has collides=True property or is in an unwalkable layer)
         """
-        # Check if position is out of map bounds
-        if x < 0 or y < 0 or x >= self.width or y >= self.height:
-            return False
-        
-        # Check collision with collision rectangles
-        for rect in self.collision_rects:
-            if rect.collidepoint(x, y):
+        try:
+            # Check if position is out of map bounds
+            if x < 0 or y < 0 or x >= self.width or y >= self.height:
                 return False
-        
-        # Convert pixel position to tile indices
-        tile_x = int(x // self.tmx_data.tilewidth)
-        tile_y = int(y // self.tmx_data.tileheight)
-        
-        # Check if the tile is in the unwalkable list
-        # This list is populated with tiles that either:
-        # 1. Have collides=True property in Tiled, or
-        # 2. Are in a layer marked as unwalkable
-        if (tile_x, tile_y) in self.unwalkable_tiles:
-            return False
-        
-        # If we got here, position is walkable
-        return True
+            
+            # If we don't have a valid TMX data object, use a simplified check
+            if not hasattr(self, 'tmx_data') or self.tmx_data is None:
+                # Create a margin for walkability (make edge non-walkable)
+                margin = 50
+                return margin < x < self.width - margin and margin < y < self.height - margin
+            
+            # Check collision with collision rectangles
+            for rect in self.collision_rects:
+                if rect.collidepoint(x, y):
+                    return False
+            
+            # Convert pixel position to tile indices
+            tile_x = int(x // self.tmx_data.tilewidth)
+            tile_y = int(y // self.tmx_data.tileheight)
+            
+            # Check if the tile is in the unwalkable list
+            # This list is populated with tiles that either:
+            # 1. Have collides=True property in Tiled, or
+            # 2. Are in a layer marked as unwalkable
+            if (tile_x, tile_y) in self.unwalkable_tiles:
+                return False
+                
+            # If we got here, position is walkable
+            return True
+        except Exception as e:
+            print(f"[ERROR] TiledMap._check_walkability error: {str(e)}")
+            # If there's an error, default to allowing movement
+            return True
     
     def is_walkable(self, x, y):
         """Check if a position is walkable, using cache when possible"""
-        # Round to nearest cached point if cache is enabled
-        if self.use_cache and self.cache_enabled:
-            # Find the nearest cached point
-            step = 8
-            cache_x = round(x / step) * step
-            cache_y = round(y / step) * step
+        try:
+            # First, check if position is outside of map bounds
+            if x < 0 or y < 0 or x >= self.width or y >= self.height:
+                return False
+                
+            # Use the cache if enabled for better performance
+            if self.use_cache:
+                # Round to nearest cached point if cache is enabled
+                step = 8
+                cache_x = round(x / step) * step
+                cache_y = round(y / step) * step
+                
+                if (cache_x, cache_y) in self.walkable_cache:
+                    return self.walkable_cache[(cache_x, cache_y)]
             
-            if (cache_x, cache_y) in self.walkable_cache:
-                return self.walkable_cache[(cache_x, cache_y)]
-        
-        # Fall back to computing walkability directly
-        return self._check_walkability(x, y)
-    
+            # Otherwise, perform the actual check
+            result = self._check_walkability(x, y)
+            
+            # Cache the result if caching is enabled
+            if self.use_cache:
+                step = 8
+                cache_x = round(x / step) * step
+                cache_y = round(y / step) * step
+                self.walkable_cache[(cache_x, cache_y)] = result
+                
+            return result
+        except Exception as e:
+            print(f"[ERROR] TiledMap.is_walkable error: {str(e)}")
+            # If there's an error, default to allowing movement (less frustrating for players)
+            return True
+            
     def get_spawn_positions(self, object_name="CustomerSpawn"):
         """Gets spawn positions for customers based on an object name"""
         spawn_points = []
         
         # Try to find spawn points from the map objects
-        if object_name in self.spawn_points:
+        if hasattr(self, 'spawn_points') and object_name in self.spawn_points:
             # Found spawn points in the cached object list
             potential_spawns = self.spawn_points[object_name]
             

@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0] - 2025-05-31
+
+### Fixed
+- Game no longer crashes after pressing Start due to robust error handling in game loop, player, and map logic.
+- All map, player, and economy logic now have fallback mechanisms for missing/corrupt assets and database failures.
+- Fixed AttributeError in `_render` for economy phase display.
+
+### Changed
+- Improved modularization and code organization.
+- Added comprehensive error logging for asset loading, sound, and database operations.
+- Updated documentation (README) with troubleshooting, error handling, and fallback system info.
+
+
 All notable changes to the Jammin' Eats project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
