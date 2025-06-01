@@ -1,10 +1,10 @@
 🎮 Jammin' Eats
 
-## Tutorial Mode
+## Tutorial Mode & Progression
 
-Jammin' Eats features a special **Tutorial Mode** designed to help new players learn the game mechanics in a forgiving environment. Here’s how Tutorial Mode works:
+Jammin' Eats features a **Tutorial System** designed to help new players learn the game mechanics in a forgiving environment and then graduate to the full game experience.
 
-### Mechanics in Tutorial Mode
+### Tutorial Mechanics
 - **No Penalties for Wrong Food:**
   - Giving a customer the wrong food will not increase the "Wrong Food" counter or result in a game over.
   - Customers may still react (e.g., appear angry), but you are free to experiment without failing.
@@ -12,23 +12,27 @@ Jammin' Eats features a special **Tutorial Mode** designed to help new players l
   - The in-game timer is still visible and counts up, but there is no time pressure or penalty for slow play.
 - **Economy and Purchases:**
   - All food is free during the tutorial phase. You cannot run out of money.
-- **Objective:**
-  - The goal is to practice the core game loop and get comfortable with controls and delivery mechanics.
+- **Tutorial Goals:**
+  - Successfully serve 5 customers with the correct food items, OR
+  - Earn $50 in the tutorial economy
 
-### How to Enable/Disable Tutorial Mode
-- Tutorial Mode is controlled by the `TUTORIAL_MODE` constant in `src/core/constants.py`.
-- To enable Tutorial Mode, set:
-  ```python
-  TUTORIAL_MODE = True
-  ```
-- To disable Tutorial Mode and play the full game with penalties and normal economy, set:
-  ```python
-  TUTORIAL_MODE = False
-  ```
+### Tutorial Graduation
+- Once you achieve either tutorial goal, a "Tutorial Complete!" overlay will appear
+- Your tutorial completion is saved to the database, so you won't have to repeat it
+- After completing the tutorial, the title screen will show a "Continue" option
+- New players will automatically start in tutorial mode
+- Returning players can choose to start a new game or continue with normal gameplay
 
-### Why Use Tutorial Mode?
-- Tutorial Mode is ideal for onboarding new players or for testing the game without risk of failure.
-- It allows experimentation and learning before progressing to the full challenge.
+### State Management
+- The game uses a state machine architecture to manage different game states:
+  - `TutorialState`: Tracks progress toward tutorial goals
+  - `TutorialCompleteState`: Displays completion overlay
+  - `TitleState`: Main menu with options based on tutorial completion
+
+### Technical Implementation
+- Tutorial completion is stored in the `player_profile` table
+- The `dal.py` module provides `is_tutorial_complete()` and `mark_tutorial_complete()` functions
+- Tutorial state is automatically determined when the game starts
 
 ---
 
