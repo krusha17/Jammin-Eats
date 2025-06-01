@@ -127,10 +127,10 @@ class Food(pygame.sprite.Sprite):
         # Track timer for determining animation progression
         self.frame_timer = 0.0
         
-        # Attempt to load up to 5 numbered frames for smooth animation
+        # Attempt to load up to 3 numbered frames for smooth animation
         base_dir = os.path.join(ASSETS_DIR, 'Food', base_name)
         if os.path.isdir(base_dir):
-            for i in range(1, 6):
+            for i in range(1, 4):
                 frame_path = os.path.join(base_dir, f"{file_prefix}{i}.png")
                 if os.path.exists(frame_path):
                     frame_surf = pygame.image.load(frame_path).convert_alpha()
@@ -138,11 +138,10 @@ class Food(pygame.sprite.Sprite):
                     self.frames.append(frame_surf)
         # If no specific frames found, fall back to repeating the primary image
         if not self.frames:
-            self.frames = [self.image] * 5
-        
+            self.frames = [self.image] * 3
         # Ensure current image matches first frame
         self.image = self.frames[0]
-        
+
         # Set up the food rectangle
         self.rect = self.image.get_rect(center=(x, y))
         
@@ -179,10 +178,11 @@ class Food(pygame.sprite.Sprite):
             self.rect.bottom < 0 or self.rect.top > HEIGHT):
             self.kill()
         
-        # Determine animation frame based on progress towards lifespan
-        if len(self.frames) > 1:
+        # Determine animation frame based on progress towards lifespan (using 3 frames)
+        frame_count = 3 if len(self.frames) >= 3 else len(self.frames)
+        if frame_count > 1:
             progress_ratio = min(self.timer / self.lifespan, 1.0)
-            target_index = int(progress_ratio * (len(self.frames) - 1))
+            target_index = int(progress_ratio * (frame_count - 1))
             if target_index != self.current_frame:
                 self.current_frame = target_index
                 current_center = self.rect.center  # preserve position when image size differs
