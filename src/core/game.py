@@ -727,13 +727,6 @@ class Game:
                 self.foods.draw(self.screen)
                 self.particles.draw(self.screen)
             
-            # Draw player stats
-            self.player.draw_stats(self.screen)
-            
-            # Draw score
-            score_text = self.font.render(f"Score: {self.score}", True, WHITE)
-            self.screen.blit(score_text, (WIDTH - 150, 20))
-            
             # Draw game time
             minutes = int(self.game_time) // 60
             seconds = int(self.game_time) % 60
@@ -769,7 +762,7 @@ class Game:
             # Draw menu
             self.screen.blit(self.menu_background, (0, 0))
             draw_text(self.screen, "JAMMIN' EATS", 72, WIDTH // 2, HEIGHT // 4, YELLOW)
-            draw_text(self.screen, "Deliver tasty food to hungry customers!", 36, WIDTH // 2, HEIGHT // 3, WHITE)
+            draw_text(self.screen, "Deliver tasty food to hungry customers!", 36, WIDTH // 2, WIDTH // 3, WHITE)
             
             # Update and draw buttons
             self.start_button.update(mouse_pos)
@@ -777,8 +770,7 @@ class Game:
             self.start_button.draw(self.screen)
             self.exit_button.draw(self.screen)
             
-            # Draw high score
-            draw_text(self.screen, f"High Score: {self.high_score}", 36, WIDTH // 2, HEIGHT - 100, WHITE)
+            # (High score display removed for now)
         
         # GAME_OVER state - draw the game over screen
         elif self.game_state == GAME_OVER:
