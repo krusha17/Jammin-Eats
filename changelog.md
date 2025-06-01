@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0-alpha] - 2025-06-01
+
+### Added
+- Persistence layer with SQLite database
+- Player profile and settings storage
+- Upgrade ownership persistence
+- Run history tracking for analytics
+- High score system
+- Database migration pipeline
+
+### Changed
+- Game state now loads from and saves to database
+- Upgrades persist between game sessions
+
 ## [0.8.0-alpha] - 2025-05-31
 
 ### Added
