@@ -71,10 +71,49 @@ def temp_game_dir():
 
 @pytest.fixture
 def mock_database(temp_game_dir):
-    """Create temporary database for testing."""
-    db_path = temp_game_dir / "data" / "test.db"
-    db_path.parent.mkdir(parents=True)
-    # Initialize test database
+    """Create and initialize a temporary SQLite database for testing."""
+    # Create data directory
+    data_dir = temp_game_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Define database path
+    db_path = data_dir / "test.db"
+    
+    # Initialize with required tables
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Create tables matching our schema
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS player_profile (
+        player_id INTEGER PRIMARY KEY,
+        display_name TEXT DEFAULT 'Player',
+        high_score INTEGER DEFAULT 0,
+        tutorial_complete INTEGER DEFAULT 0
+    )
+    """)
+    
+    # Insert default player
+    cursor.execute("""
+    INSERT INTO player_profile (player_id, display_name, high_score, tutorial_complete) 
+    VALUES (1, 'Test Player', 0, 0)
+    """)
+    
+    # Add any other tables needed for tests
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS player_settings (
+        setting_id INTEGER PRIMARY KEY,
+        player_id INTEGER,
+        music_volume REAL DEFAULT 0.7,
+        sfx_volume REAL DEFAULT 1.0,
+        FOREIGN KEY (player_id) REFERENCES player_profile(player_id)
+    )
+    """)
+    
+    conn.commit()
+    conn.close()
+    
     return db_path
 
 @pytest.fixture
