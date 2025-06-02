@@ -27,6 +27,7 @@ class Game:
         self.selected_food = None
         self.money = 0
         self.successful_deliveries = 0
+        self.tutorial_completed = False
         
         # Initialize persistence
         self.persistence = GamePersistence()
@@ -34,8 +35,11 @@ class Game:
         # Setup tutorial flow
         if not is_tutorial_complete(self.persistence.player_id):
             self.tutorial_state = TutorialState(self)
+            # Pre-initialize some basic game objects needed for tutorial
+            self.setup_tutorial_objects()
         else:
             self.tutorial_state = None
+            self.tutorial_completed = True
 
     def run(self):
         """Main loop: tutorial, title, then gameplay."""
@@ -240,3 +244,24 @@ class Game:
             x, y = random.choice(spawn_points)
             customer = Customer(x, y)
             self.customers.add(customer)
+            
+    def setup_tutorial_objects(self):
+        """Initialize objects needed for the tutorial."""
+        try:
+            # Import here to avoid circular imports
+            from src.sprites.player import Player
+            from src.map.game_map import GameMap
+            from src.economy.economy import Economy
+            
+            # Initialize basic objects needed for tutorial
+            self.player = Player(self.screen_width // 2, self.screen_height // 2)
+            self.game_map = GameMap()
+            self.economy = Economy(self)
+            
+            # Preload some customers for tutorial
+            self.spawn_customer()
+            
+        except ImportError as e:
+            print(f"[ERROR] Failed to initialize tutorial objects: {e}")
+            # Provide fallback minimal initialization
+            pass

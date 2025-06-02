@@ -38,7 +38,7 @@ class TutorialCompleteState(GameState):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
                 # Mark tutorial as complete in database
-                mark_tutorial_complete()
+                mark_tutorial_complete(self.game.persistence.player_id)
                 
                 # Update the game's state
                 self.game.tutorial_completed = True

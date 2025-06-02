@@ -41,8 +41,24 @@ class TutorialState(GameState):
         self.hint_timer = 15.0  # Show hints for 15 seconds
     
     def handle_event(self, event):
-        """Pass events to the main game."""
-        # Just pass through to the underlying game
+        """Handle input events in tutorial."""
+        # Toggle hints with H key
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_h:
+                self.show_hint = not self.show_hint
+                return True
+            elif event.key == pygame.K_SPACE:
+                # Simulate food delivery for tutorial purposes
+                self.served_correct += 1
+                self.game.successful_deliveries = self.served_correct
+                self.money_earned += 10
+                self.game.money = self.money_earned
+                return True
+            # Skip tutorial with ESC key (for testing)
+            elif event.key == pygame.K_ESCAPE:
+                # Show the tutorial completion overlay
+                self.next_state = TutorialCompleteState(self.game)
+                return True
         return False
     
     def update(self, dt):
