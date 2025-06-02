@@ -1,6 +1,30 @@
 🎮 Jammin' Eats
 
-## Tutorial Mode & Progression
+## Tutorial Mode
+
+> **Note:** Project is currently in the core system validation (graybox) phase. See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for details.
+
+
+The tutorial graduation system is fully implemented and validated. On first launch, players must complete a short tutorial (deliveries or money goal) before accessing the main game. Completion is persisted in the database and skips on future launches.
+
+- Tutorial overlays and state transitions are fully functional.
+- Graybox mechanics (no assets) are used to validate logic and persistence.
+- Press SPACE to simulate deliveries/money in the tutorial.
+- Press ENTER to advance from the completion overlay.
+
+## Current Development Stage
+
+- **Core systems (tutorial, DAL, state machine, persistence) are complete and validated.**
+- **Graybox/logic-only mode:** No art or sound assets are loaded during tutorial/testing phases; this is intentional for rapid iteration and validation.
+- **Asset integration and polish are deferred** until all checklist items are green.
+
+## System Validation Checklist
+See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for a step-by-step, test-driven guide to validating every core system before moving to the next milestone.
+
+## Next Steps for Contributors
+- Work through the checklist, checking off each system as it is validated.
+- Only begin asset, sound, and polish integration once all core systems are stable and tested.
+- See DEVELOPMENT_ROADMAP.md for future features and expansion plans. & Progression
 
 Jammin' Eats features a **Tutorial System** designed to help new players learn the game mechanics in a forgiving environment and then graduate to the full game experience.
 

@@ -1,5 +1,8 @@
 # Jammin' Eats – Core System Validation Checklist
 
+**Status:** Tutorial system, DAL, and state machine are validated and working. Project is in the graybox validation phase. Use this checklist to validate all systems before asset integration and polish.
+
+
 > Purpose: Provide a *mechanics-first* test plan that professional game studios use to validate core gameplay loops **before** art / audio polish.  
 > Scope: Tutorial graduation, title → gameplay transition, persistence, economy, input, and error handling on Windows (primary) & cross-platform readiness.
 

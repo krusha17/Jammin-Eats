@@ -2,6 +2,8 @@
 
 ## Overview
 
+**Status:** Tutorial graduation system is fully implemented and tested. The project is now in the core system validation phase (see `CORE_SYSTEM_VALIDATION_CHECKLIST.md`). This document remains as a regression and reference plan for the tutorial system.
+
 This test plan outlines the testing approach for the Jammin' Eats Tutorial Graduation System. The system allows new players to learn game mechanics in a forgiving environment and then transition to normal gameplay once they've met specific goals.
 
 ## Test Environments

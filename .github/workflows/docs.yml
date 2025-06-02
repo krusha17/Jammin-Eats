@@ -1,0 +1,61 @@
+name: Docs & Checklist Automation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 2. Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install pytest coverage
+
+      # 3. Run tests and collect results
+      - name: Run Pytest
+        run: |
+          source venv/bin/activate
+          pytest --tb=short --maxfail=1 --junitxml=pytest-results.xml
+
+      # 4. Generate coverage report
+      - name: Generate Coverage Report
+        run: |
+          source venv/bin/activate
+          coverage run -m pytest
+          coverage xml
+
+      # 5. Validate checklist (custom script)
+      - name: Validate Checklist
+        run: |
+          python tools/checklist_validator.py CORE_SYSTEM_VALIDATION_CHECKLIST.md pytest-results.xml
+
+      # 6. Fail if checklist is not up to date
+      - name: Fail if checklist not up to date
+        run: |
+          if grep -q '❌' CORE_SYSTEM_VALIDATION_CHECKLIST.md; then
+            echo "Checklist incomplete! Please update before merging."
+            exit 1
+          fi
+
+      # 7. Optionally auto-commit doc changes
+      - name: Commit doc changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add CORE_SYSTEM_VALIDATION_CHECKLIST.md README.md
+          git commit -m 'auto: update checklist and docs [ci skip]' || echo "No changes to commit"
+          git push || echo "No push (PR context)"

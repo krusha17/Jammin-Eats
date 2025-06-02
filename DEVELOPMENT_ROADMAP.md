@@ -11,7 +11,9 @@ The core gameplay loop and tutorial graduation system have been implemented. Pla
 
 ## Next Development Phases
 
-### Phase 1: Testing & QA for Tutorial Graduation System
+### Phase 1: Testing & QA for Tutorial Graduation System## Current Phase: Core System Validation
+
+> **Note:** Asset integration and polish are deferred until all items in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` are complete.
 
 - [ ] **Unit Tests**
   - [ ] Test tutorial completion detection logic
