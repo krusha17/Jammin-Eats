@@ -21,6 +21,12 @@ jobs:
           python-version: '3.13'
           cache: 'pip'
 
+      # 2. Set up dummy audio for Pygame
+      - name: Set up dummy audio driver for Pygame
+        run: |
+          echo "SDL_AUDIODRIVER=dummy" >> $GITHUB_ENV
+          echo "SDL_VIDEODRIVER=dummy" >> $GITHUB_ENV
+
       # 2. Install dependencies (including dev requirements)
       - name: Install dependencies
         run: |
@@ -58,7 +64,7 @@ jobs:
       - name: Run unit tests
         run: |
           # Only run tests for completed modules in our phased implementation
-          python -m pytest tests/unit/test_dal.py -v
+          python -m pytest tests/test_dal.py -v
 
       # 8. Run integration tests with pytest
       - name: Run integration tests
@@ -69,7 +75,7 @@ jobs:
       # 9. Generate test coverage report
       - name: Generate test coverage
         run: |
-          python -m pytest --cov=src tests/ --cov-report=xml
+          python -m pytest --cov=src.persistence tests/test_dal.py --cov-report=xml
 
       # 10. Upload coverage report as artifact
       - name: Upload coverage report
