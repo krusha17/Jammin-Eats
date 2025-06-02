@@ -37,6 +37,15 @@
 
 ---
 
+---
+
+**Project Status (as of 2025-06-02):**
+- Environment, Database, and Tutorial Graduation Flow: **COMPLETE & VALIDATED**
+- Title → Gameplay Transition: **BLOCKED** (missing modules: game_map, player, asset loading)
+- Next: Implement map, player, and asset modules to enable gameplay and menu transitions.
+
+---
+
 ## 3. Title → Gameplay Transition
 | ID | Test | Steps | Expected Result |
 |----|------|-------|-----------------|
