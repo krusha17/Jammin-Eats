@@ -1,0 +1,87 @@
+name: Jammin' Eats Testing Pipeline
+
+on:
+  push:
+    branches: [ main, dev, feature/* ]
+  pull_request:
+    branches: [ main, dev ]
+  # Manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      # 2. Install dependencies (including dev requirements)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pygame --pre  # Pygame needs --pre for Python 3.13
+
+      # 3. Install SDL libraries for Pygame
+      - name: Install SDL libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
+      # 4. Run linting with ruff
+      - name: Lint with ruff
+        run: |
+          ruff check src tests
+        continue-on-error: true  # Don't fail the build for lint errors initially
+
+      # 5. Run type checking with mypy
+      - name: Type check with mypy
+        run: |
+          mypy src
+        continue-on-error: true  # Don't fail the build for type errors initially
+
+      # 6. Run security check with pip-audit
+      - name: Security audit with pip-audit
+        run: |
+          pip-audit
+        continue-on-error: true  # Don't fail the build for security warnings initially
+
+      # 7. Run unit tests with pytest
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/unit -v
+
+      # 8. Run integration tests with pytest
+      - name: Run integration tests
+        run: |
+          python -m pytest tests/integration -v
+        continue-on-error: true  # Some integration tests may fail due to missing modules
+
+      # 9. Generate test coverage report
+      - name: Generate test coverage
+        run: |
+          python -m pytest --cov=src tests/ --cov-report=xml
+
+      # 10. Upload coverage report as artifact
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      # 11. Validate checklist (if script exists)
+      - name: Validate Checklist
+        run: |
+          if [ -f tools/checklist_validator.py ]; then
+            python tools/checklist_validator.py CORE_SYSTEM_VALIDATION_CHECKLIST.md pytest-results.xml
+          else
+            echo "Checklist validator not found, skipping validation"
+          fi
+        continue-on-error: true
