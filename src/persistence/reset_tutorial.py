@@ -9,7 +9,10 @@ import sqlite3
 from pathlib import Path
 
 # Use the same DB_PATH as in dal.py/db_init.py
-DB_PATH = Path(__file__).parent.parent / "data" / "jammin.db"
+from pathlib import Path
+
+# Set DB_PATH to the absolute path of the database file at the project root data directory
+DB_PATH = Path(__file__).parent.parent.parent / "data" / "jammin.db"
 
 def reset_tutorial_flag(player_id=1):
     if not DB_PATH.exists():
