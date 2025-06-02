@@ -7,6 +7,9 @@ import pytest
 import os
 import sys
 import pygame
+import tempfile
+import shutil
+from pathlib import Path
 
 # Add src directory to path to allow importing game modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -60,6 +63,21 @@ def test_id(request):
     return None
 
 @pytest.fixture
+def temp_game_dir():
+    """Create isolated game directory for testing."""
+    temp_dir = tempfile.mkdtemp()
+    yield Path(temp_dir)
+    shutil.rmtree(temp_dir)
+
+@pytest.fixture
+def mock_database(temp_game_dir):
+    """Create temporary database for testing."""
+    db_path = temp_game_dir / "data" / "test.db"
+    db_path.parent.mkdir(parents=True)
+    # Initialize test database
+    return db_path
+
+@pytest.fixture
 def mock_db_connection():
     """Provide a mock DB connection for testing DAL functions."""
     # This would use a proper mock or in-memory DB in a real implementation
@@ -77,7 +95,7 @@ def mock_db_connection():
         def execute(self, *args):
             pass
         def fetchone(self):
-            return {"tutorial_complete": 0}
+            return {"tutorial_complete": 0, "high_score": 0}
     
     return MockConnection()
 

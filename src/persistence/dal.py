@@ -19,8 +19,15 @@ except ImportError:
     def log(message): print(f"[LOG] {message}")
     def log_error(message): print(f"[ERROR] {message}")
 
-# Path to the database file
-DB_PATH = Path(__file__).parent.parent.parent / "data" / "jammin.db"
+# Import database initialization
+from src.persistence.db_init import initialize_database, DB_PATH
+
+# Ensure database is initialized when this module is imported
+if not DB_PATH.exists():
+    log("Database not found, initializing now...")
+    initialize_database()
+
+# DB_PATH is now imported from db_init.py
 
 # Cache for frequently accessed data
 _cache = {
