@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.9.1-alpha] - 2025-06-03
+
+### Added
+- Detailed implementation plan for completing Title → Gameplay transition (see checklist section 3A).
+- Project documentation and validation checklist updates for team review.
+
+### Fixed
+- ShopOverlay AttributeError (missing `visible` property) and gameplay state transition bugs.
+
+### Improved
+- Robustness of database initialization and asset loading logic.
+- Logging and diagnostics for state transitions and asset failures.
+
 ## [0.9.0-alpha] - 2025-06-01
 
 ### Added
