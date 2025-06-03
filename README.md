@@ -15,14 +15,17 @@ The tutorial graduation system is fully implemented and validated. On first laun
 ## Current Development Stage
 
 - **Core systems (tutorial, DAL, state machine, persistence) are complete and validated.**
-- **Graybox/logic-only mode:** No art or sound assets are loaded during tutorial/testing phases; this is intentional for rapid iteration and validation.
+- **Title → Gameplay Transition milestone is IN PROGRESS.**
+- **Current blockers:** Map is not loading, missing HUD, food/customer sprites, and shop content.
+- See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for the detailed implementation plan and blockers table.
 - **Asset integration and polish are deferred** until all checklist items are green.
 
 ## System Validation Checklist
 See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for a step-by-step, test-driven guide to validating every core system before moving to the next milestone.
 
 ## Next Steps for Contributors
-- Work through the checklist, checking off each system as it is validated.
+- Review the new implementation plan in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` (section 3A) and coordinate fixes for the Title → Gameplay transition.
+- Use the debug launcher (`debug_main.py`) to run diagnostics and validate asset loading and state transitions.
 - Only begin asset, sound, and polish integration once all core systems are stable and tested.
 - See DEVELOPMENT_ROADMAP.md for future features and expansion plans. & Progression
 
@@ -59,6 +62,12 @@ Jammin' Eats features a **Tutorial System** designed to help new players learn t
 - Tutorial state is automatically determined when the game starts
 
 ---
+
+## Diagnostics & Validation
+
+- Run `python debug_main.py` to launch the game in debug/diagnostic mode.
+- Check logs for asset loading errors, missing sprites, or state transition issues.
+- Use the checklist in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` to validate each system before moving to the next milestone.
 
 A Neon-Retro, Reggae-Cyberpunk Food Delivery Adventure!
 Welcome to Jammin' Eats, a vibrant and exciting 2D top-down game set in a neon-lit futuristic beach city where reggae rhythms blend harmoniously with cyberpunk aesthetics. Inspired by classic arcade games like Paperboy, Jammin' Eats offers immersive gameplay, dynamic animation, and an infectious tropical vibe!

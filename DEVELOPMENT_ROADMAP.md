@@ -2,18 +2,42 @@
 
 ## Current Status
 
-The core gameplay loop and tutorial graduation system have been implemented. Players can now:
+**Current milestone:** Title → Gameplay Transition (as of 2025-06-03)
 
-- Complete the tutorial with clear objectives (5 successful deliveries or $50 earned)
-- Experience a tutorial completion overlay
-- Have their tutorial progress saved in the database
-- Access the main game through the title screen with appropriate menu options
+- Tutorial system, DAL, and state machine are validated and working.
+- Blockers for this milestone:
+  - Map is not loading (fallback/default map shown)
+  - Customer food bubbles, food sprites, and HUD info not displayed
+  - Food throwing mechanic not functioning (no sprites thrown, food selection not working)
+  - Shop overlay opens/closes but is blank
+- See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` section 3A for the detailed implementation plan.
 
 ## Next Development Phases
 
-### Phase 1: Testing & QA for Tutorial Graduation System## Current Phase: Core System Validation
+### Current Phase: Title → Gameplay Transition
+
+- Follow the step-by-step implementation plan in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` section 3A to resolve all blockers above.
+- Do not proceed to asset polish, economy, or scoring until all Title → Gameplay transition checklist items are validated.
 
 > **Note:** Asset integration and polish are deferred until all items in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` are complete.
+
+---
+
+### Implementation Plan Summary (2025-06-03)
+| Step | Task |
+|------|------|
+| 1 | Audit asset paths and existence |
+| 2 | Centralize asset management |
+| 3 | Remove placeholders |
+| 4 | Refactor map loading & rendering |
+| 5 | Fix sprite assignment & food throwing |
+| 6 | Implement/restore HUD |
+| 7 | Populate shop overlay |
+| 8 | Add robust error handling/logging |
+| 9 | Validate security & efficiency |
+| 10 | Update documentation/checklists |
+
+See checklist for full details and rationale for each step.
 
 - [ ] **Unit Tests**
   - [ ] Test tutorial completion detection logic

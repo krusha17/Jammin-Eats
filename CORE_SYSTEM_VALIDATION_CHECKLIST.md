@@ -39,10 +39,36 @@
 
 ---
 
-**Project Status (as of 2025-06-02):**
+**Project Status (as of 2025-06-03):**
 - Environment, Database, and Tutorial Graduation Flow: **COMPLETE & VALIDATED**
-- Title → Gameplay Transition: **BLOCKED** (missing modules: game_map, player, asset loading)
-- Next: Implement map, player, and asset modules to enable gameplay and menu transitions.
+- Title → Gameplay Transition: **IN PROGRESS** (blockers: map not loading, missing HUD, food/customer sprites, and shop content)
+- Next: Complete asset loading, map rendering, sprite/HUD functionality, and shop overlay population as detailed below.
+
+---
+
+## 3A. Title → Gameplay Transition: Implementation Plan & Blockers (2025-06-03)
+
+### Current Blockers
+- Map is not loading (fallback/default map shown)
+- Customer food bubbles, food sprites, and HUD info not displayed
+- Food throwing mechanic not functioning (no sprites thrown, food selection not working)
+- Shop overlay opens/closes but is blank
+
+### Step-by-Step Implementation Plan
+| Step | Task | Owner | Status/Notes |
+|------|------|-------|--------------|
+| 1 | Audit asset paths and existence | Dev |  |
+| 2 | Centralize asset management | Dev |  |
+| 3 | Remove placeholders | Dev |  |
+| 4 | Refactor map loading & rendering | Dev |  |
+| 5 | Fix sprite assignment & food throwing | Dev |  |
+| 6 | Implement/restore HUD | Dev |  |
+| 7 | Populate shop overlay | Dev |  |
+| 8 | Add robust error handling/logging | Dev |  |
+| 9 | Validate security & efficiency | Dev/Lead |  |
+| 10 | Update documentation/checklists | Dev |  |
+
+See project documentation for full details and rationale for each step. Move to section 4 (Economy & Scoring) only after all above are validated.
 
 ---
 
