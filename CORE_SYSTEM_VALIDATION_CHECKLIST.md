@@ -49,8 +49,10 @@
 ## 3. Title → Gameplay Transition
 | ID | Test | Steps | Expected Result |
 |----|------|-------|-----------------|
-| TP-01 | Start new game | At title press START | Game loop begins; player/objects spawn if assets exist. |
-| TP-02 | Exit button | Click EXIT | Window closes; process ends with exit code 0. |
+| TP-00 | Title screen | Fresh DB → launch → observe | Title screen shown immediately, *Continue* enabled. |
+| TP-01 | Start new game | At title press New Game | Game loop begins; player/objects spawn if assets exist. |
+| TP-02 | Load saved game | At title press Load Game | Game loop begins; player/objects spawn if assets exist. |  
+| TP-03 | Exit button | Click EXIT | Window closes; process ends with exit code 0. |
 
 ---
 
