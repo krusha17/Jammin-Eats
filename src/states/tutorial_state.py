@@ -5,9 +5,32 @@ Players must achieve specific goals to graduate from the tutorial.
 """
 
 import pygame
-from src.states.state import GameState
-from src.states.tutorial_complete_state import TutorialCompleteState
-from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE
+
+# Use flexible import system to support both direct and src-prefixed imports
+try:
+    # Try direct imports first
+    from states.state import GameState
+    from states.tutorial_complete_state import TutorialCompleteState
+    from core.constants import WIDTH, HEIGHT, BLACK, WHITE
+except ImportError:
+    # Fall back to src-prefixed imports
+    from src.states.state import GameState
+    from src.states.tutorial_complete_state import TutorialCompleteState  
+    from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE
+
+# Set up a simple logger if the main one isn't available
+try:
+    from debug.logger import game_logger
+except ImportError:
+    try:
+        from src.debug.logger import game_logger
+    except ImportError:
+        import logging
+        game_logger = logging.getLogger("TutorialState")
+        game_logger.info = lambda msg, *args, **kwargs: print(f"[INFO] {msg}")
+        game_logger.debug = lambda msg, *args, **kwargs: print(f"[DEBUG] {msg}")
+        game_logger.error = lambda msg, *args, **kwargs: print(f"[ERROR] {msg}")
+        game_logger.warning = lambda msg, *args, **kwargs: print(f"[WARNING] {msg}")
 
 class TutorialState(GameState):
     """Tutorial gameplay state with success tracking."""
@@ -44,21 +67,61 @@ class TutorialState(GameState):
         """Handle input events in tutorial."""
         # Toggle hints with H key
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_h:
+            # Handle food selection with number keys (1-5)
+            if event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5):
+                food_idx = event.key - pygame.K_1
+                food_types = ['burger', 'pizza', 'sushi', 'taco', 'hotdog']
+                if food_idx < len(food_types):
+                    selected = food_types[food_idx]
+                    # Update both game and HUD with selection
+                    self.game.selected_food = selected
+                    if hasattr(self.game, 'hud'):
+                        self.game.hud.set_selection(selected)
+                        game_logger.debug(f"Selected food changed to {selected}", "TutorialState")
+                    return True
+                    
+            # Toggle hints with H key
+            elif event.key == pygame.K_h:
                 self.show_hint = not self.show_hint
+                game_logger.debug(f"Tutorial hints {'shown' if self.show_hint else 'hidden'}", "TutorialState")
                 return True
+                
+            # Throw food with SPACE
             elif event.key == pygame.K_SPACE:
                 # Simulate food delivery for tutorial purposes
                 self.served_correct += 1
                 self.game.successful_deliveries = self.served_correct
                 self.money_earned += 10
                 self.game.money = self.money_earned
+                game_logger.debug(f"Tutorial food delivered! Total: {self.served_correct}", "TutorialState")
+                
+                # Create a particle effect if the system exists
+                if hasattr(self.game, 'particles'):
+                    try:
+                        # Position the effect in front of the player
+                        if self.game.player:
+                            pos_x = self.game.player.rect.centerx
+                            pos_y = self.game.player.rect.centery
+                            self.game.particles.add_effect('success', pos_x, pos_y)
+                    except Exception as e:
+                        # Don't crash if particles fail
+                        game_logger.error(f"Couldn't create particle effect: {e}", "TutorialState")
                 return True
+                
+            # Shop key (B)
+            elif event.key == pygame.K_b:
+                game_logger.debug("Shop triggered in tutorial", "TutorialState")
+                if hasattr(self.game, 'shop'):
+                    self.game.shop.toggle_visibility()
+                    return True
+                
             # Skip tutorial with ESC key (for testing)
             elif event.key == pygame.K_ESCAPE:
+                game_logger.info("Tutorial skipped with ESC key", "TutorialState")
                 # Show the tutorial completion overlay
                 self.next_state = TutorialCompleteState(self.game)
                 return True
+                
         return False
     
     def update(self, dt):
@@ -125,10 +188,29 @@ class TutorialState(GameState):
     
     def enter(self):
         """Set up the tutorial when entering this state."""
+        game_logger.info("Entering tutorial state", "TutorialState")
+        
         # Ensure tutorial mode flag is set
         self.game.tutorial_mode = True
+        
+        # Set up tutorial objects
+        try:
+            self.game.setup_tutorial_objects()
+            game_logger.debug("Tutorial objects initialized successfully", "TutorialState")
+        except Exception as e:
+            game_logger.error(f"Error setting up tutorial objects: {e}", "TutorialState")
+        
+        # Initialize HUD with default food selection if needed
+        if hasattr(self.game, 'hud'):
+            game_logger.debug("Setting HUD default food selection to burger", "TutorialState")
+            self.game.hud.set_selection('burger')
+            # Also set the game's selected food
+            self.game.selected_food = 'burger'
+        
         # Reset tutorial tracking
         self.served_correct = 0
         self.money_earned = 0
         self.show_hint = True
         self.hint_timer = 15.0
+        
+        game_logger.info("Tutorial state setup complete", "TutorialState")

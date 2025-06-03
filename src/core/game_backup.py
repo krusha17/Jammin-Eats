@@ -338,6 +338,9 @@ class Game:
                     game_logger.warning("Game map exists but has no draw method", "Game")
             else:
                 game_logger.warning("No game map available to draw", "Game")
+            
+        # Draw sprites with careful attribute checking
+        if hasattr(self, 'customers'):
             game_logger.debug(f"Drawing {len(self.customers)} customers", "Game")
             for customer in self.customers:
                 if hasattr(customer, 'draw'):

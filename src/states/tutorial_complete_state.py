@@ -5,9 +5,32 @@ allowing them to acknowledge and proceed to the main game.
 """
 
 import pygame
-from src.states.state import GameState
-from src.persistence.dal import mark_tutorial_complete
-from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE
+
+# Use flexible import system to support both direct and src-prefixed imports
+try:
+    # Try direct imports first
+    from states.state import GameState
+    from persistence.dal import mark_tutorial_complete
+    from core.constants import WIDTH, HEIGHT, BLACK, WHITE
+except ImportError:
+    # Fall back to src-prefixed imports
+    from src.states.state import GameState
+    from src.persistence.dal import mark_tutorial_complete
+    from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE
+
+# Set up a simple logger if the main one isn't available
+try:
+    from debug.logger import game_logger
+except ImportError:
+    try:
+        from src.debug.logger import game_logger
+    except ImportError:
+        import logging
+        game_logger = logging.getLogger("TutorialCompleteState")
+        game_logger.info = lambda msg, *args, **kwargs: print(f"[INFO] {msg}")
+        game_logger.debug = lambda msg, *args, **kwargs: print(f"[DEBUG] {msg}")
+        game_logger.error = lambda msg, *args, **kwargs: print(f"[ERROR] {msg}")
+        game_logger.warning = lambda msg, *args, **kwargs: print(f"[WARNING] {msg}")
 
 class TutorialCompleteState(GameState):
     """State shown when the player successfully completes the tutorial."""
@@ -44,7 +67,14 @@ class TutorialCompleteState(GameState):
                 self.game.tutorial_completed = True
                 
                 # Return to main game
-                from src.states.title_state import TitleState
+                try:
+                    # Try direct import first
+                    from states.title_state import TitleState
+                except ImportError:
+                    # Fall back to src-prefixed import
+                    from src.states.title_state import TitleState
+                    
+                game_logger.info("Tutorial completed, returning to title screen", "TutorialCompleteState")
                 self.next_state = TitleState(self.game)
                 return True
         return False
