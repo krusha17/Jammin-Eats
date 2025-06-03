@@ -355,3 +355,28 @@ class Player(pygame.sprite.Sprite):
         
         # Draw at the adjusted position
         surface.blit(self.image, (draw_x, draw_y))
+        
+    def reset_position(self):
+        """Reset the player to the center of the screen or a safe spawn position."""
+        from src.core.constants import WIDTH, HEIGHT
+        
+        # Store initial spawn position (center of screen by default)
+        self.initial_x = getattr(self, 'initial_x', WIDTH // 2)
+        self.initial_y = getattr(self, 'initial_y', HEIGHT // 2)
+        
+        # Reset to initial position
+        self.rect.x = self.initial_x - self.rect.width // 2
+        self.rect.y = self.initial_y - self.rect.height // 2
+        
+        # Reset movement state
+        self.direction = 'down'
+        self.frame_index = 0
+        self.current_speed = getattr(self, 'base_speed', 3)
+        
+        # Update the current image
+        if self.animations['down'] and len(self.animations['down']) > 0:
+            self.image = self.animations['down'][0]
+        
+        # Reset any movement flags or momentum
+        if hasattr(self, 'moving'):
+            self.moving = False

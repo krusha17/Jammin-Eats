@@ -93,6 +93,14 @@ class ShopOverlay:
         self.font = pygame.font.Font(None, 36)
         self.small_font = pygame.font.Font(None, 24)
         
+    @property
+    def visible(self):
+        return self.is_open
+        
+    @visible.setter
+    def visible(self, value):
+        self.is_open = value
+        
         # Create surface for dimming background
         self.screen_size = game.screen.get_size()
         self.dim_surface = pygame.Surface(self.screen_size, pygame.SRCALPHA)
@@ -200,3 +208,6 @@ class ShopOverlay:
         close_text = self.small_font.render("Close", True, WHITE)
         close_rect = close_text.get_rect(center=self.close_rect.center)
         surface.blit(close_text, close_rect)
+
+# Alias for backward compatibility
+Shop = ShopOverlay

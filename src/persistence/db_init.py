@@ -72,24 +72,23 @@ CREATE_TABLES = [
 
 # Default data to insert
 DEFAULT_DATA = [
-    (
-        "INSERT INTO player_profile (player_id, display_name, high_score, tutorial_complete) "
-        "VALUES (1, 'Player', 0, 0) "
-        "ON CONFLICT(player_id) DO NOTHING"
-    ),
-    (
-        "INSERT INTO player_settings (player_id, music_volume, sfx_volume, fullscreen) "
-        "VALUES (1, 0.7, 1.0, 0) "
-        "ON CONFLICT(player_id) DO NOTHING"
-    ),
-    (
-        "INSERT INTO starting_stock (food_type, initial_quantity) VALUES "
-        "('burger', 10), "
-        "('pizza', 5), "
-        "('taco', 5), "
-        "('sushi', 3) "
-        "ON CONFLICT(food_type) DO NOTHING"
-    )
+    # Player profile defaults
+    "INSERT OR IGNORE INTO player_profile (player_id, display_name, high_score, tutorial_complete) "
+    "VALUES (1, 'Player', 0, 0)",
+    
+    # Player settings defaults
+    "INSERT OR IGNORE INTO player_settings (player_id, music_volume, sfx_volume, fullscreen) "
+    "VALUES (1, 0.7, 1.0, 0)",
+    
+    # Starting stock defaults
+    "INSERT OR IGNORE INTO starting_stock (food_type, initial_quantity) VALUES "
+    "('burger', 10)",
+    "INSERT OR IGNORE INTO starting_stock (food_type, initial_quantity) VALUES "
+    "('pizza', 5)",
+    "INSERT OR IGNORE INTO starting_stock (food_type, initial_quantity) VALUES "
+    "('taco', 5)",
+    "INSERT OR IGNORE INTO starting_stock (food_type, initial_quantity) VALUES "
+    "('sushi', 3)"
 ]
 
 
@@ -98,8 +97,11 @@ def ensure_data_directory():
     data_dir = DB_PATH.parent
     try:
         if not data_dir.exists():
-            data_dir.mkdir(parents=True)
+            log(f"Data directory not found, creating: {data_dir}")
+            data_dir.mkdir(parents=True, exist_ok=True)
             log(f"Created data directory: {data_dir}")
+        else:
+            log(f"Data directory exists at: {data_dir}")
         return True
     except Exception as e:
         log_error(f"Failed to create data directory: {e}")
@@ -119,11 +121,18 @@ def initialize_database():
         
         # Create tables
         for create_statement in CREATE_TABLES:
-            cursor.execute(create_statement)
+            try:
+                cursor.execute(create_statement)
+                log(f"Created table: {create_statement.split('EXISTS')[1].split('(')[0].strip()}")
+            except sqlite3.Error as e:
+                log_error(f"Failed to create table: {e}")
         
         # Insert default data
         for insert_statement in DEFAULT_DATA:
-            cursor.execute(insert_statement)
+            try:
+                cursor.execute(insert_statement)
+            except sqlite3.Error as e:
+                log_error(f"Failed to insert default data: {e}")
         
         conn.commit()
         conn.close()

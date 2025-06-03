@@ -22,13 +22,57 @@ if src_dir not in sys.path:
 
 from core.game import Game
 
-# Set debug flag if needed (can be removed or set via command line in the future)
-# import src.debug.debug_tools as debug
-# debug.DEBUG_MODE = True
-
 def main():
-    game = Game()
-    game.run()
+    print("====== STARTING JAMMIN' EATS GAME ======")
+    
+    try:
+        # Basic setup before logger is available
+        print("Setting up Python path...")
+        
+        # Import logger
+        print("Importing logger...")
+        from src.debug.logger import game_logger
+        game_logger.info("=== STARTING JAMMIN' EATS GAME ===")
+        
+        # Import critical pygame components
+        print("Initializing pygame...")
+        import pygame
+        pygame.init()
+        print(f"Pygame initialized: {pygame.get_init()}")
+        
+        # Initialize database
+        print("Checking database...")
+        from src.persistence.db_init import initialize_database, check_database_integrity
+        db_status = initialize_database()
+        print(f"Database initialization status: {db_status}")
+        
+        # Initialize game
+        print("Creating Game instance...")
+        game_logger.info("Creating Game instance")
+        game = Game()
+        print("Game instance created successfully")
+        
+        # Run game loop
+        print("Starting game loop...")
+        game_logger.info("Starting game loop")
+        game.run()
+        
+        print("====== GAME EXITED NORMALLY ======")
+        game_logger.info("=== GAME EXITED NORMALLY ===")
+    except Exception as e:
+        print("\n====== FATAL ERROR ======")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {e}")
+        
+        try:
+            from src.debug.logger import game_logger
+            game_logger.critical(f"Fatal error in main: {e}", exc_info=True)
+        except ImportError:
+            pass  # Logger not available
+            
+        import traceback
+        traceback.print_exc()
+        print("========================")
 
 # Run the game
 if __name__ == '__main__':
