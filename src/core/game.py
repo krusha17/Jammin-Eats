@@ -339,78 +339,78 @@ class Game:
             else:
                 game_logger.warning("No game map available to draw", "Game")
             
-        # Draw sprites with careful attribute checking
-        if hasattr(self, 'customers'):
-            game_logger.debug(f"Drawing {len(self.customers)} customers", "Game")
-            for customer in self.customers:
-                if hasattr(customer, 'draw'):
-                    customer.draw(screen)
-                elif hasattr(customer, 'image') and hasattr(customer, 'rect'):
-                    screen.blit(customer.image, customer.rect)
-                else:
-                    game_logger.warning("Customer sprite missing draw method or image/rect", "Game")
-        else:
-            game_logger.warning("No customers group available", "Game")
-                
-        if hasattr(self, 'foods'):
-            game_logger.debug(f"Drawing {len(self.foods)} food items", "Game")
-            for food in self.foods:
-                if hasattr(food, 'draw'):
-                    food.draw(screen)
-                elif hasattr(food, 'image') and hasattr(food, 'rect'):
-                    screen.blit(food.image, food.rect)
-                else:
-                    game_logger.warning("Food sprite missing draw method or image/rect", "Game")
-        else:
-            game_logger.warning("No foods group available", "Game")
-            
-        # Draw player if available with careful attribute checking
-        if hasattr(self, 'player') and self.player is not None:
-            game_logger.debug("Drawing player", "Game")
-            if hasattr(self.player, 'draw'):
-                self.player.draw(screen)
-                game_logger.debug("Drew player using draw method", "Game")
-            elif hasattr(self.player, 'image') and hasattr(self.player, 'rect'):
-                screen.blit(self.player.image, self.player.rect)
-                game_logger.debug("Drew player using image/rect", "Game")
+            # Draw sprites with careful attribute checking
+            if hasattr(self, 'customers'):
+                game_logger.debug(f"Drawing {len(self.customers)} customers", "Game")
+                for customer in self.customers:
+                    if hasattr(customer, 'draw'):
+                        customer.draw(screen)
+                    elif hasattr(customer, 'image') and hasattr(customer, 'rect'):
+                        screen.blit(customer.image, customer.rect)
+                    else:
+                        game_logger.warning("Customer sprite missing draw method or image/rect", "Game")
             else:
-                game_logger.warning("Player object missing draw method or image/rect", "Game")
-                # Draw a placeholder for the player
-                pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(self.screen_width // 2, self.screen_height // 2, 32, 32))
-                game_logger.debug("Drew placeholder rectangle for player", "Game")
-        else:
-            game_logger.warning("No player object available to draw", "Game")
+                game_logger.warning("No customers group available", "Game")
                 
-        # Draw particle effects
-        if hasattr(self, 'particles') and self.particles is not None:
-            self.particles.draw(screen)
-            game_logger.debug("Drew particle effects", "Game")
-            
-        # Draw HUD if available
-        if hasattr(self, 'hud') and self.hud is not None:
-            game_logger.debug("Drawing HUD", "Game")
-            self.hud.draw(screen)
-            game_logger.debug("Drew HUD successfully", "Game")
-        else:
-            game_logger.warning("No HUD available to draw", "Game")
-            
-        # Shop is drawn last (on top) if visible
-        if hasattr(self, 'shop') and self.shop is not None and hasattr(self.shop, 'visible') and self.shop.visible:
-            self.shop.draw(screen)
-            game_logger.debug("Drew shop UI", "Game")
-            
-        game_logger.debug("Completed draw_current_state method successfully", "Game")
-            
-    except Exception as e:
-        game_logger.error(f"Error in draw_current_state: {e}", "Game", exc_info=True)
-        # Draw an emergency message
-        try:
-            font = pygame.font.SysFont(None, 24)
-            error_text = font.render(f"Drawing error: {str(e)}", True, (255, 0, 0))
-            screen.blit(error_text, (10, 10))
-            game_logger.debug("Drew error message on screen", "Game")
-        except Exception as font_error:
-            game_logger.error(f"Could not draw error message: {font_error}", "Game")
+            if hasattr(self, 'foods'):
+                game_logger.debug(f"Drawing {len(self.foods)} food items", "Game")
+                for food in self.foods:
+                    if hasattr(food, 'draw'):
+                        food.draw(screen)
+                    elif hasattr(food, 'image') and hasattr(food, 'rect'):
+                        screen.blit(food.image, food.rect)
+                    else:
+                        game_logger.warning("Food sprite missing draw method or image/rect", "Game")
+            else:
+                game_logger.warning("No foods group available", "Game")
+                
+            # Draw player if available with careful attribute checking
+            if hasattr(self, 'player') and self.player is not None:
+                game_logger.debug("Drawing player", "Game")
+                if hasattr(self.player, 'draw'):
+                    self.player.draw(screen)
+                    game_logger.debug("Drew player using draw method", "Game")
+                elif hasattr(self.player, 'image') and hasattr(self.player, 'rect'):
+                    screen.blit(self.player.image, self.player.rect)
+                    game_logger.debug("Drew player using image/rect", "Game")
+                else:
+                    game_logger.warning("Player object missing draw method or image/rect", "Game")
+                    # Draw a placeholder for the player
+                    pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(self.screen_width // 2, self.screen_height // 2, 32, 32))
+                    game_logger.debug("Drew placeholder rectangle for player", "Game")
+            else:
+                game_logger.warning("No player object available to draw", "Game")
+                    
+            # Draw particle effects
+            if hasattr(self, 'particles') and self.particles is not None:
+                self.particles.draw(screen)
+                game_logger.debug("Drew particle effects", "Game")
+                
+            # Draw HUD if available
+            if hasattr(self, 'hud') and self.hud is not None:
+                game_logger.debug("Drawing HUD", "Game")
+                self.hud.draw(screen)
+                game_logger.debug("Drew HUD successfully", "Game")
+            else:
+                game_logger.warning("No HUD available to draw", "Game")
+                
+            # Shop is drawn last (on top) if visible
+            if hasattr(self, 'shop') and self.shop is not None and hasattr(self.shop, 'visible') and self.shop.visible:
+                self.shop.draw(screen)
+                game_logger.debug("Drew shop UI", "Game")
+                
+            game_logger.debug("Completed draw_current_state method successfully", "Game")
+                
+        except Exception as e:
+            game_logger.error(f"Error in draw_current_state: {e}", "Game", exc_info=True)
+            # Draw an emergency message
+            try:
+                font = pygame.font.SysFont(None, 24)
+                error_text = font.render(f"Drawing error: {str(e)}", True, (255, 0, 0))
+                screen.blit(error_text, (10, 10))
+                game_logger.debug("Drew error message on screen", "Game")
+            except Exception as font_error:
+                game_logger.error(f"Could not draw error message: {font_error}", "Game")
 
 def _render(self, mouse_pos):
     """Render the game screen."""
@@ -421,18 +421,15 @@ def _render(self, mouse_pos):
     font = pygame.font.SysFont(None, 24)
     money_text = font.render(f'${self.money}', True, (255, 255, 255))
     self.screen.blit(money_text, (10, 10))
-        font = pygame.font.SysFont(None, 24)
-        money_text = font.render(f'${self.money}', True, (255, 255, 255))
-        self.screen.blit(money_text, (10, 10))
-        
-        # Draw selected food indicator if applicable
-        if self.selected_food:
-            selected_text = font.render(f'Selected: {self.selected_food}', True, (255, 255, 255))
-            self.screen.blit(selected_text, (10, 40))
-        
-        # Draw shop button indicator
-        shop_text = font.render('Press B to open shop', True, (255, 255, 255))
-        self.screen.blit(shop_text, (10, self.screen_height - 30))
+    
+    # Draw selected food indicator if applicable
+    if self.selected_food:
+        selected_text = font.render(f'Selected: {self.selected_food}', True, (255, 255, 255))
+        self.screen.blit(selected_text, (10, 40))
+    
+    # Draw shop button indicator
+    shop_text = font.render('Press B to open shop', True, (255, 255, 255))
+    self.screen.blit(shop_text, (10, self.screen_height - 30))
     
     def reset_game(self):
         """Reset the game to initial state."""

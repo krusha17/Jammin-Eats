@@ -163,7 +163,16 @@ class GameplayState(GameState):
             if not (self.shop and self.shop.visible):
                 # Update HUD and pass current selection
                 if self.player and hasattr(self.player, 'selected_food_type'):
-                    self.hud.update(dt, self.player.selected_food_type)
+                    try:
+                        # Try to update the HUD if the method exists
+                        if hasattr(self.hud, 'update'):
+                            self.hud.update(dt, self.player.selected_food_type)
+                        else:
+                            # If update method doesn't exist, use set_selection as fallback
+                            game_logger.warning("HUD missing update method, using set_selection as fallback", "GameplayState")
+                            self.hud.set_selection(self.player.selected_food_type)
+                    except Exception as e:
+                        game_logger.error(f"Error updating HUD: {e}", "GameplayState")
             if self.shop and self.shop.visible:
                 self.shop.update(dt)
                 # When shop is open, we still update particles but not gameplay
