@@ -6,18 +6,18 @@ Continue option is only enabled if the tutorial has been completed.
 
 import pygame
 from src.states.state import GameState
-from src.persistence.dal import is_tutorial_complete
+from src.persistence.dal import is_tutorial_complete, DataAccessLayer
 from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE, BLUE, GREEN
 from src.debug.logger import game_logger
 
 # Import states for transitions
 try:
-    from src.states.black_screen_gameplay_state import BlackScreenGameplayState
+    from src.states.blackscreen_gameplay_state import BlackScreenGameplayState
     from src.states.tutorial_state import TutorialState
 except ImportError:
     # Try direct import as fallback
     try:
-        from states.black_screen_gameplay_state import BlackScreenGameplayState
+        from states.blackscreen_gameplay_state import BlackScreenGameplayState
         from states.tutorial_state import TutorialState
     except ImportError:
         game_logger.error("Could not import necessary state classes", "TitleState")
@@ -73,8 +73,9 @@ class TitleState(GameState):
         # Menu options
         self.menu_items = [
             {"id": "continue", "text": "Continue", "enabled": self.menu_items_enabled['continue']},
-            {"id": "new_game", "text": "New Game", "enabled": self.menu_items_enabled['new game']},
+            {"id": "new", "text": "New Game", "enabled": self.menu_items_enabled['new game']},
             {"id": "load", "text": "Load", "enabled": self.menu_items_enabled['load']},
+            {"id": "options", "text": "Options", "enabled": True},
             {"id": "quit", "text": "Quit", "enabled": self.menu_items_enabled['exit']}
         ]
         
@@ -151,17 +152,28 @@ class TitleState(GameState):
                         except Exception as e:
                             game_logger.error(f"Error transitioning to continue game: {e}", "TitleState", exc_info=True)
                         
-                    elif menu_id == "new_game":
+                    elif menu_id == "new":
                         # Start new game (tutorial if not done, gameplay if tutorial done)
                         try:
                             # Check if tutorial is needed
                             tutorial_needed = False
-                            if hasattr(self.game, 'persistence') and self.game.persistence:
+                            
+                            # Initialize persistence if needed using DataAccessLayer
+                            if not hasattr(self.game, 'dal') or self.game.dal is None:
+                                game_logger.info("Creating new DataAccessLayer for game", "TitleState")
+                                self.game.dal = DataAccessLayer()
+                            
+                            # Reset player progress in database for new game
+                            if hasattr(self.game, 'dal') and self.game.dal is not None:
+                                tutorial_needed = not self.game.dal.is_tutorial_complete()
+                                self.game.dal.reset_player_progress()
+                                game_logger.info("Reset player progress using DAL for new game", "TitleState")
+                            elif hasattr(self.game, 'persistence') and self.game.persistence is not None:
                                 tutorial_needed = not self.game.persistence.is_tutorial_complete()
-                                
-                                # Reset player progress in database for new game
                                 self.game.persistence.reset_player_progress()
                                 game_logger.info("Reset player progress for new game", "TitleState")
+                            else:
+                                game_logger.warning("No persistence layer available, continuing without resetting progress", "TitleState")
                             
                             game_logger.info(f"New Game selected - tutorial_needed: {tutorial_needed}", "TitleState")
                             
@@ -182,6 +194,12 @@ class TitleState(GameState):
                                 game_logger.info("Starting gameplay state", "TitleState")
                         except Exception as e:
                             game_logger.error(f"Error starting new game: {e}", "TitleState", exc_info=True)
+                            # Even if there's an error, try to transition to BlackScreenGameplayState
+                            try:
+                                self.next_state = BlackScreenGameplayState(self.game)
+                                game_logger.warning("Transitioning to gameplay despite error", "TitleState")
+                            except Exception as e2:
+                                game_logger.error(f"Could not transition to gameplay after error: {e2}", "TitleState", exc_info=True)
                         
                     elif menu_id == "load":
                         try:
