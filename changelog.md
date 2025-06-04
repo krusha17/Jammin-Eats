@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.2-alpha] - 2025-06-03
+
+### Added
+- Professional game development approach with "vertical slice" methodology implemented
+- Comprehensive state machine transition handling in Game.run method
+- Diagnostic debug launcher (debug_game.py) for development and testing
+- Detailed implementation plan for all menu options and state transitions
+
+### Fixed
+- Tutorial completion state transitions now properly return to title screen
+- Tutorial completion now requires meeting both delivery and money goals
+- Black screen issue after tutorial completion resolved
+- Transition between states using next_state property now properly handled
+
+### Improved
+- State transition logging and error handling
+- Tutorial progression feedback and progress tracking
+- Robustness of state machine architecture
+- Detailed implementation roadmap following professional game dev practices
+
 ## [0.9.1-alpha] - 2025-06-03
 
 ### Added

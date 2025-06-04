@@ -1,8 +1,7 @@
-"""Database initialization module for Jammin' Eats.
+"""Database initialization module for Jammin' Eats
 
-This module creates the database file and required tables if they don't exist.
-It should be run when the game starts to ensure all necessary database structures
-are in place before any data access operations are attempted.
+Follows professional game development practices with robust error handling,
+directory creation, and schema validation.
 """
 
 import sqlite3
@@ -53,6 +52,9 @@ def get_database_path():
 
 # Initialize the path at module load time
 DB_PATH = get_database_path()
+
+# Add absolute path constant for more reliable access
+ABSOLUTE_DB_PATH = os.path.abspath(DB_PATH)
 
 # SQL statements to create necessary tables
 CREATE_TABLES = [
@@ -194,46 +196,82 @@ def initialize_database():
             log("No player profiles found, creating default profile")
             cursor.execute("INSERT INTO player_profile (id, name, high_score, tutorial_complete) "
                           "VALUES (1, 'Player', 0, 0)")
-        else:
-            log(f"Found {count} player profiles in database")
-        
         conn.commit()
         log("All database changes committed successfully")
-        conn.close()
         
-        log(f"Database initialized successfully at {DB_PATH}")
+        # Validate database schema
+        validate_database_schema(conn)
+        
+        log("Database initialized successfully")
         return True
         
     except sqlite3.Error as e:
-        log_error(f"Database initialization failed: {e}")
-        try:
-            # Try to create an emergency fallback database in current directory
-            emergency_path = Path.cwd() / "emergency_jammin.db"
-            log(f"Attempting emergency database creation at: {emergency_path}")
-            
-            conn = sqlite3.connect(str(emergency_path))
-            cursor = conn.cursor()
-            
-            # Create minimal player_profile table for tutorial check
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS player_profile (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT DEFAULT 'Player',
-                    high_score INTEGER DEFAULT 0,
-                    tutorial_complete INTEGER DEFAULT 0
-                )
-            """)
-            cursor.execute("INSERT INTO player_profile (id, name, tutorial_complete) VALUES (1, 'Player', 0)")
-            conn.commit()
+        log_error(f"Database initialization error: {e}")
+        return False
+        
+    finally:
+        # Close connection if it was opened
+        if 'conn' in locals() and conn:
             conn.close()
+
+
+def validate_database_schema(conn):
+    """Validate that all required tables and columns exist in the database."""
+    cursor = conn.cursor()
+    
+    # Define expected tables and their required columns
+    expected_schema = {
+        'player_profile': ['id', 'name', 'high_score', 'tutorial_complete'],
+        'player_settings': ['setting_id', 'player_id', 'music_volume', 'sfx_volume'],
+        'starting_stock': ['item_id', 'food_type', 'initial_quantity'],
+        'upgrades_owned': ['upgrade_id', 'player_id', 'upgrade_name'],
+        'run_history': ['run_id', 'player_id', 'score', 'money_earned']
+    }
+    
+    log("Validating database schema...")
+    
+    # Check for each table and its columns
+    for table_name, expected_columns in expected_schema.items():
+        try:
+            # Check if table exists
+            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+            if not cursor.fetchone():
+                log_error(f"Table {table_name} is missing from database")
+                continue
+                
+            # Check table columns
+            cursor.execute(f"PRAGMA table_info({table_name})")
+            columns = [row[1] for row in cursor.fetchall()]  # Column name is at index 1
             
-            # Update global path
-            DB_PATH = emergency_path
-            log(f"Emergency database created at: {DB_PATH}")
-            return True
-        except Exception as emergency_error:
-            log_error(f"Emergency database creation also failed: {emergency_error}")
-            return False
+            # Verify required columns exist
+            missing_columns = [col for col in expected_columns if col not in columns]
+            if missing_columns:
+                log_error(f"Table {table_name} is missing columns: {', '.join(missing_columns)}")
+            else:
+                log(f"✓ Table {table_name} schema is valid")
+                
+        except sqlite3.Error as e:
+            log_error(f"Error validating {table_name}: {e}")
+    
+    # Special check for player_profile to ensure it exists with at least one row
+    try:
+        cursor.execute("SELECT COUNT(*) FROM player_profile")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            log_error("player_profile table exists but has no data")
+            # Insert a default profile
+            cursor.execute(
+                "INSERT INTO player_profile (id, name, high_score, tutorial_complete) VALUES (?, ?, ?, ?)", 
+                (1, "Player", 0, 0)
+            )
+            conn.commit()
+            log("Created default player profile")
+        else:
+            log(f"✓ Found {count} player profiles in database")
+    except sqlite3.Error as e:
+        log_error(f"Error checking player_profile data: {e}")
+    
+    log("Database schema validation complete")
 
 
 def check_database_integrity():

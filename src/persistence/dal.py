@@ -42,6 +42,140 @@ _cache = {
 CACHE_TTL = 60
 
 
+def _clear_cache(cache_key=None):
+    """
+    Clear a specific cache entry or all caches if no key provided.
+    """
+    global _cache
+    
+    if cache_key:
+        if cache_key in _cache:
+            _cache[cache_key] = None
+            log(f"Cleared cache: {cache_key}")
+    else:
+        for key in _cache:
+            if key != 'cache_time':  # Keep the timestamp
+                _cache[key] = None
+        _cache['cache_time'] = 0  # Reset timestamp too
+        log("Cleared all caches")
+
+
+class DataAccessLayer:
+    """
+    Data Access Layer class for professional game development pattern.
+    Centralizes all database operations and provides a clean interface.
+    """
+    
+    def __init__(self):
+        self.initialized = False
+        try:
+            # Ensure database exists and is properly initialized
+            if not os.path.exists(DB_PATH):
+                log("Database not found, initializing now in DAL constructor...")
+                initialize_database()
+            self.initialized = True
+            log("DAL initialized successfully")
+        except Exception as e:
+            log_error(f"Failed to initialize DAL: {e}")
+    
+    def is_tutorial_complete(self):
+        """
+        Check if the tutorial has been completed.
+        Returns True if completed, False otherwise.
+        """
+        try:
+            profile = get_player_profile()
+            return profile.get("tutorial_complete", 0) == 1
+        except Exception as e:
+            log_error(f"Error checking tutorial completion: {e}")
+            return False
+    
+    def mark_tutorial_complete(self):
+        """
+        Mark the tutorial as completed in the database.
+        """
+        try:
+            with get_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE player_profile SET tutorial_complete = 1 WHERE id = 1"
+                )
+                conn.commit()
+                log("Tutorial marked as complete in database")
+                return True
+        except Exception as e:
+            log_error(f"Error marking tutorial as complete: {e}")
+            return False
+    
+    def reset_player_progress(self):
+        """
+        Reset player progress for a new game while preserving tutorial completion status.
+        """
+        try:
+            # First get the current tutorial completion status
+            tutorial_status = self.is_tutorial_complete()
+            
+            with get_conn() as conn:
+                cursor = conn.cursor()
+                
+                # Reset player money and other stats
+                cursor.execute(
+                    """UPDATE player_profile 
+                       SET money = 0, 
+                           successful_deliveries = 0,
+                           high_score = 0 
+                       WHERE id = 1"""
+                )
+                
+                # Clear owned upgrades
+                cursor.execute("DELETE FROM upgrades_owned WHERE player_id = 1")
+                
+                # Clear save game data if exists
+                cursor.execute("DELETE FROM save_games WHERE player_id = 1")
+                
+                # Reset but preserve tutorial status
+                cursor.execute(
+                    "UPDATE player_profile SET tutorial_complete = ? WHERE id = 1",
+                    (1 if tutorial_status else 0,)
+                )
+                
+                # Commit all changes
+                conn.commit()
+                
+                # Clear all caches
+                _clear_cache()
+                
+                log("Player progress reset successfully for new game")
+                return True
+        except Exception as e:
+            log_error(f"Error resetting player progress: {e}")
+            return False
+    
+    def load_latest_save(self):
+        """
+        Load the latest save game data.
+        """
+        try:
+            with get_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """SELECT * FROM save_games 
+                       WHERE player_id = 1 
+                       ORDER BY save_date DESC LIMIT 1"""
+                )
+                save_data = cursor.fetchone()
+                
+                if save_data:
+                    log(f"Found save data from {save_data['save_date']}")
+                    return dict(save_data)
+                else:
+                    log("No save data found")
+                    return None
+        except Exception as e:
+            log_error(f"Error loading latest save: {e}")
+            return None
+
+
 @contextmanager
 def get_conn():
     """

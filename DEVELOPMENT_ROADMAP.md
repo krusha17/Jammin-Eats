@@ -1,16 +1,26 @@
 # Jammin' Eats Development Roadmap
 
-## Current Status
+## Current Status (2025-06-03)
 
-**Current milestone:** Title → Gameplay Transition (as of 2025-06-03)
+**Current Development Phase:** State Machine & Menu System Implementation
 
-- Tutorial system, DAL, and state machine are validated and working.
-- Blockers for this milestone:
-  - Map is not loading (fallback/default map shown)
-  - Customer food bubbles, food sprites, and HUD info not displayed
-  - Food throwing mechanic not functioning (no sprites thrown, food selection not working)
-  - Shop overlay opens/closes but is blank
-- See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` section 3A for the detailed implementation plan.
+### Progress Update
+- ✅ Fixed tutorial completion and state transitions
+- ✅ Implemented robust next_state transition framework in Game.run() 
+- ✅ Added comprehensive logging and error recovery
+- ✅ Created debug launcher (debug_game.py) for development diagnostics
+- 🔄 Working on Title screen menu functionality implementation
+
+### Professional Game Development Process
+Jammin' Eats follows a professional "vertical slice" development methodology:
+
+1. **Core Systems First**: Implement fundamental game systems without visual polish
+2. **Test-Driven Development**: Every feature has automated tests before implementation
+3. **Modular Architecture**: Clean separation between game components (src/core, src/states, etc.)
+4. **Placeholder First**: Gray-box testing with simple shapes before final art integration
+5. **Continuous Integration**: Automated testing through GitHub Actions
+
+See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for detailed implementation plans.
 
 ## Next Development Phases
 

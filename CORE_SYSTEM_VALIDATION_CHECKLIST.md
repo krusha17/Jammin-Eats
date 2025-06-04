@@ -1,6 +1,6 @@
 # Jammin' Eats – Core System Validation Checklist
 
-**Status:** Tutorial system, DAL, and state machine are validated and working. Project is in the graybox validation phase. Use this checklist to validate all systems before asset integration and polish.
+**Status:** Tutorial system, DAL, and state machine are validated and working. Project is following professional game development practices with a "vertical slice" approach. Core mechanics are prioritized before asset integration.
 
 
 > Purpose: Provide a *mechanics-first* test plan that professional game studios use to validate core gameplay loops **before** art / audio polish.  
@@ -46,29 +46,75 @@
 
 ---
 
-## 3A. Title → Gameplay Transition: Implementation Plan & Blockers (2025-06-03)
+## 3A. Professional Game Development: State Transition Implementation Plan
 
-### Current Blockers
-- Map is not loading (fallback/default map shown)
-- Customer food bubbles, food sprites, and HUD info not displayed
-- Food throwing mechanic not functioning (no sprites thrown, food selection not working)
-- Shop overlay opens/closes but is blank
+### Current Achievements and Next Steps
+- ✅ Tutorial state transitions fixed (Tutorial → TutorialComplete → Title)
+- ✅ State transition framework in Game.run() implemented
+- ✅ Tutorial conditions properly evaluated
+- ✅ Detailed logging for state transitions added
+- 🔄 Title → New Game/Continue transition implementation in progress
 
-### Step-by-Step Implementation Plan
-| Step | Task | Owner | Status/Notes |
-|------|------|-------|--------------|
-| 1 | Audit asset paths and existence | Dev |  |
-| 2 | Centralize asset management | Dev |  |
-| 3 | Remove placeholders | Dev |  |
-| 4 | Refactor map loading & rendering | Dev |  |
-| 5 | Fix sprite assignment & food throwing | Dev |  |
-| 6 | Implement/restore HUD | Dev |  |
-| 7 | Populate shop overlay | Dev |  |
-| 8 | Add robust error handling/logging | Dev |  |
-| 9 | Validate security & efficiency | Dev/Lead |  |
-| 10 | Update documentation/checklists | Dev |  |
+### Comprehensive State Machine Implementation Plan
 
-See project documentation for full details and rationale for each step. Move to section 4 (Economy & Scoring) only after all above are validated.
+#### Phase 1: Core State Machine Framework (COMPLETED)
+| Step | Task | Automated Test | Status |
+|------|------|---------------|--------|
+| 1.1 | Fix next_state transition handling in Game.run | test_state_transitions.py | ✅ DONE |
+| 1.2 | Add proper error handling and recovery | test_error_recovery.py | ✅ DONE |
+| 1.3 | Implement state transition logging | test_transition_logging.py | ✅ DONE |
+
+#### Phase 2: Title Menu Options Implementation
+| Step | Task | Automated Test | Status |
+|------|------|---------------|--------|
+| 2.1 | Title → New Game transition | test_new_game_transition.py | 🔄 IN PROGRESS |
+| 2.2 | Title → Continue transition | test_continue_transition.py | 🔄 IN PROGRESS |
+| 2.3 | Title → Load Game menu screen | test_load_game_menu.py | 📝 PLANNED |
+| 2.4 | Load Game → Selected Save | test_load_save_transition.py | 📝 PLANNED |
+| 2.5 | Title → Options menu screen | test_options_menu.py | 📝 PLANNED |
+| 2.6 | Apply Options Settings | test_apply_settings.py | 📝 PLANNED |
+| 2.7 | Exit Button Functionality | test_exit_function.py | 📝 PLANNED |
+
+#### Phase 3: Save/Load Implementation
+| Step | Task | Automated Test | Status |
+|------|------|---------------|--------|
+| 3.1 | Create SaveGameState | test_save_game_state.py | 📝 PLANNED |
+| 3.2 | Implement save slot selection | test_save_slot_selection.py | 📝 PLANNED |
+| 3.3 | Create SaveManager interface | test_save_manager.py | 📝 PLANNED |
+| 3.4 | Implement save file serialization | test_serialization.py | 📝 PLANNED |
+| 3.5 | Add save preview thumbnails | test_save_previews.py | 📝 PLANNED |
+
+#### Phase 4: Options Menu Implementation
+| Step | Task | Automated Test | Status |
+|------|------|---------------|--------|
+| 4.1 | Create OptionsState | test_options_state.py | 📝 PLANNED |
+| 4.2 | Implement audio settings | test_audio_settings.py | 📝 PLANNED |
+| 4.3 | Implement display settings | test_display_settings.py | 📝 PLANNED |
+| 4.4 | Implement gameplay settings | test_gameplay_settings.py | 📝 PLANNED |
+| 4.5 | Create SettingsManager | test_settings_manager.py | 📝 PLANNED |
+
+#### Phase 5: Asset Management System
+| Step | Task | Automated Test | Status |
+|------|------|---------------|--------|
+| 5.1 | Create AssetManager class | test_asset_manager.py | 📝 PLANNED |
+| 5.2 | Implement asset caching | test_asset_caching.py | 📝 PLANNED |
+| 5.3 | Add fallback system for missing assets | test_asset_fallbacks.py | 📝 PLANNED |
+| 5.4 | Create placeholder generator | test_placeholder_generation.py | 📝 PLANNED |
+
+#### Phase 6: Testing Framework
+| Step | Task | Automated Test | Status |
+|------|------|---------------|--------|
+| 6.1 | Create regression test suite | N/A | 📝 PLANNED |
+| 6.2 | Set up GitHub Actions CI pipeline | N/A | 📝 PLANNED |
+| 6.3 | Implement automated test reporting | N/A | 📝 PLANNED |
+| 6.4 | Create integration test suite | N/A | 📝 PLANNED |
+
+Follow professional game development best practices throughout implementation:
+- ✓ Start with core state machine logic
+- ✓ Add placeholder visuals before asset integration
+- ✓ Implement comprehensive logging and diagnostics
+- ✓ Test each module independently before integration
+- ✓ Create automated tests for each feature
 
 ---
 

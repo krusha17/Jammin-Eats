@@ -2,10 +2,22 @@
 
 ## Tutorial Mode
 
-> **Note:** Project is currently in the core system validation (graybox) phase. See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for details.
+> **Note:** Project follows professional game development best practices with a "vertical slice" approach. See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for details.
 
+### Professional Game Development Process
 
-The tutorial graduation system is fully implemented and validated. On first launch, players must complete a short tutorial (deliveries or money goal) before accessing the main game. Completion is persisted in the database and skips on future launches.
+Jammin' Eats follows a professional game development workflow with a "vertical slice" or "gameplay prototype" approach:
+
+1. **Logic-First Development**: Core gameplay mechanics are implemented without visual distractions
+2. **Incremental Testing**: Each system is validated independently before integration
+3. **Placeholder Assets**: Basic shapes represent gameplay elements until mechanics are solid
+4. **Asset Integration**: Visual and audio elements are added only after gameplay systems work perfectly
+
+This approach maximizes development efficiency and ensures solid foundations before adding complexity.
+
+### Current State
+
+The tutorial graduation system is fully implemented and validated. On first launch, players must complete a short tutorial (meeting both delivery AND money goals) before accessing the main game. Completion is persisted in the database and skips on future launches.
 
 - Tutorial overlays and state transitions are fully functional.
 - Graybox mechanics (no assets) are used to validate logic and persistence.

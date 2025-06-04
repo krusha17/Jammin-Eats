@@ -1,9 +1,9 @@
 # Jammin' Eats: Title → Gameplay Transition Implementation Plan
 
-*Document Date: 2025-06-03*
+*Document Date: 2025-06-03 (Updated)*
 
 ## Overview
-This document outlines the implementation plan to resolve the non-functional Title → Gameplay transition in Jammin' Eats. The goal is to apply professional game development best practices to ensure proper state transitions with comprehensive error handling, logging, and fallbacks.
+This document outlines the comprehensive implementation plan for all Title screen menu options in Jammin' Eats, following professional game development best practices. The plan emphasizes modular design, incremental testing, and robust error handling to ensure smooth gameplay experience.
 
 ## Success Criteria
 - Clicking "New Game" or "Continue" successfully transitions from Title screen to Gameplay
@@ -12,28 +12,84 @@ This document outlines the implementation plan to resolve the non-functional Tit
 - Error states are visually communicated to the player and developer
 - Implementation follows professional game architecture patterns
 
-## Implementation Phases
+## Project Status and Progress
 
-### Phase 1: Diagnostic & Logging System (Day 1)
-- **Step 1**: Create enhanced logging system
-- **Step 2**: Add debug instrumentation to Title State
-- **Step 3**: Add debug instrumentation to Game class
+### Recent Achievements
+- ✅ Fixed tutorial completion state transitions
+- ✅ Implemented robust next_state framework in Game.run()
+- ✅ Created diagnostic debug launcher (debug_game.py)
+- ✅ Added comprehensive error handling and logging
+- ✅ Fixed database initialization issues and schema mismatches
 
-### Phase 2: State Transition and Gameplay Fixes (Day 2)
-- **Step 4**: Create basic GameplayState implementation
-- **Step 5**: Update Game class to use GameplayState
+## Detailed Implementation Plan for Title Menu Options
 
-### Phase 3: Fallback Systems and Error Handling (Day 3)
-- **Step 6**: Add asset fallback system
-- **Step 7**: Add error overlay for visual feedback
+### 1. New Game Option Implementation
 
-### Phase 4: Integration (Day 4)
-- **Step 8**: Update main Game class with robust state system
-- **Step 9**: Implement debug commands for testing
+#### 1.1 Core Functionality
+1. Update TitleState.handle_event to properly detect "New Game" selection
+2. Create NewGameState or initialize GameplayState with fresh player data
+3. Ensure proper database initialization for new player profile
+4. Test transition with mock placeholder assets
+5. Add robust error handling for missing game assets
 
-### Phase 5: Testing & Validation (Day 5)
-- **Step 10**: Create diagnostics tools for state verification
-- **Step 11**: Complete integration testing
+#### 1.2 Testing Procedures
+1. Create test_new_game_transition.py with automated tests
+2. Verify database writes correctly initialize new player data
+3. Confirm proper asset loading sequence
+4. Check for memory leaks during transition
+
+### 2. Continue Option Implementation
+
+#### 2.1 Core Functionality
+1. Query database for existing player data
+2. Create GameplayState with loaded player profile
+3. Restore player position, inventory, and progress
+4. Test transition with mock assets
+5. Add error recovery for corrupted save data
+
+#### 2.2 Testing Procedures
+1. Create test_continue_transition.py with automated tests
+2. Test with various save states (new player, mid-game, etc.)
+3. Verify proper restoration of all game elements
+
+### 3. Load Game Menu Implementation
+
+#### 3.1 Core Functionality
+1. Create LoadGameState class for save slot selection screen
+2. Implement UI for displaying the 5 most recent saves with metadata
+3. Add save preview generation system
+4. Create transition handler from selected save to GameplayState
+
+#### 3.2 Testing Procedures
+1. Test with varying numbers of save files (0-5+)
+2. Verify proper loading of save metadata
+3. Confirm correct transitions for each selected save
+
+### 4. Options Menu Implementation
+
+#### 4.1 Core Functionality
+1. Create OptionsState class for settings screen
+2. Implement UI toggles and sliders for options categories
+3. Create settings persistence system in database
+4. Add audio, display, and gameplay setting controls
+
+#### 4.2 Testing Procedures
+1. Verify all settings are properly saved to database
+2. Test that settings are applied correctly when changed
+3. Confirm proper state transition back to previous state
+
+### 5. Exit Button Implementation
+
+#### 5.1 Core Functionality
+1. Update TitleState.handle_event to properly detect Exit selection
+2. Add proper game cleanup procedures before exit
+3. Save any pending changes to database
+4. Implement graceful window and process termination
+
+#### 5.2 Testing Procedures
+1. Verify no database corruption on exit
+2. Confirm proper resource cleanup (no memory leaks)
+3. Test exit from various game states
 
 ## Technical Implementation Details
 
