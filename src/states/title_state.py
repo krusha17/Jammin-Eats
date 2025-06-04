@@ -10,6 +10,18 @@ from src.persistence.dal import is_tutorial_complete
 from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE, BLUE, GREEN
 from src.debug.logger import game_logger
 
+# Import states for transitions
+try:
+    from src.states.black_screen_gameplay_state import BlackScreenGameplayState
+    from src.states.tutorial_state import TutorialState
+except ImportError:
+    # Try direct import as fallback
+    try:
+        from states.black_screen_gameplay_state import BlackScreenGameplayState
+        from states.tutorial_state import TutorialState
+    except ImportError:
+        game_logger.error("Could not import necessary state classes", "TitleState")
+
 class TitleState(GameState):
     """Main menu/title screen state."""
     
@@ -22,15 +34,48 @@ class TitleState(GameState):
         self.title_text = self.font_title.render('Jammin\'  Eats', True, WHITE)
         self.title_rect = self.title_text.get_rect(center=(WIDTH // 2, 150))
         
-        # Get tutorial completion status for menu options
-        self.tutorial_complete = is_tutorial_complete()
+        # Enable/disable menu options based on tutorial completion
+        try:
+            # Check if game has tutorial_completed property already (might be set from TutorialCompleteState)
+            game_value = getattr(self.game, 'tutorial_completed', None)
+            
+            # If game doesn't have it set, check database
+            if game_value is None:
+                # Get player ID safely
+                player_id = 1  # Default player ID
+                if hasattr(self.game, 'persistence') and self.game.persistence is not None:
+                    player_id = getattr(self.game.persistence, 'player_id', 1)
+                
+                # Check database status
+                game_logger.debug(f"Checking tutorial completion for player_id={player_id}", "TitleState")
+                tutorial_complete = is_tutorial_complete(player_id) 
+                
+                # Update game object for future reference
+                self.game.tutorial_completed = tutorial_complete
+            else:
+                tutorial_complete = game_value
+                game_logger.debug(f"Using cached tutorial_completed={tutorial_complete} from game object", "TitleState")
+                
+            game_logger.info(f"Tutorial completion status: {tutorial_complete}", "TitleState")
+        except Exception as e:
+            game_logger.error(f"Error checking tutorial completion: {e}", "TitleState", exc_info=True)
+            tutorial_complete = False  # Default to false if there's an error
+            
+        # Enable/disable menu options based on tutorial completion
+        self.menu_items_enabled = {
+            'continue': tutorial_complete,
+            'new game': True,
+            'load': tutorial_complete,
+            'exit': True
+        }
+        game_logger.debug(f"Menu items enabled: {self.menu_items_enabled}", "TitleState")
         
         # Menu options
         self.menu_items = [
-            {"id": "continue", "text": "Continue", "enabled": self.tutorial_complete},
-            {"id": "new_game", "text": "New Game", "enabled": True},
-            {"id": "load", "text": "Load", "enabled": True},
-            {"id": "quit", "text": "Quit", "enabled": True}
+            {"id": "continue", "text": "Continue", "enabled": self.menu_items_enabled['continue']},
+            {"id": "new_game", "text": "New Game", "enabled": self.menu_items_enabled['new game']},
+            {"id": "load", "text": "Load", "enabled": self.menu_items_enabled['load']},
+            {"id": "quit", "text": "Quit", "enabled": self.menu_items_enabled['exit']}
         ]
         
         # Menu positioning
@@ -52,80 +97,87 @@ class TitleState(GameState):
             self.selected_index = (self.selected_index + 1) % len(self.menu_items)
     
     def handle_event(self, event):
-        """Handle menu selection and activation."""
+        """Handle input events for the title menu."""
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                # Navigate up through enabled items
+            if event.key == pygame.K_UP or event.key == pygame.K_w:
+                # Move selection up, skipping disabled items
                 original_index = self.selected_index
                 while True:
                     self.selected_index = (self.selected_index - 1) % len(self.menu_items)
                     if self.menu_items[self.selected_index]["enabled"] or self.selected_index == original_index:
                         break
+                game_logger.debug(f"Menu selection moved to: {self.menu_items[self.selected_index]['id']}", "TitleState")
                 return True
                 
-            elif event.key == pygame.K_DOWN:
-                # Navigate down through enabled items
+            elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                # Move selection down, skipping disabled items
                 original_index = self.selected_index
                 while True:
                     self.selected_index = (self.selected_index + 1) % len(self.menu_items)
                     if self.menu_items[self.selected_index]["enabled"] or self.selected_index == original_index:
                         break
+                game_logger.debug(f"Menu selection moved to: {self.menu_items[self.selected_index]['id']}", "TitleState")
                 return True
                 
             elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                # Activate selected menu item
+                # Process selected menu item
                 selected_item = self.menu_items[self.selected_index]
-                game_logger.info(f"Menu item activated: {selected_item['id']}", "TitleState")
+                menu_id = selected_item["id"]
+                is_enabled = selected_item["enabled"]
                 
-                if selected_item["id"] == "continue" and selected_item["enabled"]:
-                    # Load the most recent save and continue
-                    game_logger.info("Continue option selected, resetting state and starting gameplay", "TitleState")
-                    try:
-                        self.game.reset_state()  # Reset game state but keep progress
-                        self.game.tutorial_mode = False  # Ensure tutorial mode is off
-                        
-                        # Explicitly set to PLAYING to trigger state transition
-                        from src.core.constants import PLAYING
-                        self.game.game_state = PLAYING
-                        game_logger.info(f"Game state explicitly set to PLAYING: {self.game.game_state}", "TitleState")
-                    except Exception as e:
-                        game_logger.error(f"Error during continue action: {e}", "TitleState", exc_info=True)
+                game_logger.info(f"Menu item selected: {menu_id} (enabled: {is_enabled})", "TitleState")
+                
+                if not is_enabled:
+                    game_logger.warning(f"Attempted to select disabled menu item: {menu_id}", "TitleState")
                     return True
-                    
-                elif selected_item["id"] == "new_game":
-                    # Start a new game
-                    game_logger.info("New Game option selected, resetting game and starting gameplay", "TitleState")
-                    try:
-                        game_logger.debug(f"Tutorial completion status: {self.tutorial_complete}", "TitleState")
-                        self.game.reset_game()  # Full reset including progress
+                
+                # Process enabled menu options
+                try:
+                    if menu_id == "continue":
+                        # Continue game where left off (requires tutorial completed)
+                        game_logger.info("Continue selected - transitioning to gameplay", "TitleState")
+                        self.game.tutorial_mode = False
+                        self.game.use_simplified_gameplay = True
+                        # Create a new gameplay state instead of using undefined PLAYING constant
+                        self.game.game_state = BlackScreenGameplayState(self.game)
                         
-                        if not self.tutorial_complete:
-                            # First-time players go to tutorial
-                            self.game.tutorial_mode = True
-                            game_logger.info("First time player, starting tutorial", "TitleState")
+                    elif menu_id == "new_game":
+                        # Start new game (tutorial if not done, gameplay if tutorial done)
+                        tutorial_needed = not getattr(self.game, 'tutorial_completed', False)
+                        game_logger.info(f"New Game selected - tutorial_needed: {tutorial_needed}", "TitleState")
+                        
+                        # Reset game properties for a new game
+                        self.game.money = 0
+                        self.game.successful_deliveries = 0
+                        
+                        # Set tutorial mode based on completion status
+                        self.game.tutorial_mode = tutorial_needed
+                        self.game.use_simplified_gameplay = True
+                    
+                        # Create the appropriate game state based on tutorial status
+                        if tutorial_needed:
+                            self.game.game_state = TutorialState(self.game)
+                            game_logger.info("Starting tutorial state", "TitleState")
                         else:
-                            # Returning players skip tutorial
-                            self.game.tutorial_mode = False
-                            game_logger.info("Returning player, skipping tutorial", "TitleState")
+                            self.game.game_state = BlackScreenGameplayState(self.game)
+                            game_logger.info("Starting gameplay state", "TitleState")
                         
-                        # Explicitly set to PLAYING to trigger state transition
-                        from src.core.constants import PLAYING
-                        self.game.game_state = PLAYING
-                        game_logger.info(f"Game state explicitly set to PLAYING: {self.game.game_state}", "TitleState")
-                    except Exception as e:
-                        game_logger.error(f"Error during new game action: {e}", "TitleState", exc_info=True)
-                    return True
-                    
-                elif selected_item["id"] == "load":
-                    # TODO: Implement load game submenu
-                    game_logger.warning("Load game not implemented yet", "TitleState")
-                    print("Load game not implemented yet")
-                    return True
-                    
-                elif selected_item["id"] == "quit":
-                    game_logger.info("Quit option selected, exiting game", "TitleState")
-                    pygame.event.post(pygame.event.Event(pygame.QUIT))
-                    return True
+                    elif menu_id == "load":
+                        # Load game menu (future implementation)
+                        game_logger.info("Load selected - feature not yet implemented", "TitleState")
+                        # TODO: Implement save/load functionality
+                        
+                    elif menu_id == "quit":
+                        # Exit game
+                        game_logger.info("Quit selected - exiting game", "TitleState")
+                        pygame.event.post(pygame.event.Event(pygame.QUIT))
+                        
+                except Exception as e:
+                    game_logger.error(f"Error processing menu selection '{menu_id}': {e}", "TitleState", exc_info=True)
+                
+                return True
+        
+        return False
         
         return False
     

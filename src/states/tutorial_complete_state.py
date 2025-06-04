@@ -60,11 +60,28 @@ class TutorialCompleteState(GameState):
         """Handle input events."""
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                # Mark tutorial as complete in database
-                mark_tutorial_complete(self.game.persistence.player_id)
+                # Mark tutorial as complete in database with better error handling
+                try:
+                    # Check if persistence is properly initialized
+                    player_id = 1  # Default player ID
+                    if hasattr(self.game, 'persistence') and self.game.persistence is not None:
+                        player_id = getattr(self.game.persistence, 'player_id', 1)
+                        game_logger.debug(f"Using player_id {player_id} from persistence for tutorial completion", "TutorialCompleteState")
+                    else:
+                        game_logger.warning("Game persistence not available, using default player_id=1", "TutorialCompleteState")
+                    
+                    # Call the DB function to mark tutorial as complete
+                    result = mark_tutorial_complete(player_id)
+                    if result:
+                        game_logger.info(f"Successfully marked tutorial as complete for player_id={player_id}", "TutorialCompleteState")
+                    else:
+                        game_logger.error(f"Failed to mark tutorial as complete for player_id={player_id}", "TutorialCompleteState")
+                except Exception as e:
+                    game_logger.error(f"Error marking tutorial as complete: {e}", "TutorialCompleteState", exc_info=True)
                 
-                # Update the game's state
+                # Update the game's state regardless of database success
                 self.game.tutorial_completed = True
+                game_logger.info("Set game.tutorial_completed=True", "TutorialCompleteState")
                 
                 # Return to main game
                 try:

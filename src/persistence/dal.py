@@ -20,10 +20,11 @@ except ImportError:
     def log_error(message): print(f"[ERROR] {message}")
 
 # Import database initialization
+import os
 from src.persistence.db_init import initialize_database, DB_PATH
 
 # Ensure database is initialized when this module is imported
-if not DB_PATH.exists():
+if not os.path.exists(DB_PATH):
     log("Database not found, initializing now...")
     initialize_database()
 
@@ -51,7 +52,7 @@ def get_conn():
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM table")
     """
-    if not DB_PATH.exists():
+    if not os.path.exists(DB_PATH):
         log_error(f"Database file not found: {DB_PATH}")
         # Return a memory database as fallback
         conn = sqlite3.connect(":memory:")
@@ -105,7 +106,7 @@ def get_player_profile(player_id=1):
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM player_profile WHERE player_id = ?", 
+                "SELECT * FROM player_profile WHERE id = ?", 
                 (player_id,)
             )
             profile = cursor.fetchone()
@@ -114,15 +115,15 @@ def get_player_profile(player_id=1):
             else:
                 # Create default profile if it doesn't exist
                 cursor.execute(
-                    "INSERT INTO player_profile (player_id, display_name, high_score) VALUES (?, ?, ?)",
+                    "INSERT INTO player_profile (id, name, tutorial_complete) VALUES (?, ?, ?)",
                     (player_id, "Player", 0)
                 )
                 conn.commit()
-                return {"player_id": player_id, "display_name": "Player", "high_score": 0}
+                return {"id": player_id, "name": "Player", "tutorial_complete": 0}
     except sqlite3.Error as e:
         log_error(f"Failed to get player profile: {e}")
         # Return default profile as fallback
-        return {"player_id": player_id, "display_name": "Player", "high_score": 0}
+        return {"id": player_id, "name": "Player", "tutorial_complete": 0}
 
 
 def update_high_score(player_id, score):
@@ -369,13 +370,15 @@ def get_recent_runs(player_id=1, limit=5):
 
 def create_backup():
     """Create a backup of the database."""
-    if not DB_PATH.exists():
+    if not os.path.exists(DB_PATH):
         log_error("Cannot backup: database file not found")
         return False
     
     try:
         # Create backup directory
-        backup_dir = DB_PATH.parent / "backups"
+        from pathlib import Path
+        db_path = Path(DB_PATH)  # Convert string to Path for directory operations
+        backup_dir = db_path.parent / "backups"
         backup_dir.mkdir(exist_ok=True)
         
         # Generate backup filename with timestamp
@@ -432,7 +435,7 @@ def is_tutorial_complete(player_id=1):
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT tutorial_complete FROM player_profile WHERE player_id = ?",
+                "SELECT tutorial_complete FROM player_profile WHERE id = ?",
                 (player_id,)
             )
             row = cursor.fetchone()
@@ -447,7 +450,7 @@ def mark_tutorial_complete(player_id=1):
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE player_profile SET tutorial_complete = 1 WHERE player_id = ?",
+                "UPDATE player_profile SET tutorial_complete = 1 WHERE id = ?",
                 (player_id,)
             )
             conn.commit()

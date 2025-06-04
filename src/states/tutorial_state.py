@@ -126,20 +126,45 @@ class TutorialState(GameState):
     
     def update(self, dt):
         """Check for tutorial completion and update hints."""
-        # Update hint timer and fade out
-        if self.show_hint:
+        # Check if hint timer should expire
+        if self.hint_timer > 0:
             self.hint_timer -= dt
             if self.hint_timer <= 0:
+                game_logger.debug("Tutorial hints timed out", "TutorialState")
                 self.show_hint = False
         
         # Get current game stats to check for completion
-        self.served_correct = self.game.successful_deliveries
-        self.money_earned = self.game.money
+        self.served_correct = getattr(self.game, 'successful_deliveries', 0)
+        self.money_earned = getattr(self.game, 'money', 0)
         
-        # Check if either tutorial goal has been met
-        if self.served_correct >= self.target_deliveries or self.money_earned >= self.target_money:
-            # Show the tutorial completion overlay
-            self.next_state = TutorialCompleteState(self.game)
+        # Log current progress toward tutorial goals
+        game_logger.debug(f"Tutorial progress: deliveries={self.served_correct}/{self.target_deliveries}, money=${self.money_earned}/${self.target_money}", "TutorialState")
+        
+        # Check if both tutorial goals have been met
+        tutorial_complete_delivery = self.served_correct >= self.target_deliveries
+        tutorial_complete_money = self.money_earned >= self.target_money
+        
+        if tutorial_complete_delivery and tutorial_complete_money:
+            game_logger.info(f"All tutorial goals reached! deliveries={self.served_correct}/{self.target_deliveries}, money=${self.money_earned}/${self.target_money}", "TutorialState")
+            
+            # Only transition if we haven't already
+            if not hasattr(self, 'next_state') or self.next_state is None:
+                try:
+                    # Show the tutorial completion overlay
+                    game_logger.info("Transitioning to TutorialCompleteState", "TutorialState")
+                    self.next_state = TutorialCompleteState(self.game)
+                except Exception as e:
+                    game_logger.error(f"Failed to transition to TutorialCompleteState: {e}", "TutorialState", exc_info=True)
+        else:
+            # Provide feedback on which goal(s) are still pending
+            if not tutorial_complete_delivery and not tutorial_complete_money:
+                remaining_msg = f"Still need {self.target_deliveries - self.served_correct} more deliveries and ${self.target_money - self.money_earned} more money"
+            elif not tutorial_complete_delivery:
+                remaining_msg = f"Still need {self.target_deliveries - self.served_correct} more deliveries"
+            else:  # not tutorial_complete_money
+                remaining_msg = f"Still need ${self.target_money - self.money_earned} more money"
+                
+            game_logger.debug(f"Tutorial not yet complete: {remaining_msg}", "TutorialState")
     
     def draw(self, screen):
         """Draw tutorial hints over the game screen."""

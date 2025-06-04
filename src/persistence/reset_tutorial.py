@@ -1,7 +1,7 @@
 """
 Reset the tutorial flag for Jammin' Eats.
 
-This script sets tutorial_complete = 0 for player_id = 1 in the jammin.db database,
+This script sets tutorial_complete = 0 for id = 1 in the jammin.db database,
 so the tutorial will run again on next game launch.
 """
 
@@ -15,14 +15,15 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent.parent.parent / "data" / "jammin.db"
 
 def reset_tutorial_flag(player_id=1):
-    if not DB_PATH.exists():
+    import os
+    if not os.path.exists(DB_PATH):
         print(f"Database not found at {DB_PATH}. Is the game initialized?")
         return False
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE player_profile SET tutorial_complete = 0 WHERE player_id = ?",
+            "UPDATE player_profile SET tutorial_complete = 0 WHERE id = ?",
             (player_id,)
         )
         conn.commit()

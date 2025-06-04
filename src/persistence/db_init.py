@@ -38,17 +38,18 @@ def get_database_path():
             data_dir.mkdir(parents=True, exist_ok=True)
             log(f"Created data directory: {data_dir}")
         
-        # Set the database path
-        db_path = data_dir / "jammin.db"
+        # Set the database path - explicitly use .db extension
+        db_path = data_dir / "jammin.db"  # Ensure .db extension, not .dbo
         log(f"Database path set to: {db_path}")
         
-        return db_path
+        # Make sure we return a string for sqlite3.connect
+        return str(db_path)
     except Exception as e:
         log_error(f"Failed to configure database path: {e}")
         # Fallback to current working directory
         fallback = Path.cwd() / "jammin.db"
         log(f"Using fallback database path: {fallback}")
-        return fallback
+        return str(fallback)  # Return as string
 
 # Initialize the path at module load time
 DB_PATH = get_database_path()
@@ -57,8 +58,8 @@ DB_PATH = get_database_path()
 CREATE_TABLES = [
     """
     CREATE TABLE IF NOT EXISTS player_profile (
-        player_id INTEGER PRIMARY KEY,
-        display_name TEXT DEFAULT 'Player',
+        id INTEGER PRIMARY KEY,
+        name TEXT DEFAULT 'Player',
         high_score INTEGER DEFAULT 0,
         tutorial_complete INTEGER DEFAULT 0
     )
@@ -71,7 +72,7 @@ CREATE_TABLES = [
         sfx_volume REAL DEFAULT 1.0,
         fullscreen INTEGER DEFAULT 0,
         difficulty TEXT DEFAULT 'normal',
-        FOREIGN KEY (player_id) REFERENCES player_profile(player_id)
+        FOREIGN KEY (player_id) REFERENCES player_profile(id)
     )
     """,
     """
@@ -87,7 +88,7 @@ CREATE_TABLES = [
         player_id INTEGER,
         upgrade_name TEXT,
         purchase_date TEXT,
-        FOREIGN KEY (player_id) REFERENCES player_profile(player_id)
+        FOREIGN KEY (player_id) REFERENCES player_profile(id)
     )
     """,
     """
@@ -99,7 +100,7 @@ CREATE_TABLES = [
         missed_deliveries INTEGER,
         run_date TEXT,
         duration_sec REAL,
-        FOREIGN KEY (player_id) REFERENCES player_profile(player_id)
+        FOREIGN KEY (player_id) REFERENCES player_profile(id)
     )
     """
 ]
@@ -107,7 +108,7 @@ CREATE_TABLES = [
 # Default data to insert
 DEFAULT_DATA = [
     # Player profile defaults
-    "INSERT OR IGNORE INTO player_profile (player_id, display_name, high_score, tutorial_complete) "
+    "INSERT OR IGNORE INTO player_profile (id, name, high_score, tutorial_complete) "
     "VALUES (1, 'Player', 0, 0)",
     
     # Player settings defaults
@@ -128,7 +129,7 @@ DEFAULT_DATA = [
 
 def ensure_data_directory():
     """Ensure the data directory exists."""
-    data_dir = DB_PATH.parent
+    data_dir = Path(DB_PATH).parent
     try:
         if not data_dir.exists():
             log(f"Data directory not found, creating: {data_dir}")
@@ -191,7 +192,7 @@ def initialize_database():
         count = cursor.fetchone()[0]
         if count == 0:
             log("No player profiles found, creating default profile")
-            cursor.execute("INSERT INTO player_profile (player_id, display_name, high_score, tutorial_complete) "
+            cursor.execute("INSERT INTO player_profile (id, name, high_score, tutorial_complete) "
                           "VALUES (1, 'Player', 0, 0)")
         else:
             log(f"Found {count} player profiles in database")
@@ -216,13 +217,13 @@ def initialize_database():
             # Create minimal player_profile table for tutorial check
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS player_profile (
-                    player_id INTEGER PRIMARY KEY,
-                    display_name TEXT DEFAULT 'Player',
+                    id INTEGER PRIMARY KEY,
+                    name TEXT DEFAULT 'Player',
                     high_score INTEGER DEFAULT 0,
                     tutorial_complete INTEGER DEFAULT 0
                 )
             """)
-            cursor.execute("INSERT INTO player_profile (player_id, tutorial_complete) VALUES (1, 0)")
+            cursor.execute("INSERT INTO player_profile (id, name, tutorial_complete) VALUES (1, 'Player', 0)")
             conn.commit()
             conn.close()
             

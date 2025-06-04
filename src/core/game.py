@@ -177,22 +177,47 @@ class Game:
             
             # Check if we need to transition to gameplay based on game_state flag
             if self.game_state == PLAYING and not isinstance(current_state, GameplayState):
-                game_logger.info(f"Explicit transition to GameplayState triggered by game_state={self.game_state}", "Game")
+                game_logger.info(f"Explicit transition to gameplay triggered by game_state={self.game_state}", "Game")
                 try:
                     # First exit current state properly
                     game_logger.debug(f"Exiting current state: {type(current_state).__name__}", "Game")
                     current_state.exit()
                     
-                    # Create and enter gameplay state
-                    game_logger.debug("Creating new GameplayState instance", "Game")
-                    current_state = GameplayState(self)
-                    game_logger.debug("Entering GameplayState", "Game")
+                    # Determine which gameplay state to use
+                    use_simplified = getattr(self, 'use_simplified_gameplay', False)
+                    
+                    # Create and enter appropriate gameplay state
+                    if use_simplified:
+                        # Use the simplified black screen gameplay state
+                        try:
+                            # Try direct import first
+                            try:
+                                from states.black_screen_gameplay_state import BlackScreenGameplayState
+                            except ImportError:
+                                # Fall back to src-prefixed import
+                                from src.states.black_screen_gameplay_state import BlackScreenGameplayState
+                                
+                            game_logger.debug("Creating new BlackScreenGameplayState instance", "Game")
+                            current_state = BlackScreenGameplayState(self)
+                            game_logger.info("Successfully created BlackScreenGameplayState", "Game")
+                        except Exception as e:
+                            game_logger.error(f"Failed to create BlackScreenGameplayState: {e}", "Game", exc_info=True)
+                            # Fall back to regular GameplayState
+                            game_logger.warning("Falling back to regular GameplayState", "Game")
+                            current_state = GameplayState(self)
+                    else:
+                        # Use the regular gameplay state
+                        game_logger.debug("Creating new GameplayState instance", "Game")
+                        current_state = GameplayState(self)
+                    
+                    # Enter the chosen state
+                    game_logger.debug(f"Entering {type(current_state).__name__}", "Game")
                     current_state.enter()
-                    game_logger.info("Successfully transitioned to GameplayState", "Game")
+                    game_logger.info(f"Successfully transitioned to {type(current_state).__name__}", "Game")
                     
                     # Update tracking
                     last_state_change = current_time
-                    last_state_type = "GameplayState"
+                    last_state_type = type(current_state).__name__
                 except Exception as e:
                     game_logger.critical(f"Failed to transition to GameplayState: {e}", "Game", exc_info=True)
                     # Try to recover by returning to title
@@ -204,6 +229,39 @@ class Game:
                         game_logger.critical(f"Could not recover from transition error: {recover_error}", "Game", exc_info=True)
                     continue
                     
+            # Check for next_state transition
+            if hasattr(current_state, 'next_state') and current_state.next_state is not None:
+                game_logger.info(f"State transition detected: {type(current_state).__name__} -> {type(current_state.next_state).__name__}", "Game")
+                
+                try:
+                    # Exit current state properly
+                    if hasattr(current_state, 'exit'):
+                        current_state.exit()
+                    
+                    # Switch to next state
+                    next_state = current_state.next_state
+                    current_state = next_state
+                    current_state.next_state = None  # Clear next_state to prevent loops
+                    
+                    # Enter new state
+                    if hasattr(current_state, 'enter'):
+                        current_state.enter()
+                    
+                    # Update tracking
+                    last_state_change = pygame.time.get_ticks()
+                    last_state_type = type(current_state).__name__
+                    
+                    game_logger.info(f"Successfully transitioned to {type(current_state).__name__}", "Game")
+                except Exception as e:
+                    game_logger.critical(f"Error during state transition: {e}", "Game", exc_info=True)
+                    # Try to recover
+                    try:
+                        current_state = TitleState(self)
+                        current_state.enter()
+                        self.game_state = MENU
+                    except Exception as recover_error:
+                        game_logger.critical(f"Could not recover from transition error: {recover_error}", "Game", exc_info=True)
+            
             # Update current state
             if current_state:
                 dt = self.clock.tick(FPS) / 1000.0
