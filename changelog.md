@@ -1,6 +1,27 @@
 # Changelog
 
-## [0.9.2-alpha] - 2025-06-03
+## [0.9.3-alpha] - 2025-06-09
+
+### Added
+- Robust, modular Title Screen menu with all main options (New Game, Continue, Load, Options, Quit)
+- Placeholder BlackScreenGameplayState for isolated state transition testing
+- Fallback and dual persistence handling (DataAccessLayer and GamePersistence)
+- Extensive logging and error handling for all menu and state transitions
+- Automated test coverage for database initialization and persistence
+
+### Fixed
+- New Game button now reliably transitions to Tutorial or Gameplay based on tutorial completion
+- Options button is visible and functional on Title Screen
+- Import path mismatches for BlackScreenGameplayState and persistence modules
+- Defensive handling for missing or failed persistence layer
+
+### Improved
+- Modular state transition logic using next_state pattern
+- Menu item enable/disable logic based on player progress
+- Logging granularity and diagnostic output for all core operations
+- Professional, maintainable code structure and TDD workflow
+
+
 
 ### Added
 - Professional game development approach with "vertical slice" methodology implemented

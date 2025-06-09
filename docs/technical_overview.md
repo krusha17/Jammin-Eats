@@ -25,6 +25,12 @@ This document provides a high-level summary of the Jammin' Eats codebase and arc
 ## Logging & Debugging
 - Logging utilities in `src/debug/` help track asset loading and errors.
 
+## 0.9.3-alpha: Title Screen & Persistence Overhaul
+- TitleState and menu transitions refactored for modularity and reliability
+- Robust error handling and logging for all state transitions
+- Dual persistence support: fallback between DataAccessLayer and GamePersistence
+- Automated tests for database and persistence logic
+
 ## Extending the Codebase
 - Add new features as modules in `src/`.
 - Follow the modular structure for maintainability.

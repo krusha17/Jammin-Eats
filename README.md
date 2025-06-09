@@ -15,7 +15,18 @@ Jammin' Eats follows a professional game development workflow with a "vertical s
 
 This approach maximizes development efficiency and ensures solid foundations before adding complexity.
 
-### Current State
+### Current State (0.9.3-alpha)
+
+- Title Screen menu is now robust, modular, and fully functional (New Game, Continue, Load, Options, Quit)
+- New Game button reliably transitions to Tutorial or Gameplay based on player progress
+- Options menu is visible and functional
+- BlackScreenGameplayState placeholder allows isolated state transition testing
+- All menu options have detailed logging and error handling
+- Dual persistence layer support (DataAccessLayer and GamePersistence)
+- Defensive programming for missing/corrupt persistence
+- Automated tests for DB and persistence
+- See CHANGELOG.md for full details
+
 
 The tutorial graduation system is fully implemented and validated. On first launch, players must complete a short tutorial (meeting both delivery AND money goals) before accessing the main game. Completion is persisted in the database and skips on future launches.
 

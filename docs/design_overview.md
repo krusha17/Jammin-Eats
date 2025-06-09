@@ -22,6 +22,13 @@ This document outlines the core gameplay, mechanics, and vision for Jammin' Eats
 - Pixel art with neon and tropical color palettes.
 - Reggae and cyberpunk influences in UI and sound.
 
+## Recent Improvements (0.9.3-alpha)
+- Title Screen menu is now robust, modular, and supports all main options
+- New Game and Options transitions are reliable and future-proof
+- Fallback and dual persistence for player progress
+- Extensive error handling and detailed logging for all transitions
+- Test-driven development with automated DB/persistence tests
+
 ## Future Directions
 - More levels and food types.
 - Customizable food truck.
