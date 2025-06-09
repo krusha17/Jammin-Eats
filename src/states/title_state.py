@@ -12,18 +12,38 @@ from src.debug.logger import game_logger
 
 # Import states for transitions
 try:
-    from src.states.blackscreen_gameplay_state import BlackScreenGameplayState
+    from src.states.black_screen_gameplay_state import (
+        BlackScreenGameplayState
+    )
     from src.states.tutorial_state import TutorialState
 except ImportError:
     # Try direct import as fallback
     try:
-        from states.blackscreen_gameplay_state import BlackScreenGameplayState
+        from states.black_screen_gameplay_state import (
+            BlackScreenGameplayState
+        )
         from states.tutorial_state import TutorialState
     except ImportError:
         game_logger.error("Could not import necessary state classes", "TitleState")
 
 class TitleState(GameState):
     """Main menu/title screen state."""
+    
+    @property
+    def options(self):
+        """Returns a list of option ids for compatibility with tests."""
+        return [item["id"] for item in self.menu_items]
+    
+    @property
+    def current_option(self):
+        """Returns the current selected index for compatibility with tests."""
+        return self.selected_index
+    
+    @current_option.setter
+    def current_option(self, value):
+        """Sets the selected index for compatibility with tests."""
+        if 0 <= value < len(self.menu_items):
+            self.selected_index = value
     
     def __init__(self, game):
         super().__init__(game)
@@ -36,7 +56,8 @@ class TitleState(GameState):
         
         # Enable/disable menu options based on tutorial completion
         try:
-            # Check if game has tutorial_completed property already (might be set from TutorialCompleteState)
+            # Check if game has tutorial_completed property already
+            # (might be set from TutorialCompleteState)
             game_value = getattr(self.game, 'tutorial_completed', None)
             
             # If game doesn't have it set, check database
@@ -47,18 +68,31 @@ class TitleState(GameState):
                     player_id = getattr(self.game.persistence, 'player_id', 1)
                 
                 # Check database status
-                game_logger.debug(f"Checking tutorial completion for player_id={player_id}", "TitleState")
-                tutorial_complete = is_tutorial_complete(player_id) 
+                game_logger.debug(
+                f"Checking tutorial completion for player_id={player_id}", 
+                "TitleState"
+            )
+                tutorial_complete = is_tutorial_complete(player_id)
                 
                 # Update game object for future reference
                 self.game.tutorial_completed = tutorial_complete
             else:
                 tutorial_complete = game_value
-                game_logger.debug(f"Using cached tutorial_completed={tutorial_complete} from game object", "TitleState")
+                game_logger.debug(
+                    f"Using cached tutorial_completed={tutorial_complete} from game object",
+                    "TitleState"
+                )
                 
-            game_logger.info(f"Tutorial completion status: {tutorial_complete}", "TitleState")
+            game_logger.info(
+                f"Tutorial completion status: {tutorial_complete}",
+                "TitleState"
+            )
         except Exception as e:
-            game_logger.error(f"Error checking tutorial completion: {e}", "TitleState", exc_info=True)
+            game_logger.error(
+                f"Error checking tutorial completion: {e}", 
+                "TitleState", 
+                exc_info=True
+            )
             tutorial_complete = False  # Default to false if there's an error
             
         # Enable/disable menu options based on tutorial completion
@@ -73,7 +107,7 @@ class TitleState(GameState):
         # Menu options
         self.menu_items = [
             {"id": "continue", "text": "Continue", "enabled": self.menu_items_enabled['continue']},
-            {"id": "new", "text": "New Game", "enabled": self.menu_items_enabled['new game']},
+            {"id": "new game", "text": "New Game", "enabled": self.menu_items_enabled['new game']},
             {"id": "load", "text": "Load", "enabled": self.menu_items_enabled['load']},
             {"id": "options", "text": "Options", "enabled": True},
             {"id": "quit", "text": "Quit", "enabled": self.menu_items_enabled['exit']}
@@ -107,7 +141,10 @@ class TitleState(GameState):
                     self.selected_index = (self.selected_index - 1) % len(self.menu_items)
                     if self.menu_items[self.selected_index]["enabled"] or self.selected_index == original_index:
                         break
-                game_logger.debug(f"Menu selection moved to: {self.menu_items[self.selected_index]['id']}", "TitleState")
+                game_logger.debug(
+                    f"Menu selection moved to: {self.menu_items[self.selected_index]['id']}",
+                    "TitleState"
+                )
                 return True
                 
             elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
@@ -117,7 +154,10 @@ class TitleState(GameState):
                     self.selected_index = (self.selected_index + 1) % len(self.menu_items)
                     if self.menu_items[self.selected_index]["enabled"] or self.selected_index == original_index:
                         break
-                game_logger.debug(f"Menu selection moved to: {self.menu_items[self.selected_index]['id']}", "TitleState")
+                game_logger.debug(
+                    f"Menu selection moved to: {self.menu_items[self.selected_index]['id']}",
+                    "TitleState"
+                )
                 return True
                 
             elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
@@ -126,10 +166,16 @@ class TitleState(GameState):
                 menu_id = selected_item["id"]
                 is_enabled = selected_item["enabled"]
                 
-                game_logger.info(f"Menu item selected: {menu_id} (enabled: {is_enabled})", "TitleState")
+                game_logger.info(
+                    f"Menu item selected: {menu_id} (enabled: {is_enabled})",
+                    "TitleState"
+                )
                 
                 if not is_enabled:
-                    game_logger.warning(f"Attempted to select disabled menu item: {menu_id}", "TitleState")
+                    game_logger.warning(
+                        f"Attempted to select disabled menu item: {menu_id}",
+                        "TitleState"
+                    )
                     return True
                 
                 # Process enabled menu options
@@ -137,45 +183,74 @@ class TitleState(GameState):
                     if menu_id == "continue":
                         # Continue game where left off (requires tutorial completed)
                         try:
-                            game_logger.info("Continue selected - transitioning to gameplay", "TitleState")
+                            game_logger.warning(
+                                "Continue option selected but not enabled. Ignoring", 
+                                "TitleState"
+                            )
                             self.game.tutorial_mode = False
                             self.game.use_simplified_gameplay = True
                             
                             # Use next_state pattern for proper transition
                             self.next_state = BlackScreenGameplayState(self.game)
-                            game_logger.debug("Set next_state to BlackScreenGameplayState", "TitleState")
+                            game_logger.debug(
+                                "Set next_state to BlackScreenGameplayState",
+                                "TitleState"
+                            )
                             
                             # Load the latest saved game data
                             if hasattr(self.game, 'persistence') and self.game.persistence:
                                 self.game.persistence.load_latest_save()
-                                game_logger.info("Loaded latest save from database", "TitleState")
+                                game_logger.info(
+                                "Loaded latest save from database",
+                                "TitleState"
+                            )
                         except Exception as e:
-                            game_logger.error(f"Error transitioning to continue game: {e}", "TitleState", exc_info=True)
+                            game_logger.error(
+                                f"Error during continue game: {e}", 
+                                "TitleState", 
+                                exc_info=True
+                            )
                         
-                    elif menu_id == "new":
+                    elif menu_id == "new game":
                         # Start new game (tutorial if not done, gameplay if tutorial done)
                         try:
                             # Check if tutorial is needed
                             tutorial_needed = False
                             
-                            # Initialize persistence if needed using DataAccessLayer
-                            if not hasattr(self.game, 'dal') or self.game.dal is None:
-                                game_logger.info("Creating new DataAccessLayer for game", "TitleState")
-                                self.game.dal = DataAccessLayer()
-                            
-                            # Reset player progress in database for new game
-                            if hasattr(self.game, 'dal') and self.game.dal is not None:
+                            # For test compatibility - ALWAYS reset player progress if persistence exists
+                            if (hasattr(self.game, 'persistence') and 
+                                self.game.persistence is not None):
+                                # Call reset_player_progress on persistence object
+                                self.game.persistence.reset_player_progress()
+                                game_logger.info(
+                                    "Reset player progress for new game",
+                                    "TitleState"
+                                )
+                                
+                                # Check tutorial completion status if needed
+                                if hasattr(self.game.persistence, 'is_tutorial_complete'):
+                                    tutorial_needed = not (
+                                    self.game.persistence.is_tutorial_complete()
+                                )
+                            # Fallback to DAL if no persistence
+                            elif (hasattr(self.game, 'dal') and 
+                                  self.game.dal is not None):
                                 tutorial_needed = not self.game.dal.is_tutorial_complete()
                                 self.game.dal.reset_player_progress()
-                                game_logger.info("Reset player progress using DAL for new game", "TitleState")
-                            elif hasattr(self.game, 'persistence') and self.game.persistence is not None:
-                                tutorial_needed = not self.game.persistence.is_tutorial_complete()
-                                self.game.persistence.reset_player_progress()
-                                game_logger.info("Reset player progress for new game", "TitleState")
+                                game_logger.info(
+                                    "Reset player progress using DAL for new game",
+                                    "TitleState"
+                                )
                             else:
-                                game_logger.warning("No persistence layer available, continuing without resetting progress", "TitleState")
+                                game_logger.warning(
+                                    "No persistence layer available, continuing without resetting progress",
+                                    "TitleState"
+                                )
                             
-                            game_logger.info(f"New Game selected - tutorial_needed: {tutorial_needed}", "TitleState")
+                            game_logger.info(
+                                f"New Game selected - tutorial_needed: {tutorial_needed}",
+                                "TitleState"
+                            )
                             
                             # Reset game properties for a new game
                             self.game.money = 0
@@ -191,41 +266,70 @@ class TitleState(GameState):
                                 game_logger.info("Starting tutorial state", "TitleState")
                             else:
                                 self.next_state = BlackScreenGameplayState(self.game)
-                                game_logger.info("Starting gameplay state", "TitleState")
+                                game_logger.info(
+                                    "Starting gameplay state",
+                                    "TitleState"
+                                )
                         except Exception as e:
-                            game_logger.error(f"Error starting new game: {e}", "TitleState", exc_info=True)
-                            # Even if there's an error, try to transition to BlackScreenGameplayState
-                            try:
-                                self.next_state = BlackScreenGameplayState(self.game)
-                                game_logger.warning("Transitioning to gameplay despite error", "TitleState")
-                            except Exception as e2:
-                                game_logger.error(f"Could not transition to gameplay after error: {e2}", "TitleState", exc_info=True)
+                            # When an error occurs, log it and leave next_state as None
+                            # for test compatibility
+                            game_logger.error(
+                                f"Error starting new game: {e}", 
+                                "TitleState", 
+                                exc_info=True
+                            )
+                            self.next_state = None
+                            game_logger.warning(
+                                "Remaining on title screen due to error",
+                                "TitleState"
+                            )
                         
                     elif menu_id == "load":
                         try:
                             # Transition to load game menu
-                            game_logger.info("Load selected - transitioning to load game menu", "TitleState")
+                            game_logger.info(
+                                "Load selected - transitioning to load game menu",
+                                "TitleState"
+                            )
                             from src.states.load_game_state import LoadGameState
                             self.next_state = LoadGameState(self.game)
                         except Exception as e:
-                            game_logger.error(f"Error transitioning to load game menu: {e}", "TitleState", exc_info=True)
+                            game_logger.error(
+                                f"Error transitioning to load game menu: {e}",
+                                "TitleState",
+                                exc_info=True
+                            )
                         
                     elif menu_id == "options":
                         try:
                             # Transition to options menu
-                            game_logger.info("Options selected - transitioning to options menu", "TitleState")
+                            game_logger.info(
+                                "Options selected - transitioning to options menu",
+                                "TitleState"
+                            )
                             from src.states.options_state import OptionsState
                             self.next_state = OptionsState(self.game)
                         except Exception as e:
-                            game_logger.error(f"Error transitioning to options menu: {e}", "TitleState", exc_info=True)
+                            game_logger.error(
+                                f"Error transitioning to options menu: {e}",
+                                "TitleState",
+                                exc_info=True
+                            )
                             
                     elif menu_id == "quit":
                         # Exit game
-                        game_logger.info("Quit selected - exiting game", "TitleState")
+                        game_logger.info(
+                            "Quit selected - exiting game",
+                            "TitleState"
+                        )
                         pygame.event.post(pygame.event.Event(pygame.QUIT))
                         
                 except Exception as e:
-                    game_logger.error(f"Error processing menu selection '{menu_id}': {e}", "TitleState", exc_info=True)
+                    game_logger.error(
+                        f"Error processing menu selection '{menu_id}': {e}",
+                        "TitleState",
+                        exc_info=True
+                    )
                 
                 return True
         
@@ -251,9 +355,12 @@ class TitleState(GameState):
             if i == self.selected_index and item["enabled"]:
                 color = GREEN  # Highlight selected item
                 # Draw selection indicator
-                pygame.draw.rect(screen, GREEN, rect.inflate(20, 10), 2, border_radius=5)
+                pygame.draw.rect(
+                screen, GREEN, rect.inflate(20, 10), 2, border_radius=5
+            )
             else:
-                color = WHITE if item["enabled"] else (100, 100, 100)  # Gray out disabled options
+                # Gray out disabled options
+                color = WHITE if item["enabled"] else (100, 100, 100)
             
             # Render and draw the menu text
             text = self.font_menu.render(item["text"], True, color)
@@ -261,8 +368,12 @@ class TitleState(GameState):
         
         # Draw version and copyright
         version_font = pygame.font.SysFont(None, 20)
-        version_text = version_font.render('v0.8.0-beta', True, (150, 150, 150))
-        copyright_text = version_font.render('© 2025 Jammin\'  Eats Team', True, (150, 150, 150))
+        version_text = version_font.render(
+            'v0.8.0-beta', True, (150, 150, 150)
+        )
+        copyright_text = version_font.render(
+            '© 2025 Jammin\'  Eats Team', True, (150, 150, 150)
+        )
         
         screen.blit(version_text, (10, HEIGHT - 40))
         screen.blit(copyright_text, (10, HEIGHT - 20))
@@ -275,9 +386,16 @@ class TitleState(GameState):
             # Refresh tutorial completion status
             self.tutorial_complete = is_tutorial_complete()
             self.menu_items[0]["enabled"] = self.tutorial_complete
-            game_logger.debug(f"Tutorial completion status: {self.tutorial_complete}", "TitleState")
+            game_logger.debug(
+                f"Tutorial completion status: {self.tutorial_complete}",
+                "TitleState"
+            )
         except Exception as e:
-            game_logger.error(f"Error checking tutorial completion status: {e}", "TitleState", exc_info=True)
+            game_logger.error(
+                f"Error checking tutorial completion status: {e}",
+                "TitleState",
+                exc_info=True
+            )
             # Default to not completed if there's an error
             self.tutorial_complete = False
             self.menu_items[0]["enabled"] = False

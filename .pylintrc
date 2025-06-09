@@ -1,0 +1,141 @@
+[MASTER]
+# Specify a configuration file.
+#rcfile=
+
+# Python code to execute, usually for sys.path manipulation such as
+# pygtk.require().
+#init-hook=
+
+# Add files or directories to the blacklist. They should be base names, not paths.
+ignore=CVS
+
+# Add files or directories matching the regex patterns to the blacklist. The
+# regex matches against base names, not paths.
+ignore-patterns=
+
+# Pickle collected data for later comparisons.
+persistent=yes
+
+# List of plugins (as comma separated values of python modules names) to load,
+# usually to register additional checkers.
+load-plugins=
+
+# Use multiple processes to speed up Pylint.
+jobs=4
+
+# Allow loading of arbitrary C extensions. Extensions are imported into the
+# active Python interpreter and may run arbitrary code.
+unsafe-load-any-extension=no
+
+# A comma-separated list of package or module names from where C extensions may
+# be loaded. Extensions are loading into the active Python interpreter and may
+# run arbitrary code
+extension-pkg-whitelist=pygame
+
+[MESSAGES CONTROL]
+# Only show warnings with the listed confidence levels. Leave empty to show all.
+confidence=
+
+# Enable the message, report, category or checker with the given id(s). You can
+# either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once). See also the "--disable" option for examples.
+enable=c-extension-no-member
+
+# Disable the message, report, category or checker with the given id(s).
+disable=raw-checker-failed,
+        bad-inline-option,
+        locally-disabled,
+        file-ignored,
+        suppressed-message,
+        useless-suppression,
+        deprecated-pragma,
+        use-symbolic-message-instead,
+        too-many-instance-attributes,   # Game objects often need many attributes
+        too-many-arguments,             # Common in game dev functions
+        too-many-locals,                # Game update functions often need many local vars
+        invalid-name,                   # We have our own naming convention
+        too-few-public-methods,         # Some game classes are simple containers
+        too-many-public-methods,        # Game classes often have many public methods
+        no-member,                      # Pygame often has dynamic members
+        missing-docstring,              # We'll handle docstrings our own way
+        duplicate-code                  # Game state patterns often look similar
+
+[REPORTS]
+# Set the output format.
+output-format=text
+
+# Tells whether to display a full report or only the messages
+reports=yes
+
+# Python expression which should return a note less than 10 (10 is the highest
+# note). You have access to the variables errors warning, statement which
+# respectively contain the number of errors / warnings messages and the total
+# number of statements analyzed. This is used by the global evaluation report
+# (RP0004).
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+# Template used to display messages. This is a python new-style format string
+# used to format the message information. See doc for all details
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+
+[BASIC]
+# Good variable names which should always be accepted, separated by a comma
+good-names=i,j,k,ex,Run,_,id,x,y,z,dx,dy,dz,dt,v,hp,mp,ui,db,fn,fs,ms,bg
+
+[FORMAT]
+# Maximum number of characters on a single line. 100 is good for modern displays
+max-line-length=100
+
+# Maximum number of lines in a module. Game modules can be larger than typical
+max-module-lines=1500
+
+# String used as indentation unit. 4 spaces is standard for Python
+indent-string='    '
+
+# Number of spaces of indent required inside a hanging or continued line.
+indent-after-paren=4
+
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
+expected-line-ending-format=
+
+[SIMILARITIES]
+# Minimum lines number of a similarity. Game code often reuses patterns
+min-similarity-lines=8
+
+# Ignore comments when computing similarities.
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities.
+ignore-imports=yes
+
+[DESIGN]
+# Maximum number of arguments for function / method. Game methods often need many
+max-args=10
+
+# Maximum number of locals for function / method body. Game functions often need many
+max-locals=25
+
+# Maximum number of return / yield for function / method body.
+max-returns=11
+
+# Maximum number of branch for function / method body.
+max-branches=26
+
+# Maximum number of statements in function / method body. Game loops can be complex
+max-statements=100
+
+# Maximum number of parents for a class (see R0901).
+max-parents=7
+
+# Maximum number of attributes for a class (see R0902). Game classes need many attributes
+max-attributes=12
+
+# Minimum number of public methods for a class (see R0903).
+min-public-methods=0
+
+# Maximum number of public methods for a class (see R0904). Game classes often have many methods
+max-public-methods=30

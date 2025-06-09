@@ -1,3 +1,10 @@
+"""Core game engine for Jammin' Eats.
+
+Handles game initialization, main game loop, state management, and core gameplay functionality.
+Serves as the central controller connecting all game components and systems.
+Manages resource loading, persistence, and transitions between different game states.
+"""
+
 import pygame
 import traceback
 import os
@@ -72,7 +79,10 @@ class Game:
                 # Check database integrity
                 integrity_result, missing_tables = check_database_integrity()
                 if not integrity_result:
-                    game_logger.warning(f"Database integrity issues detected: {missing_tables}", "Game")
+                    game_logger.warning(
+                        f"Database integrity issues detected: {missing_tables}",
+                        "Game"
+                    )
             else:
                 game_logger.error("Failed to initialize database", "Game")
             
@@ -171,13 +181,19 @@ class Game:
             
             # Log if we're in a different state type now
             if current_state_type != last_state_type:
-                game_logger.info(f"State changed from {last_state_type} to {current_state_type}", "Game")
+                game_logger.info(
+                    f"State changed from {last_state_type} to {current_state_type}",
+                    "Game"
+                )
                 last_state_type = current_state_type
                 last_state_change = current_time
             
             # Check if we need to transition to gameplay based on game_state flag
             if self.game_state == PLAYING and not isinstance(current_state, GameplayState):
-                game_logger.info(f"Explicit transition to gameplay triggered by game_state={self.game_state}", "Game")
+                game_logger.info(
+                    f"Explicit transition to gameplay triggered by game_state={self.game_state}",
+                    "Game"
+                )
                 try:
                     # First exit current state properly
                     game_logger.debug(f"Exiting current state: {type(current_state).__name__}", "Game")
@@ -192,16 +208,24 @@ class Game:
                         try:
                             # Try direct import first
                             try:
-                                from states.black_screen_gameplay_state import BlackScreenGameplayState
+                                from states.black_screen_gameplay_state import (
+                                    BlackScreenGameplayState
+                                )
                             except ImportError:
                                 # Fall back to src-prefixed import
-                                from src.states.black_screen_gameplay_state import BlackScreenGameplayState
+                                from src.states.black_screen_gameplay_state import (
+                                    BlackScreenGameplayState
+                                )
                                 
                             game_logger.debug("Creating new BlackScreenGameplayState instance", "Game")
                             current_state = BlackScreenGameplayState(self)
                             game_logger.info("Successfully created BlackScreenGameplayState", "Game")
                         except Exception as e:
-                            game_logger.error(f"Failed to create BlackScreenGameplayState: {e}", "Game", exc_info=True)
+                            game_logger.error(
+                                f"Failed to create BlackScreenGameplayState: {e}",
+                                "Game", 
+                                exc_info=True
+                            )
                             # Fall back to regular GameplayState
                             game_logger.warning("Falling back to regular GameplayState", "Game")
                             current_state = GameplayState(self)
@@ -219,7 +243,11 @@ class Game:
                     last_state_change = current_time
                     last_state_type = type(current_state).__name__
                 except Exception as e:
-                    game_logger.critical(f"Failed to transition to GameplayState: {e}", "Game", exc_info=True)
+                    game_logger.critical(
+                        f"Failed to transition to GameplayState: {e}",
+                        "Game", 
+                        exc_info=True
+                    )
                     # Try to recover by returning to title
                     try:
                         current_state = TitleState(self)
@@ -231,7 +259,11 @@ class Game:
                     
             # Check for next_state transition
             if hasattr(current_state, 'next_state') and current_state.next_state is not None:
-                game_logger.info(f"State transition detected: {type(current_state).__name__} -> {type(current_state.next_state).__name__}", "Game")
+                game_logger.info(
+                    f"State transition detected: {type(current_state).__name__} -> "
+                    f"{type(current_state.next_state).__name__}",
+                    "Game"
+                )
                 
                 try:
                     # Exit current state properly
@@ -253,7 +285,11 @@ class Game:
                     
                     game_logger.info(f"Successfully transitioned to {type(current_state).__name__}", "Game")
                 except Exception as e:
-                    game_logger.critical(f"Error during state transition: {e}", "Game", exc_info=True)
+                    game_logger.critical(
+                        f"Error during state transition: {e}",
+                        "Game", 
+                        exc_info=True
+                    )
                     # Try to recover
                     try:
                         current_state = TitleState(self)
@@ -381,7 +417,10 @@ class Game:
             screen: The surface to draw on
         """
         try:
-            game_logger.debug("Beginning draw_current_state method", "Game")
+            game_logger.debug(
+                "Beginning draw_current_state method",
+                "Game"
+            )
             
             # Draw background & map layer
             screen.fill((0, 0, 0))  # Black background as fallback
@@ -428,7 +467,8 @@ class Game:
                 if hasattr(self.player, 'draw'):
                     self.player.draw(screen)
                     game_logger.debug("Drew player using draw method", "Game")
-                elif hasattr(self.player, 'image') and hasattr(self.player, 'rect'):
+                elif (hasattr(self.player, 'image') and 
+                      hasattr(self.player, 'rect')):
                     screen.blit(self.player.image, self.player.rect)
                     game_logger.debug("Drew player using image/rect", "Game")
                 else:
@@ -470,7 +510,7 @@ class Game:
             except Exception as font_error:
                 game_logger.error(f"Could not draw error message: {font_error}", "Game")
 
-def _render(self, mouse_pos):
+def render(self, mouse_pos):
     """Render the game screen."""
     # First draw the base game state
     self.draw_current_state(self.screen)
