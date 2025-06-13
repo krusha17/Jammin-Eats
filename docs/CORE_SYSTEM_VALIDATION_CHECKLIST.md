@@ -1,6 +1,6 @@
 # Jammin' Eats – Core System Validation Checklist
 
-**Status:** Tutorial system, DAL, and state machine are validated and working. Project is following professional game development practices with a "vertical slice" approach. Core mechanics are prioritized before asset integration.
+**Status:** Tutorial system, DAL, state machine, and database schema are all validated and working. Test suite has been restored and all tests are now passing. Project is following professional game development practices with a "vertical slice" approach. Core mechanics are prioritized before asset integration.
 
 
 > Purpose: Provide a *mechanics-first* test plan that professional game studios use to validate core gameplay loops **before** art / audio polish.  
@@ -39,8 +39,10 @@
 
 ---
 
-**Project Status (as of 2025-06-03):**
+**Project Status (as of 2025-06-13):**
 - Environment, Database, and Tutorial Graduation Flow: **COMPLETE & VALIDATED**
+- Database Schema: **COMPLETE & VALIDATED** (added missing columns: money, successful_deliveries, added save_games table)
+- Test Suite: **COMPLETE & VALIDATED** (all test files restored and passing)
 - Title → Gameplay Transition: **IN PROGRESS** (blockers: map not loading, missing HUD, food/customer sprites, and shop content)
 - Next: Complete asset loading, map rendering, sprite/HUD functionality, and shop overlay population as detailed below.
 

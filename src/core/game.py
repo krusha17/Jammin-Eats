@@ -3,26 +3,27 @@
 Handles game initialization, main game loop, state management, and core gameplay functionality.
 Serves as the central controller connecting all game components and systems.
 Manages resource loading, persistence, and transitions between different game states.
+
+This module has been refactored for improved maintainability by separating:
+- Core game loop and state management (this file)
+- Rendering logic (game_renderer.py)
+- World object management (game_world.py)
 """
 
+
 import pygame
-import traceback
-import os
-import sys
 
 # Fix imports to work with the way main.py sets up the Python path
 try:
     # Try direct imports first (when src is in path)
-    from core.constants import WIDTH, HEIGHT, FPS, MENU, PLAYING, CUSTOMER_SPAWN_RATE
+    from core.constants import FPS, HEIGHT, MENU, PLAYING, WIDTH
+    from core.game_renderer import GameRenderer
+    from core.game_world import GameWorld
+    from debug.logger import game_logger
     from persistence.dal import is_tutorial_complete
     from persistence.game_persistence import GamePersistence
-    from states import TitleState, TutorialState
+    from states import TitleState
     from states.gameplay_state import GameplayState
-    from debug.logger import game_logger
-    
-    # Also import UI components we'll need
-    from ui.hud import HUD
-    from ui.shop import Shop
     
     print("Direct imports succeeded")
     IMPORT_PREFIX = ""
@@ -30,21 +31,31 @@ try:
 except ImportError as e:
     # Fall back to src-prefixed imports
     print(f"Direct imports failed: {e}, trying with src prefix")
-    from src.core.constants import WIDTH, HEIGHT, FPS, MENU, PLAYING, CUSTOMER_SPAWN_RATE
+    from src.core.constants import FPS, HEIGHT, MENU, PLAYING, WIDTH
+    from src.core.game_renderer import GameRenderer
+    from src.core.game_world import GameWorld
+    from src.debug.logger import game_logger
     from src.persistence.dal import is_tutorial_complete
     from src.persistence.game_persistence import GamePersistence
-    from src.states import TitleState, TutorialState
+    from src.states import TitleState
     from src.states.gameplay_state import GameplayState
-    from src.debug.logger import game_logger
-    
-    # Also import UI components we'll need
-    from src.ui.hud import HUD
-    from src.ui.shop import Shop
     
     IMPORT_PREFIX = "src."
 
 class Game:
-    def __init__(self, screen_width=WIDTH, screen_height=HEIGHT):
+    """Main game class that controls the game loop and state management.
+    
+    This class is responsible for initializing the game, handling the main loop,
+    managing game states, and coordinating between different components like
+    the renderer, world manager, and persistence layer.
+    """
+    def __init__(self, screen_width=WIDTH, screen_height=HEIGHT):  # noqa: PLR0915
+        """Initialize the game with the given screen dimensions.
+        
+        Args:
+            screen_width: Width of the game window in pixels
+            screen_height: Height of the game window in pixels
+        """
         game_logger.info("Initializing Game class", "Game")
         
         # Initialize pygame
@@ -54,7 +65,11 @@ class Game:
             self.clock = pygame.time.Clock()
             game_logger.debug("Pygame display initialized successfully", "Game")
         except Exception as e:
-            game_logger.critical(f"Failed to initialize pygame display: {e}", "Game", exc_info=True)
+            game_logger.critical(
+                f"Failed to initialize pygame display: {e}", 
+                "Game", 
+                exc_info=True
+            )
             raise  # Re-raise as this is critical
         
         # Game state
@@ -62,13 +77,17 @@ class Game:
         self.screen_width = screen_width
         self.screen_height = screen_height
         
+        # Initialize renderer and world manager
+        self.renderer = GameRenderer(self)
+        self.world = GameWorld(self)
+        
         # Initialize database and persistence
         try:
             # Initialize database first - use the right import path based on what worked
-            if IMPORT_PREFIX == "":
-                from persistence.db_init import initialize_database, check_database_integrity
-            else:
-                from src.persistence.db_init import initialize_database, check_database_integrity
+            db_init_module = f"{IMPORT_PREFIX}persistence.db_init"
+            db_init = __import__(db_init_module, fromlist=["initialize_database", "check_database_integrity"])
+            initialize_database = db_init.initialize_database
+            check_database_integrity = db_init.check_database_integrity
                 
             game_logger.info("Initializing game database", "Game")
             
@@ -135,7 +154,7 @@ class Game:
             # Default to completed to avoid blocking player
             self.tutorial_mode = False  # Skip tutorial by default on error
 
-    def run(self):
+    def run(self):  # noqa: PLR0912, PLR0915
         """Main loop: tutorial, title, then gameplay using state pattern."""
         game_logger.info("Starting main game loop", "Game")
         
@@ -156,9 +175,8 @@ class Game:
             current_state = TitleState(self)
             current_state.enter()
             
-        # Track current state type and time for debugging state transitions
+        # Track current state type for debugging state transitions
         last_state_type = type(current_state).__name__
-        last_state_change = pygame.time.get_ticks()
         
         # Main state machine loop
         while running:
@@ -181,12 +199,11 @@ class Game:
             
             # Log if we're in a different state type now
             if current_state_type != last_state_type:
-                game_logger.info(
-                    f"State changed from {last_state_type} to {current_state_type}",
+                game_logger.debug(
+                    f"State update: {current_state_type} at {current_time}",
                     "Game"
                 )
                 last_state_type = current_state_type
-                last_state_change = current_time
             
             # Check if we need to transition to gameplay based on game_state flag
             if self.game_state == PLAYING and not isinstance(current_state, GameplayState):
@@ -206,19 +223,11 @@ class Game:
                     if use_simplified:
                         # Use the simplified black screen gameplay state
                         try:
-                            # Try direct import first
-                            try:
-                                from states.black_screen_gameplay_state import (
-                                    BlackScreenGameplayState
-                                )
-                            except ImportError:
-                                # Fall back to src-prefixed import
-                                from src.states.black_screen_gameplay_state import (
-                                    BlackScreenGameplayState
-                                )
-                                
+                            # Dynamic import based on prefix
+                            black_screen_module = f"{IMPORT_PREFIX}states.black_screen_gameplay_state"
+                            black_screen_module = __import__(black_screen_module, fromlist=["BlackScreenGameplayState"])
                             game_logger.debug("Creating new BlackScreenGameplayState instance", "Game")
-                            current_state = BlackScreenGameplayState(self)
+                            current_state = black_screen_module.BlackScreenGameplayState(self)
                             game_logger.info("Successfully created BlackScreenGameplayState", "Game")
                         except Exception as e:
                             game_logger.error(
@@ -240,7 +249,6 @@ class Game:
                     game_logger.info(f"Successfully transitioned to {type(current_state).__name__}", "Game")
                     
                     # Update tracking
-                    last_state_change = current_time
                     last_state_type = type(current_state).__name__
                 except Exception as e:
                     game_logger.critical(
@@ -280,7 +288,6 @@ class Game:
                         current_state.enter()
                     
                     # Update tracking
-                    last_state_change = pygame.time.get_ticks()
                     last_state_type = type(current_state).__name__
                     
                     game_logger.info(f"Successfully transitioned to {type(current_state).__name__}", "Game")
@@ -309,106 +316,22 @@ class Game:
 
     def run_gameplay(self):
         """Legacy gameplay loop - now handled by GameplayState.
+        
         This method is kept for backward compatibility but is no longer used.
-        The main game loop now uses the state machine pattern."""
+        The main game loop now uses the state machine pattern.
+        """
         game_logger.warning("run_gameplay() called directly - this method is deprecated", "Game")
         
-        # Create and run a GameplayState directly
-        gameplay_state = GameplayState(self)
-        gameplay_state.enter()
-        
-        running = True
-        while running:
-            dt = self.clock.tick(FPS) / 1000.0
+        # Transition to gameplay state if called directly
+        try:
+            from states.gameplay_state import GameplayState
+        except ImportError:
+            from src.states.gameplay_state import GameplayState
             
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    break
-                    
-                if gameplay_state.handle_event(event):
-                    if gameplay_state.next_state:
-                        gameplay_state.exit()
-                        running = False
-                        break
-                    continue
-                    
-            gameplay_state.update(dt)
-            gameplay_state.draw(self.screen)
-            # Updates
-            if self.player:
-                self.player.update(dt, self.customers, self.foods, self.game_map)
-            self.customers.update(dt)
-            self.foods.update(dt)
+        self.current_state = GameplayState(self)
+        game_logger.info("Transition to GameplayState", "Game")
 
-            # Collision and economy
-            for food in list(self.foods):
-                for customer in list(self.customers):
-                    if food.collides_with(customer):
-                        was_fed_before = getattr(customer, 'fed', False)
-                        customer.feed(food.food_type)
-                        food.kill()
-                        if getattr(customer, 'fed', False) and not was_fed_before:
-                            payment = self.economy.calculate_delivery_payment(food.food_type, "perfect_delivery")
-                            self.economy.add_money(payment, reason=f"Delivery to {customer.type}")
 
-            # Render
-            if hasattr(self, 'particles'):
-                self.particles.update(dt)
-            pygame.display.flip()
-            
-        game_logger.info("Game loop terminated", "Game")
-
-    def run_gameplay(self):
-        """Legacy gameplay loop - now handled by GameplayState.
-        This method is kept for backward compatibility but is no longer used.
-        The main game loop now uses the state machine pattern."""
-        game_logger.warning("run_gameplay() called directly - this method is deprecated", "Game")
-        
-        # Create and run a GameplayState directly
-        gameplay_state = GameplayState(self)
-        gameplay_state.enter()
-        
-        running = True
-        while running:
-            dt = self.clock.tick(FPS) / 1000.0
-            
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    break
-                    
-                if gameplay_state.handle_event(event):
-                    if gameplay_state.next_state:
-                        gameplay_state.exit()
-                        running = False
-                        break
-                    continue
-                    
-            gameplay_state.update(dt)
-            gameplay_state.draw(self.screen)
-            # Updates
-            if self.player:
-                self.player.update(dt, self.customers, self.foods, self.game_map)
-            self.customers.update(dt)
-            self.foods.update(dt)
-
-            # Collision and economy
-            for food in list(self.foods):
-                for customer in list(self.customers):
-                    if food.collides_with(customer):
-                        was_fed_before = getattr(customer, 'fed', False)
-                        customer.feed(food.food_type)
-                        food.kill()
-                        if getattr(customer, 'fed', False) and not was_fed_before:
-                            payment = self.economy.calculate_delivery_payment(food.food_type, "perfect_delivery")
-                            self.economy.add_money(payment, reason=f"Delivery to {customer.type}")
-
-            # Render
-            if hasattr(self, 'particles'):
-                self.particles.update(dt)
-            self._render(mouse_pos)
-            pygame.display.flip()
 
     def draw_current_state(self, screen):
         """Draw the current game state - used by tutorial and other states.
@@ -417,68 +340,9 @@ class Game:
             screen: The surface to draw on
         """
         try:
-            game_logger.debug(
-                "Beginning draw_current_state method",
-                "Game"
-            )
+            # Delegate to the renderer for base rendering
+            self.renderer.draw_current_state(screen)
             
-            # Draw background & map layer
-            screen.fill((0, 0, 0))  # Black background as fallback
-            game_logger.debug("Drew black background", "Game")
-            
-            # Draw map if available
-            if hasattr(self, 'game_map') and self.game_map:
-                if hasattr(self.game_map, 'draw'):
-                    self.game_map.draw(screen)
-                    game_logger.debug("Drew game map", "Game")
-                else:
-                    game_logger.warning("Game map exists but has no draw method", "Game")
-            else:
-                game_logger.warning("No game map available to draw", "Game")
-            
-            # Draw sprites with careful attribute checking
-            if hasattr(self, 'customers'):
-                game_logger.debug(f"Drawing {len(self.customers)} customers", "Game")
-                for customer in self.customers:
-                    if hasattr(customer, 'draw'):
-                        customer.draw(screen)
-                    elif hasattr(customer, 'image') and hasattr(customer, 'rect'):
-                        screen.blit(customer.image, customer.rect)
-                    else:
-                        game_logger.warning("Customer sprite missing draw method or image/rect", "Game")
-            else:
-                game_logger.warning("No customers group available", "Game")
-                
-            if hasattr(self, 'foods'):
-                game_logger.debug(f"Drawing {len(self.foods)} food items", "Game")
-                for food in self.foods:
-                    if hasattr(food, 'draw'):
-                        food.draw(screen)
-                    elif hasattr(food, 'image') and hasattr(food, 'rect'):
-                        screen.blit(food.image, food.rect)
-                    else:
-                        game_logger.warning("Food sprite missing draw method or image/rect", "Game")
-            else:
-                game_logger.warning("No foods group available", "Game")
-                
-            # Draw player if available with careful attribute checking
-            if hasattr(self, 'player') and self.player is not None:
-                game_logger.debug("Drawing player", "Game")
-                if hasattr(self.player, 'draw'):
-                    self.player.draw(screen)
-                    game_logger.debug("Drew player using draw method", "Game")
-                elif (hasattr(self.player, 'image') and 
-                      hasattr(self.player, 'rect')):
-                    screen.blit(self.player.image, self.player.rect)
-                    game_logger.debug("Drew player using image/rect", "Game")
-                else:
-                    game_logger.warning("Player object missing draw method or image/rect", "Game")
-                    # Draw a placeholder for the player
-                    pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(self.screen_width // 2, self.screen_height // 2, 32, 32))
-                    game_logger.debug("Drew placeholder rectangle for player", "Game")
-            else:
-                game_logger.warning("No player object available to draw", "Game")
-                    
             # Draw particle effects
             if hasattr(self, 'particles') and self.particles is not None:
                 self.particles.draw(screen)
@@ -510,7 +374,7 @@ class Game:
             except Exception as font_error:
                 game_logger.error(f"Could not draw error message: {font_error}", "Game")
 
-def render(self, mouse_pos):
+def render(self):
     """Render the game screen."""
     # First draw the base game state
     self.draw_current_state(self.screen)
@@ -531,167 +395,28 @@ def render(self, mouse_pos):
     
     def reset_game(self):
         """Reset the game to initial state."""
-        game_logger.info("Resetting entire game state", "Game")
-        
-        try:
-            # Initialize or reset game objects - use dynamic import path
-            if IMPORT_PREFIX == "":
-                # Direct imports
-                from sprites.player import Player
-                from map.game_map import GameMap
-            else:
-                # src-prefixed imports
-                from src.sprites.player import Player
-                from src.map.game_map import GameMap
-            
-            game_logger.debug("Initializing Player", "Game")
-            self.player = Player(self.screen_width // 2, self.screen_height // 2)
-            
-            game_logger.debug("Initializing GameMap", "Game")
-            self.game_map = GameMap()
-            
-            self.customers.empty()
-            self.foods.empty()
-            game_logger.debug("Cleared sprite groups", "Game")
-        except ImportError as e:
-            game_logger.error(f"Failed to import required modules: {e}", "Game", exc_info=True)
-            # Try to recover by setting to None
-            self.player = None
-            self.game_map = None
-        
-        # Reset economy
-        self.money = 0
-        self.successful_deliveries = 0
-        self.selected_food = None
-        
-        # Initialize shop if not already done
-        if not hasattr(self, 'shop'):
-            # We already imported Shop at the top of the file
-            self.shop = Shop(self)
-        
-        # Initialize economy if not already done
-        if not hasattr(self, 'economy'):
-            try:
-                if IMPORT_PREFIX == "":
-                    from economy.economy import Economy
-                else:
-                    from src.economy.economy import Economy
-                self.economy = Economy(self)
-            except ImportError as e:
-                game_logger.error(f"Failed to import Economy: {e}", "Game")
-        
-        # Initialize particles if not already done
-        if not hasattr(self, 'particles'):
-            try:
-                if IMPORT_PREFIX == "":
-                    from effects.particles import ParticleSystem
-                else:
-                    from src.effects.particles import ParticleSystem
-                self.particles = ParticleSystem()
-            except ImportError as e:
-                game_logger.error(f"Failed to import ParticleSystem: {e}", "Game")
-                # Create a minimal implementation as fallback
-                self.particles = type('DummyParticleSystem', (), {'update': lambda *args: None, 'draw': lambda *args: None})()
+        game_logger.info("Delegating reset_game to GameWorld", "Game")
+        # Delegate to the world manager
+        self.world.reset_game()
     
     def reset_state(self):
         """Reset the game state without recreating objects."""
-        game_logger.info("Resetting game state (keeping objects)", "Game")
+        game_logger.info("Delegating reset_state to GameWorld", "Game")
+        # Delegate to the world manager
+        self.world.reset_state()
         
-        try:
-            self.money = 0
-            self.successful_deliveries = 0
-            self.selected_food = None
-            self.customers.empty()
-            self.foods.empty()
-            
-            # Reset player position if exists
-            if self.player:
-                game_logger.debug("Resetting player position", "Game")
-                self.player.reset_position()
-            else:
-                game_logger.warning("Cannot reset player position: player is None", "Game")
-                # Try to create player if missing
-                self.reset_game()
-                
-            game_logger.info("Game state reset completed", "Game")
-            # Set proper game state - this triggers state transition in the main loop
-            self.game_state = PLAYING
-            game_logger.info(f"Game state set to: {self.game_state}", "Game")
-        except Exception as e:
-            game_logger.error(f"Error resetting game state: {e}", "Game", exc_info=True)
+        # Set proper game state - this triggers state transition in the main loop
+        self.game_state = PLAYING
+        game_logger.info(f"Game state set to: {self.game_state}", "Game")
     
     def spawn_customer(self):
         """Spawn a new customer at a valid spawn point."""
-        import random
-        
-        try:
-            # Import using the correct prefix
-            if IMPORT_PREFIX == "":
-                from sprites.customer import Customer
-            else:
-                from src.sprites.customer import Customer
-            
-            # Get valid spawn points from the map or use predefined positions
-            spawn_points = getattr(self.game_map, 'customer_spawn_points', [(100, 100), (200, 100), (300, 100)])
-            
-            if spawn_points:
-                x, y = random.choice(spawn_points)
-                customer = Customer(x, y)
-                self.customers.add(customer)
-                game_logger.debug(f"Customer spawned at {x},{y}", "Game")
-            else:
-                game_logger.warning("No valid spawn points found for customer", "Game")
-        except ImportError as e:
-            game_logger.error(f"Failed to import Customer class: {e}", "Game")
-        except Exception as e:
-            game_logger.error(f"Error spawning customer: {e}", "Game", exc_info=True)
+        game_logger.info("Delegating spawn_customer to GameWorld", "Game")
+        # Delegate to the world manager
+        self.world.spawn_customer()
             
     def setup_tutorial_objects(self):
         """Initialize objects needed for the tutorial."""
-        game_logger.info("Setting up tutorial objects", "Game")
-        
-        try:
-            # Import using the correct prefix to avoid import errors
-            if IMPORT_PREFIX == "":
-                from sprites.player import Player
-                from map.game_map import GameMap
-                from economy.economy import Economy
-            else:
-                from src.sprites.player import Player
-                from src.map.game_map import GameMap
-                from src.economy.economy import Economy
-            
-            # Initialize basic objects needed for tutorial
-            game_logger.debug("Initializing Player for tutorial", "Game")
-            self.player = Player(self.screen_width // 2, self.screen_height // 2)
-            
-            game_logger.debug("Initializing GameMap for tutorial", "Game")
-            self.game_map = GameMap()
-            
-            game_logger.debug("Initializing Economy for tutorial", "Game")
-            self.economy = Economy(self)
-            
-            # Initialize HUD for tutorial if needed
-            if not hasattr(self, 'hud'):
-                game_logger.debug("Initializing HUD for tutorial", "Game")
-                self.hud = HUD(self.screen_width, self.screen_height)
-                
-            # Preload some customers for tutorial
-            self.spawn_customer()
-            game_logger.info("Tutorial objects setup complete", "Game")
-            
-        except ImportError as e:
-            game_logger.error(f"Failed to initialize tutorial objects: {e}", "Game", exc_info=True)
-            # Provide fallback minimal initialization
-            if not self.player:
-                # Create a minimal player if import fails
-                from pygame.sprite import Sprite
-                minimal_player = type('MinimalPlayer', (Sprite,), {
-                    'rect': pygame.Rect(self.screen_width // 2, self.screen_height // 2, 32, 32),
-                    'reset_position': lambda: None,
-                    'draw': lambda surf: pygame.draw.rect(surf, (255,0,0), pygame.Rect(self.screen_width // 2, self.screen_height // 2, 32, 32))
-                })()
-                self.player = minimal_player
-                game_logger.warning("Created minimal player fallback for tutorial", "Game")
-        except Exception as e:
-            game_logger.critical(f"Unexpected error in tutorial setup: {e}", "Game", exc_info=True)
+        game_logger.info("Delegating setup_tutorial_objects to GameWorld", "Game")
+        # Delegate to the world manager
+        self.world.setup_tutorial_objects()

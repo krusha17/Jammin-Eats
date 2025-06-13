@@ -15,16 +15,25 @@ Jammin' Eats follows a professional game development workflow with a "vertical s
 
 This approach maximizes development efficiency and ensures solid foundations before adding complexity.
 
-### Current State (0.9.3-alpha)
+### Current State (0.9.4-alpha)
 
-- Title Screen menu is now robust, modular, and fully functional (New Game, Continue, Load, Options, Quit)
+- Modular code architecture with game.py split into core components (game.py, game_renderer.py, game_world.py)
+- Complete database schema with all required columns and tables:
+  - player_profile table with money and successful_deliveries columns
+  - save_games table for game state persistence
+  - Robust migration system for schema updates
+- Comprehensive test suite with all tests passing:
+  - Restored test_states.py and test_tutorial_completion.py
+  - Enhanced test diagnostics via run_test.py
+  - Robust mocking and fixtures for reliable testing
+- Title Screen menu is modular and fully functional (New Game, Continue, Load, Options, Quit)
 - New Game button reliably transitions to Tutorial or Gameplay based on player progress
 - Options menu is visible and functional
-- BlackScreenGameplayState placeholder allows isolated state transition testing
+- BlackScreenGameplayState placeholder for isolated state transition testing
 - All menu options have detailed logging and error handling
 - Dual persistence layer support (DataAccessLayer and GamePersistence)
 - Defensive programming for missing/corrupt persistence
-- Automated tests for DB and persistence
+- Updated documentation reflects current architecture and development process
 - See CHANGELOG.md for full details
 
 
@@ -37,7 +46,8 @@ The tutorial graduation system is fully implemented and validated. On first laun
 
 ## Current Development Stage
 
-- **Core systems (tutorial, DAL, state machine, persistence) are complete and validated.**
+- **Core systems (tutorial, DAL, state machine, persistence, database schema) are complete and validated.**
+- **Test infrastructure is complete with all tests passing.**
 - **Title → Gameplay Transition milestone is IN PROGRESS.**
 - **Current blockers:** Map is not loading, missing HUD, food/customer sprites, and shop content.
 - See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for the detailed implementation plan and blockers table.
@@ -223,7 +233,11 @@ Jammin-Eats/
    ```
 2. **Install the good vibes (dependencies):**
    ```sh
-   pip install pygame pyodbc pytmx pyinstaller
+   pip install -r requirements.txt
+   ```
+   For development, also install development dependencies:
+   ```sh
+   pip install -r requirements-dev.txt
    ```
 3. **Start jammin'!**
    ```sh

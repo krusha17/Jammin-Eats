@@ -40,6 +40,10 @@ Jammin-Eats/
   ```sh
   pytest
   ```
+- Run tests with detailed logging (recommended for troubleshooting):
+  ```sh
+  python run_test.py
+  ```
 - Run tests in a specific file:
   ```sh
   pytest tests/test_database_initialization.py
@@ -51,6 +55,14 @@ Jammin-Eats/
 - Show extra info (verbose):
   ```sh
   pytest -v
+  ```
+- Generate test output file (for detailed error diagnosis):
+  ```sh
+  pytest -v > test_output.txt 2>&1
+  ```
+- Run tests with full tracebacks:
+  ```sh
+  pytest --tb=long
   ```
 
 ---
@@ -87,10 +99,45 @@ Jammin-Eats/
 
 ---
 
-## 7. Additional Tips
+## 7. Test Files Organization
+
+Jammin' Eats has two primary test file locations:
+
+1. **Root-level test files:** 
+   - Located directly in the project root (e.g., `test_states.py`, `test_tutorial_completion.py`)
+   - Used for core system validation tests that run against the main game instance
+
+2. **Tests directory:** 
+   - Located in `tests/` folder with unit and integration subdirectories
+   - Contains more focused tests for individual components
+   - Reference implementations for core tests
+
+---
+
+## 8. Using run_test.py
+
+The project includes a custom `run_test.py` script that provides enhanced test diagnostics:
+
+```sh
+python run_test.py
+```
+
+Key features:
+- Runs tests with detailed logging
+- Captures full traceback and error information
+- Saves output to `test_output.txt` for easier troubleshooting
+- Helps diagnose test skips and failures
+- Essential for resolving complex test issues
+
+---
+
+## 9. Additional Tips
 
 - Use `pytest --maxfail=1 --disable-warnings -v` for fast feedback.
 - Use markers (e.g., `@pytest.mark.slow`) to categorize tests.
+- For mocking game objects in tests, see examples in `test_states.py`.
+- When testing state transitions, ensure all required methods are mocked (e.g., `change_state`).
+- When running database tests, ensure the database is properly initialized and reset between tests.
 - See [pytest documentation](https://docs.pytest.org/) for advanced features.
 
 ---

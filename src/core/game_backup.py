@@ -219,102 +219,55 @@ class Game:
         The main game loop now uses the state machine pattern."""
         game_logger.warning("run_gameplay() called directly - this method is deprecated", "Game")
         
-        # Create and run a GameplayState directly
-        gameplay_state = GameplayState(self)
-        gameplay_state.enter()
-        
+        # Initial game setup
         running = True
+        spawn_timer = 0
+        
         while running:
-            dt = self.clock.tick(FPS) / 1000.0
-            
+            # Process events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                    break
-                    
-                if gameplay_state.handle_event(event):
-                    if gameplay_state.next_state:
-                        gameplay_state.exit()
-                        running = False
-                        break
-                    continue
-                    
-            gameplay_state.update(dt)
-            gameplay_state.draw(self.screen)
-            # Updates
-            if self.player:
-                self.player.update(dt, self.customers, self.foods, self.game_map)
-            self.customers.update(dt)
-            self.foods.update(dt)
-
-            # Collision and economy
-            for food in list(self.foods):
-                for customer in list(self.customers):
-                    if food.collides_with(customer):
-                        was_fed_before = getattr(customer, 'fed', False)
-                        customer.feed(food.food_type)
-                        food.kill()
-                        if getattr(customer, 'fed', False) and not was_fed_before:
-                            payment = self.economy.calculate_delivery_payment(food.food_type, "perfect_delivery")
-                            self.economy.add_money(payment, reason=f"Delivery to {customer.type}")
-
-            # Render
-            if hasattr(self, 'particles'):
-                self.particles.update(dt)
-            pygame.display.flip()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_b:  # 'b' to open shop
+                        self.show_shop = not self.show_shop
+                    elif event.key == pygame.K_1:  # Number keys to select foods
+                        self.selected_food = "burger"
+                    elif event.key == pygame.K_2:
+                        self.selected_food = "pizza"
+                    elif event.key == pygame.K_3:
+                        self.selected_food = "taco"
+                elif event.type == pygame.MOUSEBUTTONDOWN and not self.show_shop:
+                    # Throw food in the direction of the mouse click
+                    if self.selected_food and self.inventory.get(self.selected_food, 0) > 0:
+                        self.inventory[self.selected_food] -= 1
+                        # Create food projectile in the direction of mouse
+                        mouse_pos = pygame.mouse.get_pos()
+                        # Implement food throwing logic
             
-        game_logger.info("Game loop terminated", "Game")
-
-    def run_gameplay(self):
-        """Legacy gameplay loop - now handled by GameplayState.
-        This method is kept for backward compatibility but is no longer used.
-        The main game loop now uses the state machine pattern."""
-        game_logger.warning("run_gameplay() called directly - this method is deprecated", "Game")
-        
-        # Create and run a GameplayState directly
-        gameplay_state = GameplayState(self)
-        gameplay_state.enter()
-        
-        running = True
-        while running:
-            dt = self.clock.tick(FPS) / 1000.0
+            # Update game state
+            keys = pygame.key.get_pressed()
+            # Update player movement based on keys
+            # Update food projectiles, customers, etc.
             
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    break
-                    
-                if gameplay_state.handle_event(event):
-                    if gameplay_state.next_state:
-                        gameplay_state.exit()
-                        running = False
-                        break
-                    continue
-                    
-            gameplay_state.update(dt)
-            gameplay_state.draw(self.screen)
-            # Updates
-            if self.player:
-                self.player.update(dt, self.customers, self.foods, self.game_map)
-            self.customers.update(dt)
-            self.foods.update(dt)
-
-            # Collision and economy
-            for food in list(self.foods):
-                for customer in list(self.customers):
-                    if food.collides_with(customer):
-                        was_fed_before = getattr(customer, 'fed', False)
-                        customer.feed(food.food_type)
-                        food.kill()
-                        if getattr(customer, 'fed', False) and not was_fed_before:
-                            payment = self.economy.calculate_delivery_payment(food.food_type, "perfect_delivery")
-                            self.economy.add_money(payment, reason=f"Delivery to {customer.type}")
-
-            # Render
-            if hasattr(self, 'particles'):
-                self.particles.update(dt)
-            self._render(mouse_pos)
+            # Check if it's time to spawn a new customer
+            spawn_timer += 1
+            if spawn_timer >= CUSTOMER_SPAWN_RATE:
+                self.spawn_customer()
+                spawn_timer = 0
+            
+            # Check for collisions between food and customers
+            # Update scoring, money, etc. based on successful deliveries
+            
+            # Clear screen and render
+            self.screen.fill((0, 0, 0))  # Black background
+            
+            # Draw game elements
+            self._render(pygame.mouse.get_pos())
+            
+            # Update display
             pygame.display.flip()
+            self.clock.tick(FPS)
 
     def draw_current_state(self, screen):
         """Draw the current game state - used by tutorial and other states.
@@ -339,6 +292,125 @@ class Game:
             else:
                 game_logger.warning("No game map available to draw", "Game")
             
+            # Draw sprites with careful attribute checking
+            if hasattr(self, 'customers'):
+                game_logger.debug(f"Drawing {len(self.customers)} customers", "Game")
+                for customer in self.customers:
+                    if hasattr(customer, 'draw'):
+                        customer.draw(screen)
+                    elif hasattr(customer, 'image') and hasattr(customer, 'rect'):
+                        screen.blit(customer.image, customer.rect)
+                    else:
+                        game_logger.warning("Customer sprite missing draw method or image/rect", "Game")
+            else:
+                game_logger.warning("No customers group available", "Game")
+                
+            # Draw foods
+            if hasattr(self, 'foods'):
+                game_logger.debug(f"Drawing {len(self.foods)} food items", "Game")
+                self.foods.draw(screen)
+            
+            # Draw player
+            if hasattr(self, 'player') and self.player is not None:
+                self.player.draw(screen)
+                game_logger.debug("Drew player sprite", "Game")
+            
+            # Special VFX
+            if hasattr(self, 'particles'):
+                self.particles.draw(screen)
+                game_logger.debug("Drew particle effects", "Game")
+                
+            # HUD elements
+            if hasattr(self, 'hud') and self.hud is not None:
+                self.hud.draw(screen, self.economy if hasattr(self, 'economy') else None)
+                
+            # Display current state name in debug mode
+            if hasattr(self, 'current_state') and self.current_state is not None:
+                state_name = self.current_state.__class__.__name__
+                game_logger.debug(f"Current game state: {state_name}", "Game")
+                
+        except Exception as e:
+            game_logger.error(f"Error in draw_current_state: {e}", "Game", exc_info=True)
+
+def run_gameplay(self):
+    """Legacy gameplay loop - now handled by GameplayState.
+    This method is kept for backward compatibility but is no longer used.
+    The main game loop now uses the state machine pattern."""
+    game_logger.warning("run_gameplay() called directly - this method is deprecated", "Game")
+        
+    # Initial game setup
+    running = True
+    spawn_timer = 0
+        
+    while running:
+        # Process events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:  # 'b' to open shop
+                    self.show_shop = not self.show_shop
+                elif event.key == pygame.K_1:  # Number keys to select foods
+                    self.selected_food = "burger"
+                elif event.key == pygame.K_2:
+                    self.selected_food = "pizza"
+                elif event.key == pygame.K_3:
+                    self.selected_food = "taco"
+            elif event.type == pygame.MOUSEBUTTONDOWN and not self.show_shop:
+                # Throw food in the direction of the mouse click
+                if self.selected_food and self.inventory.get(self.selected_food, 0) > 0:
+                    self.inventory[self.selected_food] -= 1
+                    # Create food projectile in the direction of mouse
+                    mouse_pos = pygame.mouse.get_pos()
+                    # Implement food throwing logic
+            
+        # Update game state
+        keys = pygame.key.get_pressed()
+        # Update player movement based on keys
+        # Update food projectiles, customers, etc.
+            
+        # Check if it's time to spawn a new customer
+        spawn_timer += 1
+        if spawn_timer >= CUSTOMER_SPAWN_RATE:
+            self.spawn_customer()
+            spawn_timer = 0
+            
+        # Check for collisions between food and customers
+        # Update scoring, money, etc. based on successful deliveries
+            
+        # Clear screen and render
+        self.screen.fill((0, 0, 0))  # Black background
+            
+        # Draw game elements
+        self._render(pygame.mouse.get_pos())
+            
+        # Update display
+        pygame.display.flip()
+        self.clock.tick(FPS)
+
+def draw_current_state(self, screen):
+    """Draw the current game state - used by tutorial and other states.
+    
+    Args:
+        screen: The surface to draw on
+    """
+    try:
+        game_logger.debug("Beginning draw_current_state method", "Game")
+            
+        # Draw background & map layer
+        screen.fill((0, 0, 0))  # Black background as fallback
+        game_logger.debug("Drew black background", "Game")
+            
+        # Draw map if available
+        if hasattr(self, 'game_map') and self.game_map:
+            if hasattr(self.game_map, 'draw'):
+                self.game_map.draw(screen)
+                game_logger.debug("Drew game map", "Game")
+            else:
+                game_logger.warning("Game map exists but has no draw method", "Game")
+        else:
+            game_logger.warning("No game map available to draw", "Game")
+            
         # Draw sprites with careful attribute checking
         if hasattr(self, 'customers'):
             game_logger.debug(f"Drawing {len(self.customers)} customers", "Game")
@@ -351,76 +423,56 @@ class Game:
                     game_logger.warning("Customer sprite missing draw method or image/rect", "Game")
         else:
             game_logger.warning("No customers group available", "Game")
-                
+            
         if hasattr(self, 'foods'):
             game_logger.debug(f"Drawing {len(self.foods)} food items", "Game")
-            for food in self.foods:
-                if hasattr(food, 'draw'):
-                    food.draw(screen)
-                elif hasattr(food, 'image') and hasattr(food, 'rect'):
-                    screen.blit(food.image, food.rect)
-                else:
-                    game_logger.warning("Food sprite missing draw method or image/rect", "Game")
-        else:
-            game_logger.warning("No foods group available", "Game")
-            
-        # Draw player if available with careful attribute checking
-        if hasattr(self, 'player') and self.player is not None:
-            game_logger.debug("Drawing player", "Game")
-            if hasattr(self.player, 'draw'):
-                self.player.draw(screen)
-                game_logger.debug("Drew player using draw method", "Game")
-            elif hasattr(self.player, 'image') and hasattr(self.player, 'rect'):
-                screen.blit(self.player.image, self.player.rect)
-                game_logger.debug("Drew player using image/rect", "Game")
-            else:
-                game_logger.warning("Player object missing draw method or image/rect", "Game")
-                # Draw a placeholder for the player
-                pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(self.screen_width // 2, self.screen_height // 2, 32, 32))
-                game_logger.debug("Drew placeholder rectangle for player", "Game")
-        else:
-            game_logger.warning("No player object available to draw", "Game")
                 
-        # Draw particle effects
-        if hasattr(self, 'particles') and self.particles is not None:
-            self.particles.draw(screen)
-            game_logger.debug("Drew particle effects", "Game")
+            # Draw player
+            if hasattr(self, 'player') and self.player is not None:
+                self.player.draw(screen)
+                game_logger.debug("Drew player sprite", "Game")
+                
+            # Special VFX
+            if hasattr(self, 'particles'):
+                self.particles.draw(screen)
+                game_logger.debug("Drew particle effects", "Game")
+                
+            # HUD elements
+            if hasattr(self, 'hud') and self.hud is not None:
+                self.hud.draw(screen, self.economy if hasattr(self, 'economy') else None)
+                game_logger.debug("Drew HUD elements", "Game")
+                
             
-        # Draw HUD if available
-        if hasattr(self, 'hud') and self.hud is not None:
-            game_logger.debug("Drawing HUD", "Game")
-            self.hud.draw(screen)
-            game_logger.debug("Drew HUD successfully", "Game")
-        else:
-            game_logger.warning("No HUD available to draw", "Game")
+            # Display current state name in debug mode
+            if hasattr(self, 'current_state') and self.current_state is not None:
+                debug_font = pygame.font.SysFont(None, 20)
+                state_text = debug_font.render(f"State: {self.current_state.__class__.__name__}", True, (255, 255, 0))
+                screen.blit(state_text, (10, 30))
+                game_logger.debug(f"Drew state debug info: {self.current_state.__class__.__name__}", "Game")
             
-        # Shop is drawn last (on top) if visible
-        if hasattr(self, 'shop') and self.shop is not None and hasattr(self.shop, 'visible') and self.shop.visible:
-            self.shop.draw(screen)
-            game_logger.debug("Drew shop UI", "Game")
-            
-        game_logger.debug("Completed draw_current_state method successfully", "Game")
-            
-    except Exception as e:
-        game_logger.error(f"Error in draw_current_state: {e}", "Game", exc_info=True)
-        # Draw an emergency message
-        try:
-            font = pygame.font.SysFont(None, 24)
-            error_text = font.render(f"Drawing error: {str(e)}", True, (255, 0, 0))
-            screen.blit(error_text, (10, 10))
-            game_logger.debug("Drew error message on screen", "Game")
-        except Exception as font_error:
-            game_logger.error(f"Could not draw error message: {font_error}", "Game")
+            # Shop is drawn last (on top) if visible
+            if hasattr(self, 'shop') and self.shop is not None and hasattr(self.shop, 'visible') and self.shop.visible:
+                self.shop.draw(screen)
+                game_logger.debug("Drew shop UI", "Game")
+                
+            game_logger.debug("Completed draw_current_state method successfully", "Game")
+        except Exception as e:
+            game_logger.error(f"Error in draw_current_state: {e}", "Game", exc_info=True)
+            # Draw an emergency message
+            try:
+                font = pygame.font.SysFont(None, 24)
+                error_text = font.render(f"Drawing error: {str(e)}", True, (255, 0, 0))
+                screen.blit(error_text, (10, 10))
+                game_logger.debug("Drew error message on screen", "Game")
+            except Exception as font_error:
+                game_logger.error(f"Could not draw error message: {font_error}", "Game")
 
-def _render(self, mouse_pos):
-    """Render the game screen."""
-    # First draw the base game state
-    self.draw_current_state(self.screen)
-    
-    # Then add gameplay UI elements
-    font = pygame.font.SysFont(None, 24)
-    money_text = font.render(f'${self.money}', True, (255, 255, 255))
-    self.screen.blit(money_text, (10, 10))
+    def _render(self, mouse_pos):
+        """Render the game screen."""
+        # First draw the base game state
+        self.draw_current_state(self.screen)
+        
+        # Then add gameplay UI elements
         font = pygame.font.SysFont(None, 24)
         money_text = font.render(f'${self.money}', True, (255, 255, 255))
         self.screen.blit(money_text, (10, 10))

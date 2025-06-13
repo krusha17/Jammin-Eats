@@ -1,36 +1,36 @@
 # Jammin' Eats Linting Report
 
-Generated on: 2025-06-09 13:51:10
+Generated on: 2025-06-13 10:50:14
 
 ## Current Status
 
 - Total Files: 58
 - Files With Issues: 52 (89.7%)
-- Total Issues: 286
-- Average Issues Per File: 4.93
+- Total Issues: 275
+- Average Issues Per File: 4.74
 
 ## Progress Since Last Report
 
-- Issues Fixed: 24
+- Issues Fixed: 11
 - Files Improved: 0
 
 ## Issues by Type
 
 | Type | Count | Percentage |
 |------|------:|-----------:|
-| Naming | 52 | 18.2% |
-| Docstring | 88 | 30.8% |
-| Style | 142 | 49.7% |
-| Complexity | 3 | 1.0% |
-| Syntax | 1 | 0.3% |
+| Naming | 51 | 18.5% |
+| Docstring | 87 | 31.6% |
+| Style | 133 | 48.4% |
+| Complexity | 3 | 1.1% |
+| Syntax | 1 | 0.4% |
 
 ## Top 10 Files With Most Issues
 
 | File | Issues |
 |------|-------:|
-| src\core\game.py | 27 |
 | src\states\gameplay_state.py | 20 |
 | src\ui\shop.py | 17 |
+| src\core\game.py | 16 |
 | src\core\game_backup.py | 16 |
 | src\map\tilemap.py | 15 |
 | src\map\tilemap_new.py | 12 |
@@ -45,6 +45,7 @@ Generated on: 2025-06-09 13:51:10
 |------|-------------:|------------------:|
 | 2025-06-09 | 310 | 52 |
 | 2025-06-09 | 286 | 52 |
+| 2025-06-13 | 275 | 52 |
 
 ## What to Focus On Next
 

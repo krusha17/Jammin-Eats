@@ -4,9 +4,7 @@ Handles all database interactions for game data persistence
 """
 
 import pyodbc
-import os
-from typing import Optional, Dict, List
-from datetime import datetime
+from typing import Optional, Dict
 
 class GameDatabase:
     """Manages database connections and game data operations"""

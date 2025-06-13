@@ -8,7 +8,7 @@ It handles loading and saving game state, upgrades, and run history.
 from src.persistence.dal import (
     fetch_starting_defaults, load_owned_upgrades, own_upgrade,
     save_run_history, get_high_scores, update_high_score,
-    get_player_profile, create_backup
+    get_player_profile, create_backup, get_recent_runs, DataAccessLayer
 )
 from src.debug.logger import log, log_error
 
@@ -149,3 +149,49 @@ class GamePersistence:
         except Exception as e:
             log_error(f"Error creating database backup: {e}")
             return False
+            
+    def reset_player_progress(self):
+        """
+        Reset player progress for a new game while preserving tutorial completion.
+        Used when starting a new game.
+        
+        Returns:
+            bool: True if reset successful, False otherwise
+        """
+        try:
+            # Create a DAL instance and delegate to its reset_player_progress method
+            dal = DataAccessLayer()
+            success = dal.reset_player_progress()
+            if success:
+                log("Player progress reset successfully")
+                # Reload player profile after reset
+                self._load_player_profile()
+                return True
+            else:
+                log_error("Failed to reset player progress")
+                return False
+        except Exception as e:
+            log_error(f"Error resetting player progress: {e}")
+            return False
+    
+    def load_latest_save(self):
+        """
+        Load the latest save game data.
+        Used for continuing the most recent game.
+        
+        Returns:
+            dict: Save game data or None if loading failed
+        """
+        try:
+            # Create a DAL instance and delegate to its load_latest_save method
+            dal = DataAccessLayer()
+            save_data = dal.load_latest_save()
+            if save_data:
+                log(f"Loaded latest save game: {save_data.get('run_date')}")
+                return save_data
+            else:
+                log_error("No save game found or failed to load")
+                return None
+        except Exception as e:
+            log_error(f"Error loading latest save game: {e}")
+            return None

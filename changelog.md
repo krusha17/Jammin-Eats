@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.9.4-alpha] - 2025-06-13
+
+### Added
+- Modular code architecture with game.py split into core components:
+  - game.py: Core game engine and state management
+  - game_renderer.py: Rendering logic
+  - game_world.py: World object management and physics
+- Complete database schema with critical fixes:
+  - Added missing 'money' column to player_profile table
+  - Added missing 'successful_deliveries' column to player_profile table
+  - Added 'save_games' table for game state persistence
+- Enhanced test infrastructure:
+  - Restored test_states.py and test_tutorial_completion.py
+  - Added run_test.py for detailed test diagnostics and logging
+  - Fixed mocking and fixtures for reliable state transition testing
+
+### Fixed
+- Database initialization and schema issues resolved
+- All test files now pass with proper fixtures and mocks
+- Tutorial state transition tests no longer skipped
+- Missing draw_current_state method issue resolved through refactoring
+
+### Improved
+- Comprehensive documentation updates to reflect current architecture:
+  - Updated technical_overview.md with current module structure
+  - Updated folder_structure.md with accurate project organization
+  - Enhanced pytest_workflow.md with new testing procedures
+  - Updated CORE_SYSTEM_VALIDATION_CHECKLIST.md with current status
+  - Updated DEVELOPMENT_ROADMAP.md to track completed tasks
+- Code organization and structure matches professional game development practices
+- Clear separation of rendering, world management, and game logic
+
 ## [0.9.3-alpha] - 2025-06-09
 
 ### Added
