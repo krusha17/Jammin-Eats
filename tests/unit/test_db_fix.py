@@ -22,7 +22,6 @@ def check_database():
                 initialize_database,
                 check_database_integrity,
             )
-            from src.debug.logger import game_logger
 
             print("Successfully imported database modules")
         except ImportError as e:

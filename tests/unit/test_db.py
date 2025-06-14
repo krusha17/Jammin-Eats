@@ -12,7 +12,7 @@ project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
 # Import the database initialization module
-from src.persistence.db_init import (
+from src.persistence.db_init import (  # noqa: E402
     initialize_database,
     check_database_integrity,
     DB_PATH,
