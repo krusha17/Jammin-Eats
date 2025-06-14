@@ -2,7 +2,7 @@
 Write-Host "Starting backup process..." -ForegroundColor Green
 
 $repoPath = "C:\Users\jerom\Jammin-Eats"
-$backupBasePath = "D:\Backups\Jammin-Eats'"
+$backupBasePath = "D:\Backups\Jammin-Eats"
 
 # Create timestamp and backup directory
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
@@ -11,7 +11,16 @@ New-Item -ItemType Directory -Path $backupPath -Force
 
 # Count total files for progress tracking
 Write-Host "Calculating files to backup..." -ForegroundColor Cyan
-$filesToCopy = Get-ChildItem -Path $repoPath -Recurse -File | Where-Object { $_.FullName -notlike "*\Backups\*" }
+# Exclude Backups, .git, virtual env, build artifacts, and cache folders
+$excludes = @("\\Backups\\", "\\.git\\", "\\.venv\\", "\\build\\", "\\dist\\", "\\__pycache__\\")
+$filesToCopy = Get-ChildItem -Path $repoPath -Recurse -File |
+    Where-Object {
+        $include = $true
+        foreach ($ex in $excludes) {
+            if ($_.FullName -like "*${ex}*") { $include = $false; break }
+        }
+        $include
+    }
 $totalFiles = $filesToCopy.Count
 Write-Host "Found $totalFiles files to backup" -ForegroundColor Cyan
 
