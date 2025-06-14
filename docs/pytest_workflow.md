@@ -1,6 +1,6 @@
 # Pytest Workflow Guide for Jammin' Eats
 
-This guide explains how to use [pytest](https://docs.pytest.org/) for running, writing, and integrating tests in the Jammin' Eats project.
+This guide explains how to use [pytest](https://docs.pytest.org/) for testing the Jammin' Eats project. It also details how our tests integrate with the **pre-commit** hook system, giving you immediate feedback on code quality before every commit.
 
 ---
 
@@ -88,7 +88,20 @@ Jammin-Eats/
 
 ---
 
-## 6. Continuous Integration (CI)
+## 6. Pre-commit Integration
+
+Pre-commit hooks run a **fast subset** of the test suite (smoke tests) together with linting, formatting, and type checking on **every commit**. This gives you immediate feedback.
+
+```bash
+# Manually run all hooks, including the test subset
+pre-commit run --all-files
+```
+
+Full tests still run in CI/CD pipelines and can be executed locally via `pytest`.
+
+---
+
+## 7. Continuous Integration (CI)
 
 - Add `pytest` to your `requirements.txt` or development dependencies.
 - In your CI pipeline, use the command:
@@ -99,15 +112,11 @@ Jammin-Eats/
 
 ---
 
-## 7. Test Files Organization
+## 8. Test Files Organization
 
-Jammin' Eats has two primary test file locations:
+All tests reside in the `tests/` folder (with unit/integration subfolders). Historical root-level test files have been migrated and the root is now reserved for entry scripts only.
 
-1. **Root-level test files:** 
-   - Located directly in the project root (e.g., `test_states.py`, `test_tutorial_completion.py`)
-   - Used for core system validation tests that run against the main game instance
-
-2. **Tests directory:** 
+1. **Tests directory:** 
    - Located in `tests/` folder with unit and integration subdirectories
    - Contains more focused tests for individual components
    - Reference implementations for core tests

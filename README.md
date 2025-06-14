@@ -1,273 +1,214 @@
 🎮 Jammin' Eats
 
-## Tutorial Mode
-
-> **Note:** Project follows professional game development best practices with a "vertical slice" approach. See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for details.
-
-### Professional Game Development Process
-
-Jammin' Eats follows a professional game development workflow with a "vertical slice" or "gameplay prototype" approach:
-
-1. **Logic-First Development**: Core gameplay mechanics are implemented without visual distractions
-2. **Incremental Testing**: Each system is validated independently before integration
-3. **Placeholder Assets**: Basic shapes represent gameplay elements until mechanics are solid
-4. **Asset Integration**: Visual and audio elements are added only after gameplay systems work perfectly
-
-This approach maximizes development efficiency and ensures solid foundations before adding complexity.
-
-### Current State (0.9.4-alpha)
-
-- Modular code architecture with game.py split into core components (game.py, game_renderer.py, game_world.py)
-- Complete database schema with all required columns and tables:
-  - player_profile table with money and successful_deliveries columns
-  - save_games table for game state persistence
-  - Robust migration system for schema updates
-- Comprehensive test suite with all tests passing:
-  - Restored test_states.py and test_tutorial_completion.py
-  - Enhanced test diagnostics via run_test.py
-  - Robust mocking and fixtures for reliable testing
-- Title Screen menu is modular and fully functional (New Game, Continue, Load, Options, Quit)
-- New Game button reliably transitions to Tutorial or Gameplay based on player progress
-- Options menu is visible and functional
-- BlackScreenGameplayState placeholder for isolated state transition testing
-- All menu options have detailed logging and error handling
-- Dual persistence layer support (DataAccessLayer and GamePersistence)
-- Defensive programming for missing/corrupt persistence
-- Updated documentation reflects current architecture and development process
-- See CHANGELOG.md for full details
-
-
-The tutorial graduation system is fully implemented and validated. On first launch, players must complete a short tutorial (meeting both delivery AND money goals) before accessing the main game. Completion is persisted in the database and skips on future launches.
-
-- Tutorial overlays and state transitions are fully functional.
-- Graybox mechanics (no assets) are used to validate logic and persistence.
-- Press SPACE to simulate deliveries/money in the tutorial.
-- Press ENTER to advance from the completion overlay.
-
-## Current Development Stage
-
-- **Core systems (tutorial, DAL, state machine, persistence, database schema) are complete and validated.**
-- **Test infrastructure is complete with all tests passing.**
-- **Title → Gameplay Transition milestone is IN PROGRESS.**
-- **Current blockers:** Map is not loading, missing HUD, food/customer sprites, and shop content.
-- See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for the detailed implementation plan and blockers table.
-- **Asset integration and polish are deferred** until all checklist items are green.
-
-## System Validation Checklist
-See `CORE_SYSTEM_VALIDATION_CHECKLIST.md` for a step-by-step, test-driven guide to validating every core system before moving to the next milestone.
-
-## Next Steps for Contributors
-- Review the new implementation plan in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` (section 3A) and coordinate fixes for the Title → Gameplay transition.
-- Use the debug launcher (`debug_main.py`) to run diagnostics and validate asset loading and state transitions.
-- Only begin asset, sound, and polish integration once all core systems are stable and tested.
-- See DEVELOPMENT_ROADMAP.md for future features and expansion plans. & Progression
-
-Jammin' Eats features a **Tutorial System** designed to help new players learn the game mechanics in a forgiving environment and then graduate to the full game experience.
-
-### Tutorial Mechanics
-- **No Penalties for Wrong Food:**
-  - Giving a customer the wrong food will not increase the "Wrong Food" counter or result in a game over.
-  - Customers may still react (e.g., appear angry), but you are free to experiment without failing.
-- **Timer Behavior:**
-  - The in-game timer is still visible and counts up, but there is no time pressure or penalty for slow play.
-- **Economy and Purchases:**
-  - All food is free during the tutorial phase. You cannot run out of money.
-- **Tutorial Goals:**
-  - Successfully serve 5 customers with the correct food items, OR
-  - Earn $50 in the tutorial economy
-
-### Tutorial Graduation
-- Once you achieve either tutorial goal, a "Tutorial Complete!" overlay will appear
-- Your tutorial completion is saved to the database, so you won't have to repeat it
-- After completing the tutorial, the title screen will show a "Continue" option
-- New players will automatically start in tutorial mode
-- Returning players can choose to start a new game or continue with normal gameplay
-
-### State Management
-- The game uses a state machine architecture to manage different game states:
-  - `TutorialState`: Tracks progress toward tutorial goals
-  - `TutorialCompleteState`: Displays completion overlay
-  - `TitleState`: Main menu with options based on tutorial completion
-
-### Technical Implementation
-- Tutorial completion is stored in the `player_profile` table
-- The `dal.py` module provides `is_tutorial_complete()` and `mark_tutorial_complete()` functions
-- Tutorial state is automatically determined when the game starts
-
----
-
-## Diagnostics & Validation
-
-- Run `python debug_main.py` to launch the game in debug/diagnostic mode.
-- Check logs for asset loading errors, missing sprites, or state transition issues.
-- Use the checklist in `CORE_SYSTEM_VALIDATION_CHECKLIST.md` to validate each system before moving to the next milestone.
-
 A Neon-Retro, Reggae-Cyberpunk Food Delivery Adventure!
+
 Welcome to Jammin' Eats, a vibrant and exciting 2D top-down game set in a neon-lit futuristic beach city where reggae rhythms blend harmoniously with cyberpunk aesthetics. Inspired by classic arcade games like Paperboy, Jammin' Eats offers immersive gameplay, dynamic animation, and an infectious tropical vibe!
 
-🚀 Overview
+## 🚀 Current State (0.9.4-alpha)
 
-In Jammin' Eats, players take on the role of Kai Irie, a cheerful, reggae-loving food truck driver. Deliver culturally diverse, reggae-themed dishes across an ever-changing urban landscape, meet quirky customers, and groove to the rhythm as you navigate through bustling city streets.
+**Professional Game Development Setup**
+- ✅ **Pre-commit Hooks**: Fully functional for both CLI and GUI Git operations
+- ✅ **Code Quality**: Ruff (linting), Black (formatting), Pylint (static analysis), MyPy (type checking)
+- ✅ **Testing Suite**: Comprehensive tests with robust fixtures and mocking
+- ✅ **Modular Architecture**: Clean separation of concerns following game dev best practices
+- ✅ **Database Integration**: Complete schema with persistence and migration system
 
-🌴 Game Features
+**Game Features**
+- Complete database schema with all required tables (player_profile, save_games)
+- Robust migration system for schema updates  
+- Title Screen menu with full functionality (New Game, Continue, Load, Options, Quit)
+- Tutorial system with graduation mechanics and persistent completion tracking
+- Modular code architecture with clear separation of game systems
+- Comprehensive error handling and fallback systems
+- Asset loading system with graceful degradation
 
-🎯 Gameplay Mechanics
+## 🛠️ Development Setup
 
-Directional Movement & Animation: Smooth, responsive movement with dynamic sprite animations for Kai and his food truck.
-Interactive Customers: Serve diverse characters with unique tastes, preferences, and patience meters.
-Food Throwing Mechanic: Deliver delicious dishes like Tropical Pizza Slice, Ska Smoothie, and Rasta Rice Pudding with fun, satisfying mechanics.
-Dynamic Game States: Navigate seamlessly through menus, active gameplay, and game-over screens with immersive visual feedback.
+### Prerequisites
+- Python 3.8+
+- Git for Windows (with Unix shell tools)
+- Visual Studio Code or preferred IDE
 
-🍕 Food Animation System
+### Quick Start
 
-- Each food item cycles smoothly through 3 animation frames as it flies, with a visually distinct explosion or impact frame.
-- Animation speed is decoupled from projectile lifespan for a polished, responsive feel.
-- Asset management is streamlined: only 3 PNGs per food type are required, with fallback logic if assets are missing.
-
-🧩 HUD & Inventory
-
-- The selected food is now displayed only in the bottom inventory HUD, keeping the main HUD clean and focused.
-- Inventory status shows key bindings, stock counts, and highlights out-of-stock items in red and current selection in green.
-
-💡 Technical Highlights
-
-Pixel-Perfect Graphics: Stunning top-down pixel art infused with neon-cyberpunk and tropical island aesthetics.
-Vibrant, Seamless Environments: Procedurally generated backgrounds and assets designed to scale effortlessly.
-Reggae-Cyberpunk Theme: Unique visual identity inspired by retro arcade classics, with a futuristic twist.
-
-🧑‍💻 Modular Architecture & Error Handling
-
-- **Codebase is fully modularized** under `src/` with clear separation for core logic, sprites, maps, utilities, and debug tools.
-- **Professional, maintainable structure**: All gameplay, animation, and economy logic is modular and extensible.
-- **Robust asset loading**: All assets are loaded relative to project root; missing assets trigger fallback visuals/sounds.
-- **Fallback map system**: If a TMX map fails to load, a fallback map is generated to keep the game running.
-- **Database integration**: If the database module is missing or fails, the game continues with persistence/logging disabled.
-- **Sound loading**: Missing sound files are logged but do not crash the game.
-- **Comprehensive error handling**: All critical game loop and rendering logic is wrapped to prevent crashes from unexpected exceptions.
-- **Gameplay polish**: Food animation, collision, and inventory feedback are thoroughly tested for smoothness and clarity.
-- **Debug mode**: Toggle with F12 or D for verbose error and event output.
-
-🆘 Troubleshooting
-
-- **Missing Sounds**: If you see errors about missing sound files, add or correct files in `assets/sounds/`. The game will continue without them.
-- **Database Errors**: If `pyodbc` is not installed, database features are gracefully disabled.
-- **Map Not Loading**: If a TMX file is missing or corrupt, a fallback map will be used and a warning printed.
-- **Game Crashes on Start**: All known issues with game state transitions and map loading are now fixed. If you encounter a crash, check the console for error logs and verify asset/database presence.
-
-🛠️ Current Development State
-
-Fully playable prototype with core gameplay loops established.
-Complete sprite animation system for main character and customers.
-Functional game states including start menu, gameplay, and score tracking.
-
-📊 Database Integration
-
-Player profiles and progress management
-Dynamic object creation and management (customers, food types, levels)
-Leaderboards and achievement tracking
-Persistent game settings and customization options
-
-🌎 Expanded Game Universe
-
-Additional themed levels and customer varieties
-Advanced food truck customization and upgrades
-Regular updates featuring special events, challenges, and unlockable content
-
-🚧 Transition to 3D
-
-Future scalability plans to evolve into a rich, immersive 3D experience while retaining original charm
-Flexible data architecture designed from inception to facilitate seamless expansion
-
-🤝 Community & Collaboration
-
-Online leaderboards and social sharing features
-Support for community-created custom levels
-Active engagement with player feedback to continuously enhance the gaming experience
-
-📂 Modular Project Structure
-
-```text
-Jammin-Eats/
-├── assets/
-│   ├── Food/              # Food item sprites organized by type
-│   ├── Maps/              # TMX map files for levels
-│   ├── sprites/
-│   │   └── characters/    # Player and customer character sprites
-│   ├── tiles/             # Tile assets for maps
-│   └── tilesets/          # Tilesets for the map editor
-├── src/                  # Modular source code structure
-│   ├── core/             # Core game engine components
-│   │   ├── constants.py  # Game constants and configuration
-│   │   └── game.py       # Main game engine class
-│   ├── debug/            # Debugging and development tools
-│   │   └── debug_tools.py # Error tracking and debugging utilities
-│   ├── map/              # Map loading and handling
-│   │   └── tilemap.py    # TMX map loader with fallback capabilities
-│   ├── sprites/          # Game entity classes
-│   │   ├── customer.py   # Customer class with AI behaviors
-│   │   ├── food.py       # Food projectile class
-│   │   ├── particle.py   # Visual effects system
-│   │   └── player.py     # Player character with controls
-│   ├── ui/               # User interface components
-│   │   ├── button.py     # Interactive button class
-│   │   └── text.py       # Text rendering utilities
-│   ├── utils/            # Utility functions and helpers
-│   │   ├── asset_loader.py # Centralized asset loading system
-│   │   └── sounds.py     # Sound loading and playback
-│   └── main.py          # Entry point for the modular version
-├── debug_main.py         # Enhanced debugging launcher
-├── README.md
-└── venv/                 # Python virtual environment
-```
-
-> **Heads up!**
-> - The `.gitignore` is tuned to keep your `Backups/` folder out of version control—no worries, no clutter!
-> - The backup script is jammin' too: it skips the `Backups/` folder so you don't back up your backups. Meta!
-> - All your irie assets live in the `assets/` folder—don't break the rhythm, keep the structure!
-
-🖥️ **How to Run the Game (Jammin' Style)**
-
-1. **Clone this reggae adventure:**
-   ```sh
+1. **Clone the repository:**
+   ```bash
    git clone https://github.com/YourUsername/Jammin-Eats.git
+   cd Jammin-Eats
    ```
-2. **Install the good vibes (dependencies):**
-   ```sh
+
+2. **Set up virtual environment:**
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   ```
+
+3. **Install dependencies:**
+   ```bash
    pip install -r requirements.txt
+   pip install -r requirements-dev.txt  # For development
    ```
-   For development, also install development dependencies:
-   ```sh
-   pip install -r requirements-dev.txt
+
+4. **Install pre-commit hooks:**
+   ```bash
+   pre-commit install
    ```
-3. **Start jammin'!**
-   ```sh
+
+5. **Run the game:**
+   ```bash
    python main.py
    ```
 
-🎛️ **Build the Standalone .exe (for your music producer or friends!)**
+### Development Workflow
 
-1. Run the build script in `Tools/Scripts/build/` or use PyInstaller directly:
-   ```sh
-   pyinstaller --onefile --windowed --add-data "assets;assets" --name "Jammin_Eats" main.py
-   ```
-2. Find your fresh-baked game in the `dist/` folder—ready to groove!
+**Code Quality & Testing**
+- Pre-commit hooks automatically run on every commit (CLI and GUI)
+- All code passes Ruff linting, Black formatting, Pylint analysis, and MyPy type checking
+- Run tests with: `python -m pytest tests/`
+- Debug mode available with: `python debug_main.py`
 
-📝 **Dependencies**
-- `pygame`
-- `pyodbc` *(optional, for future database features)*
-- `pytmx`
-- `pyinstaller`
-- See `Requirements.md` for details.
+**Professional Standards**
+- Follow "vertical slice" game development approach
+- Logic-first development with incremental testing
+- Comprehensive error handling and fallback systems
+- Modular, maintainable code structure
 
-💻 **Platform**
-- This project is tuned for **Windows** (PowerShell scripts, build process, etc.).
+## 🎯 Tutorial System
 
-🌴 **Contributing & Community**
+Jammin' Eats features a comprehensive **Tutorial System** that guides new players through game mechanics:
 
-We're excited to collaborate! Feel free to open issues, submit pull requests, or suggest ideas. Join us in making Jammin' Eats a truly unforgettable gaming experience!
+### Tutorial Mechanics
+- **Forgiving Learning Environment**: Wrong food selections don't cause game over
+- **No Time Pressure**: Timer visible but no penalties for slow play  
+- **Free Economy**: All food is free during tutorial phase
+- **Clear Goals**: Serve 5 customers correctly OR earn $50
 
-Stay irie, stay jammin'! 🌴🎵🍍🚚
+### Progression System
+- Tutorial completion persists in database
+- Automatic graduation to main game
+- Title screen adapts based on player progress
+- One-time tutorial experience per player
 
-We're excited to collaborate! Feel free to open issues, submit pull requests, or suggest ideas. Join us in making Jammin' Eats a truly unforgettable gaming experience!
+## 🏗️ Architecture
 
-Stay Jammin'! 🌴🎵🍍🚚
+### Project Structure
+```
+Jammin-Eats/
+├── .venv/                 # Python virtual environment
+├── assets/                # Game assets (sprites, sounds, maps)
+│   ├── Food/             # Food item sprites
+│   ├── sprites/          # Character and UI sprites  
+│   ├── sounds/           # Audio files
+│   └── Maps/             # TMX map files
+├── src/                  # Modular source code
+│   ├── core/            # Core game engine
+│   ├── sprites/         # Game entities
+│   ├── ui/              # User interface
+│   ├── utils/           # Utility functions
+│   └── debug/           # Development tools
+├── tests/               # Comprehensive test suite
+├── docs/                # Documentation
+├── data/                # Database files
+├── .pre-commit-config.yaml  # Code quality automation
+├── mypy.ini             # Type checking configuration
+├── .pylintrc            # Static analysis rules
+└── pyproject.toml       # Project configuration
+```
+
+### Core Systems
+- **State Machine**: Clean transitions between game states
+- **Data Access Layer**: Robust database operations with error handling
+- **Asset Loader**: Centralized loading with fallback capabilities
+- **Game Renderer**: Modular rendering system
+- **Debug Tools**: Comprehensive diagnostics and validation
+
+## 🎮 Game Features
+
+### Gameplay Mechanics
+- **Directional Movement**: Smooth, responsive controls with dynamic animations
+- **Food Delivery System**: Throw various reggae-themed dishes to customers
+- **Customer AI**: Diverse characters with unique preferences and behaviors
+- **Economy System**: Money management and progression tracking
+
+### Technical Highlights
+- **Pixel-Perfect Graphics**: Neon-cyberpunk and tropical aesthetics
+- **Robust Error Handling**: Graceful degradation for missing assets
+- **Database Integration**: Persistent player profiles and game state
+- **Modular Design**: Clean, maintainable, and extensible codebase
+
+## 🧪 Testing & Quality Assurance
+
+### Testing Framework
+- **Comprehensive Suite**: Unit and integration tests for all core systems
+- **Robust Mocking**: Isolated testing of game components
+- **CI/CD Ready**: Pre-commit hooks ensure code quality
+- **Debug Tools**: Enhanced diagnostics and validation utilities
+
+### Code Quality Standards
+- **Linting**: Ruff for Python code analysis
+- **Formatting**: Black for consistent code style  
+- **Type Checking**: MyPy for static type analysis
+- **Static Analysis**: Pylint for code quality metrics
+
+## 🚧 Current Development Focus
+
+**Completed Milestones**
+- ✅ Core system architecture and modularization
+- ✅ Tutorial system with persistent completion
+- ✅ Database schema and migration system
+- ✅ Pre-commit hooks and code quality automation
+- ✅ Comprehensive testing infrastructure
+
+**In Progress**
+- 🔄 Title → Gameplay transition improvements
+- 🔄 Asset integration and map loading optimization
+- 🔄 HUD and inventory system enhancements
+
+**Future Plans**
+- 📋 Advanced customer AI and behavior systems
+- 📋 Enhanced visual effects and animation
+- 📋 Sound system integration
+- 📋 Performance optimization and polish
+
+## 🤝 Contributing
+
+We follow professional game development standards:
+
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Write** tests for new features
+4. **Ensure** pre-commit hooks pass
+5. **Submit** a pull request
+
+All contributions are automatically validated through our pre-commit hook system.
+
+## 📊 Technical Requirements
+
+### Dependencies
+- `pygame` - Game engine
+- `pytmx` - TMX map loading
+- `pyodbc` - Database connectivity (optional)
+- `pre-commit` - Code quality automation
+- `pytest` - Testing framework
+
+### Platform Support
+- **Primary**: Windows 10/11
+- **Python**: 3.8+
+- **Git**: Required for development workflow
+
+## 🎵 Game Universe
+
+In Jammin' Eats, you play as **Kai Irie**, a reggae-loving food truck driver delivering culturally diverse dishes across a vibrant cyberpunk beach city. Navigate through neon-lit streets, serve unique customers, and groove to the rhythm while building your food delivery empire!
+
+### Featured Dishes
+- 🍕 Tropical Pizza Slice
+- 🥤 Ska Smoothie  
+- 🍚 Rasta Rice Pudding
+- 🍦 Island Ice Cream
+- 🥟 Reggae Rasgulla
+
+---
+
+**Stay irie, stay jammin'! 🌴🎵🍍🚚**
+
+> **Note**: This project follows professional game development best practices with a "vertical slice" approach. See documentation in `docs/` for detailed implementation guides and development processes.

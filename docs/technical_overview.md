@@ -1,80 +1,205 @@
 # Technical Overview
 
-This document provides a high-level summary of the Jammin' Eats codebase and architecture.
+This document provides a high-level summary of the Jammin' Eats codebase, architecture, and development workflow following professional game development standards.
+
+## Project Architecture
+
+Jammin' Eats follows a **modular, state-driven architecture** with comprehensive quality assurance automation and clean separation of concerns.
+
+### Core System Design
+
+```
+Game Engine (src/core/)
+├── State Machine → Title/Tutorial/Gameplay States
+├── Rendering Pipeline → Visual output and effects
+├── World Management → Physics and object interactions
+└── Asset Loading → Centralized resource management
+
+Persistence Layer (src/persistence/)
+├── Data Access Layer → Database operations
+├── Save/Load System → Game state persistence
+└── Tutorial Tracking → Progress validation
+
+Quality Assurance
+├── Pre-commit Hooks → Automated code validation
+├── Testing Framework → Unit and integration tests
+└── Static Analysis → Type checking and linting
+```
 
 ## Code Structure
-- Modular Python code, organized under `src/`:
-  - `core/`: Game constants, main loop, core logic
-    - `game.py`: Core game engine and state management
-    - `game_renderer.py`: Rendering logic and visual output
-    - `game_world.py`: World object management and physics
-    - `constants.py`: Global constants and configuration
-  - `states/`: Game state management
-    - Various state classes (TitleState, GameplayState, etc.)
-  - `sprites/`: All sprite classes (player, food, customers, etc.)
-  - `map/`: Map loading and handling (TMX, Tiled, etc.)
-  - `utils/`: Utility functions (asset loading, sounds, logging)
-  - `persistence/`: Database and save game handling
-    - `dal.py`: Data Access Layer for database operations
-    - `db_init.py`: Database initialization and migration 
-    - `game_persistence.py`: Game save/load functionality
 
-## Main Technologies
-- Python 3.8+
-- Pygame (graphics, input, sound)
-- PyTMX (Tiled map parsing)
-- SQLite (database persistence)
+### Modular Organization (`src/`)
 
-## Entry Point
-- `main.py` (modular version)
-- (Legacy: `main.py`)
+- **`core/`**: Game engine fundamentals
+  - `game.py`: Main game engine and state management
+  - `game_renderer.py`: Rendering pipeline and visual effects
+  - `game_world.py`: World object management and physics simulation
+  - `constants.py`: Global constants and configuration settings
 
-## Asset Loading
-- All asset paths are managed via `src/core/constants.py` and helpers.
-- Assets are loaded relative to the project root for consistency.
-- The system includes robust fallbacks for missing assets.
+- **`states/`**: State machine implementation
+  - `title_state.py`: Main menu and navigation
+  - `tutorial_state.py`: Tutorial system with completion tracking
+  - `gameplay_state.py`: Core game mechanics and interaction
 
-## Logging & Debugging
-- Logging utilities in `src/debug/` help track asset loading, state transitions, and database operations.
-- Comprehensive error handling throughout the codebase ensures graceful failure.
-- The `run_test.py` utility provides detailed logging for troubleshooting test failures.
+- **`sprites/`**: Game entity classes
+  - `player.py`: Player character with movement and actions
+  - `customer.py`: AI-driven customer behavior and satisfaction
+  - `food.py`: Food projectile mechanics and collision detection
+  - `particle.py`: Visual effects and animations
 
-## Database & Persistence
-- SQLite database (`data/jammin.db`) stores player progress and game state.
-- Database schema includes:
-  - `player_profile` table: Tracks player progress, tutorial completion, money, and delivery statistics
-  - `save_games` table: Stores game save slots for loading/resuming games
-  - Migration system for schema updates
-- Dual persistence architecture with DataAccessLayer (DAL) and GamePersistence classes
+- **`ui/`**: User interface components
+  - `button.py`: Interactive button system
+  - `text.py`: Text rendering and formatting utilities
 
-## 0.9.4-alpha: Modular Architecture & Test Improvements
-- Code fully refactored into a modular structure:
-  - Game.py split into game.py, game_renderer.py, and game_world.py
-  - State management moved to dedicated state classes
-  - Persistence layer with full database support
-- Database schema expanded and stabilized:
-  - Added missing columns (money, successful_deliveries)
-  - Added save_games table for save/load functionality
-  - Robust migration system for schema updates
-- Comprehensive test suite:
-  - Fixed and expanded test coverage
-  - Improved test fixtures and mocks
-  - Added detailed test diagnostics and logging
-- TitleState and menu transitions refactored for modularity and reliability
-- Robust error handling and logging for all state transitions
-- Dual persistence support: fallback between DataAccessLayer and GamePersistence
+- **`utils/`**: Shared utility functions
+  - `asset_loader.py`: Centralized asset loading with fallback support
+  - `sounds.py`: Audio management and playback
 
-## Extending the Codebase
-- Add new features as modules in `src/`.
-- Follow the modular structure for maintainability.
-- Document new modules in this folder.
-- Write tests for new functionality in the `tests/` directory.
-- Use the State pattern for new game screens or modes.
-- For database changes, add migrations in `db_init.py`.
+- **`persistence/`**: Data persistence layer
+  - `dal.py`: Data Access Layer for database operations
+  - `db_init.py`: Database schema and migration management
+  - `game_persistence.py`: Save/load functionality
 
-## Testing
-- Comprehensive test suite using pytest.
-- Tests are organized in the `tests/` directory with subdirectories for unit and integration tests.
-- Run tests with `pytest` or use `run_test.py` for detailed diagnostics.
-- Custom test fixtures provide consistent test environment setup.
-- See `pytest_workflow.md` for more details on writing and running tests.
+- **`debug/`**: Development and debugging tools
+  - `debug_tools.py`: Error tracking and development utilities
+
+## Technology Stack
+
+### Core Technologies
+- **Python 3.13+**: Main development language
+- **Pygame**: Graphics rendering, input handling, and audio
+- **PyTMX**: Tiled map file parsing and level management
+- **SQLite**: Local database for game persistence and progress tracking
+
+### Development Tools
+- **Pre-commit Hooks**: Automated code quality validation
+  - **Ruff**: Fast Python linting and code style enforcement
+  - **Black**: Automatic code formatting
+  - **Pylint**: Static analysis and code quality metrics
+  - **MyPy**: Type checking and validation
+- **Pytest**: Comprehensive testing framework
+- **Git**: Version control with quality gates
+
+### Configuration Management
+- **`.pre-commit-config.yaml`**: Hook configuration
+- **`mypy.ini`**: Type checking settings
+- **`.pylintrc`**: Static analysis rules
+- **`pyproject.toml`**: Centralized project configuration
+
+## Development Workflow
+
+### Quality Assurance Pipeline
+
+1. **Code Development**: Write code using modular architecture principles
+2. **Pre-commit Validation**: Automatic quality checks on every commit
+   - Linting (Ruff)
+   - Formatting (Black)
+   - Static Analysis (Pylint)
+   - Type Checking (MyPy)
+3. **Testing**: Comprehensive unit and integration tests
+4. **Documentation**: Maintained alongside code changes
+
+### Entry Points
+
+- **`main.py`**: Production game launcher
+- **`debug_main.py`**: Development launcher with enhanced diagnostics
+- **`run_test.py`**: Test runner with detailed logging
+
+## Asset Management
+
+### Asset Loading System
+- **Centralized Loading**: All assets managed through `asset_loader.py`
+- **Fallback Support**: Graceful handling of missing assets
+- **Path Management**: Consistent relative path resolution
+- **Error Handling**: Comprehensive asset loading error recovery
+
+### Asset Organization
+```
+assets/
+├── Food/               # Game items organized by type
+├── sprites/           # Character and UI graphics
+├── sounds/            # Audio files by category
+├── Maps/              # Level data (TMX format)
+├── tiles/             # Map building components
+└── tilesets/          # Map editor resources
+```
+
+## Database Architecture
+
+### SQLite Schema
+- **Player Profiles**: User progress and settings
+- **Tutorial Completion**: Progress tracking and validation
+- **Game State**: Save/load functionality
+- **High Scores**: Achievement tracking
+
+### Data Access Layer (DAL)
+- **Abstracted Operations**: Clean separation between game logic and data
+- **Transaction Management**: Consistent database operations
+- **Migration Support**: Schema versioning and updates
+- **Backup System**: Automatic database backups
+
+## State Management
+
+### State Machine Pattern
+The game uses a robust state machine for managing different game modes:
+
+1. **Title State**: Main menu and navigation
+2. **Tutorial State**: Interactive tutorial with completion tracking
+3. **Gameplay State**: Core game mechanics and customer interaction
+
+### State Transitions
+- Clean transitions between states
+- Persistent data across state changes
+- Tutorial completion validation
+- Progress saving and restoration
+
+## Error Handling and Logging
+
+### Comprehensive Error Management
+- **Asset Loading**: Fallback systems for missing resources
+- **Database Operations**: Transaction rollback and error recovery
+- **State Transitions**: Graceful handling of invalid state changes
+- **User Input**: Validation and sanitization
+
+### Development Debugging
+- **Debug Tools**: Enhanced logging and error tracking
+- **Diagnostic Utilities**: Database inspection and validation
+- **Test Utilities**: Comprehensive test coverage and reporting
+
+## Performance Considerations
+
+### Optimization Strategies
+- **Asset Caching**: Efficient resource loading and reuse
+- **Sprite Management**: Optimized rendering pipeline
+- **Database Queries**: Indexed operations and prepared statements
+- **Memory Management**: Proper cleanup and resource disposal
+
+### Code Quality Metrics
+- **Pre-commit Hook Performance**: Typically 2-5 seconds per commit
+- **Test Coverage**: Comprehensive coverage of critical systems
+- **Static Analysis**: Continuous code quality monitoring
+- **Type Safety**: Strong typing throughout the codebase
+
+## Professional Standards
+
+### Code Quality
+- **Automated Validation**: Pre-commit hooks prevent quality issues
+- **Consistent Formatting**: Black ensures uniform code style
+- **Type Safety**: MyPy provides static type validation
+- **Documentation**: Comprehensive inline and external documentation
+
+### Testing Strategy
+- **Unit Tests**: Individual module validation
+- **Integration Tests**: System interaction testing
+- **Regression Testing**: Continuous validation of existing functionality
+- **Coverage Analysis**: Ensuring comprehensive test coverage
+
+### Version Control
+- **Quality Gates**: Pre-commit hooks prevent low-quality commits
+- **Modular Commits**: Clean, focused change sets
+- **Documentation**: Changes documented alongside code
+- **Backup Systems**: Database and configuration backups
+
+---
+
+> **Note**: This architecture supports rapid development while maintaining professional game development standards. The modular design enables easy feature expansion and maintenance, while automated quality assurance ensures code reliability and consistency.

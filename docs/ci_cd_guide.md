@@ -2,119 +2,207 @@
 
 ## Overview
 
-This document explains the Continuous Integration (CI) and Continuous Deployment (CD) setup for Jammin' Eats. As a professional game development project, we use automated testing and quality checks to maintain code quality and prevent regressions.
+This document explains the Continuous Integration (CI) and quality assurance setup for Jammin' Eats. As a professional game development project, we use automated testing and quality checks to maintain code quality and prevent regressions.
 
-## Workflow Structure
+## Pre-commit Hook System
 
-Jammin' Eats uses GitHub Actions for CI/CD. There are two main workflow files:
+Jammin' Eats uses **pre-commit hooks** for immediate code quality validation. This ensures that all code changes meet quality standards before they're even committed to the repository.
 
-1. **`docs.yml`**: Handles documentation updates and checklist validation
-2. **`tests.yml`**: Runs comprehensive testing, linting, type checking, and security audits
+### Automated Quality Checks
 
-## What Gets Tested and When
+Every time you commit code (both CLI and GUI), the following tools run automatically:
 
-### On Every Push and Pull Request
+1. **Ruff**: Fast Python linter for code style and error detection
+2. **Black**: Code formatter for consistent styling
+3. **Pylint**: Static analysis for code quality metrics
+4. **MyPy**: Type checking for better code reliability
 
-Whenever code is pushed to `main`, `dev`, or any `feature/*` branch, or when a pull request is created targeting `main` or `dev`, the following checks run automatically:
+### Configuration Files
 
-- **Unit Tests**: Tests for individual modules (DAL, state machine, etc.)
-- **Integration Tests**: Tests for interactions between modules
-- **Linting**: Code style and formatting checks using `ruff`
-- **Type Checking**: Static type analysis using `mypy`
-- **Security Audit**: Vulnerability scans using `pip-audit`
-- **Code Coverage**: Measure of how much code is covered by tests
-- **Checklist Validation**: Ensures the `CORE_SYSTEM_VALIDATION_CHECKLIST.md` is up-to-date
+- `.pre-commit-config.yaml`: Pre-commit hook configuration
+- `mypy.ini`: Type checking settings
+- `.pylintrc`: Static analysis rules and disabled checks
+- `pyproject.toml`: Project configuration and tool settings
 
-## Understanding Test Results
+## Development Workflow
 
-### Dashboard View
+### Setting Up Pre-commit Hooks
 
-On GitHub, navigate to the "Actions" tab to see all workflow runs. Each run will be marked with:
-- ✅ Green check: All tests passed
-- ❌ Red X: One or more tests failed
-
-### Detailed Test Results
-
-Click on any workflow run to see detailed results:
-
-1. **Test Output**: Shows exactly which tests passed or failed
-2. **Coverage Report**: Available as a downloadable artifact
-3. **Lint and Type Errors**: Listed in their respective steps
-
-## Running Tests Locally
-
-Before pushing code, you should run tests locally:
+When setting up the development environment:
 
 ```bash
-# Install dev dependencies
+# Install pre-commit hooks after cloning
+pre-commit install
+
+# Run hooks on all files (optional, for initial setup)
+pre-commit run --all-files
+```
+
+### Daily Development
+
+1. **Make Code Changes**: Edit files as normal
+2. **Stage Changes**: `git add .` or use GUI
+3. **Commit**: `git commit -m "Your message"` or use GUI
+4. **Automatic Validation**: Pre-commit hooks run automatically
+5. **Fix Issues**: If hooks fail, fix issues and commit again
+
+### What Happens on Commit
+
+When you commit code, the system:
+
+1. **Runs Ruff**: Checks for linting errors and code style issues
+2. **Runs Black**: Automatically formats code if needed
+3. **Runs Pylint**: Performs static analysis
+4. **Runs MyPy**: Validates type annotations
+5. **Blocks Commit**: If any check fails, commit is prevented
+6. **Shows Errors**: Displays specific issues to fix
+
+## Testing Framework
+
+### Running Tests Locally
+
+```bash
+# Install development dependencies
 pip install -r requirements-dev.txt
 
 # Run all tests
 python -m pytest tests/
 
-# Run specific test modules
-python -m pytest tests/unit/test_dal.py
+# Run tests with coverage
+python -m pytest tests/ --cov=src
 
-# Run with coverage
-python -m pytest --cov=src tests/
+# Run specific test file
+python -m pytest tests/test_dal.py
 
-# Run linting
-ruff check src tests
-
-# Run type checking
-mypy src
+# Debug mode for game testing
+python debug_main.py
 ```
 
-## Workflow Configuration
+### Test Structure
 
-### Modifying the Workflows
+```
+tests/
+├── unit/           # Unit tests for individual modules
+├── integration/    # Integration tests for module interactions
+└── fixtures/       # Test data and mock objects
+```
 
-The workflow files are located in `.github/workflows/`. To modify them:
+### Key Test Areas
 
-1. Edit the YAML files
-2. Commit and push changes
-3. The updated workflow will be used for subsequent runs
+- **Database Layer**: DAL operations and schema validation
+- **State Machine**: Game state transitions and logic
+- **Tutorial System**: Completion tracking and persistence
+- **Asset Loading**: Fallback systems and error handling
+- **UI Components**: Menu interactions and state management
 
-### Current Settings
+## Code Quality Standards
 
-- **Python Version**: 3.13
-- **Test Framework**: pytest
-- **Coverage Tool**: pytest-cov
-- **Linter**: ruff
-- **Type Checker**: mypy
-- **Security Scanner**: pip-audit
+### Linting Rules (Ruff)
 
-## Troubleshooting Common Issues
+- **E402**: Module imports must be at top of file (suppressed in tests with `# noqa: E402`)
+- **F401**: No unused imports
+- **F841**: No unused variables
+- **Line Length**: Maximum 88 characters (Black standard)
 
-### Failed Tests
+### Type Checking (MyPy)
 
-If tests fail in CI but pass locally:
-- Check for environment-specific code
-- Verify dependencies match between CI and local environments
-- Look for path-related issues
+- **Ignore Missing Imports**: External libraries without stubs are ignored
+- **Explicit Package Bases**: Prevents "source file found twice" errors
+- **Exclude Patterns**: Tests and debug modules are excluded from strict checking
 
-### Slow Builds
+### Static Analysis (Pylint)
 
-If workflows are taking too long:
-- Consider running only unit tests on feature branches
-- Cache dependencies and test results
-- Split workflow into parallel jobs
+Selected checks disabled for game development:
+- **C0114**: Missing module docstring (where appropriate)
+- **C0115**: Missing class docstring (where appropriate)
+- **R0903**: Too few public methods (common in game entities)
+- **W0613**: Unused argument (common in event handlers)
 
-## Best Practices
+## Error Handling and Fallbacks
 
-1. **Never Disable Tests**: If a test is failing, fix the code, not the test
-2. **Maintain High Coverage**: Aim for at least 80% code coverage
-3. **Write Regression Tests**: When fixing bugs, add a test to prevent recurrence
-4. **Keep CI Fast**: Optimize workflows to run quickly
-5. **Pay Attention to Warnings**: Address lint and type warnings, even when they don't fail the build
+### Pre-commit Hook Failures
 
-## Next Steps for CI/CD Improvement
+If pre-commit hooks fail:
 
-1. Add performance benchmarking tests
-2. Set up automatic deployment to game distribution platforms
-3. Implement pre-commit hooks for local checks before pushing
-4. Add visual testing for UI/UX components
+1. **Read the Error Messages**: They show exactly what needs fixing
+2. **Fix Issues**: Address linting, formatting, or type errors
+3. **Commit Again**: Hooks will re-run automatically
+4. **Contact Team**: If stuck, check with other developers
+
+### Common Issues and Solutions
+
+#### Import Order (E402)
+```python
+# Wrong - imports after code
+sys.path.append("../src")
+import game  # E402 error
+
+# Right - imports at top, or use noqa
+sys.path.append("../src")
+import game  # noqa: E402
+```
+
+#### Unused Imports (F401)
+```python
+# Wrong - imported but not used
+import unused_module  # F401 error
+
+# Right - remove unused imports
+# import unused_module  # Removed
+```
+
+#### Type Annotations
+```python
+# Add type hints for better MyPy compliance
+def process_customer(customer: Customer) -> bool:
+    return customer.is_satisfied()
+```
+
+## Performance and Optimization
+
+### Pre-commit Hook Performance
+
+- **Fast Execution**: Hooks typically run in 2-5 seconds
+- **Incremental Checking**: Only changed files are checked
+- **Parallel Processing**: Multiple tools run simultaneously when possible
+
+### Best Practices
+
+1. **Commit Early and Often**: Smaller commits are easier to validate
+2. **Fix Issues Immediately**: Don't let quality debt accumulate
+3. **Use IDE Integration**: Many editors can run these tools continuously
+4. **Review Hook Output**: Understanding errors helps prevent future issues
+
+## Troubleshooting
+
+### Common Setup Issues
+
+**Git Hooks Not Running**
+```bash
+# Reinstall hooks
+pre-commit uninstall
+pre-commit install
+```
+
+**Python Environment Issues**
+```bash
+# Ensure virtual environment is activated
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/Mac
+```
+
+**Permission Issues on Windows**
+- Ensure Git for Windows includes Unix shell tools
+- Add Git's `usr/bin` directory to PATH
+- Use Git Bash or PowerShell with administrator privileges if needed
+
+### Getting Help
+
+1. **Check Console Output**: Error messages are usually very specific
+2. **Review Documentation**: This guide and tool-specific docs
+3. **Test Locally**: Run `pre-commit run --all-files` to test all files
+4. **Ask Team**: Don't hesitate to ask for help with complex issues
 
 ---
 
-By following these CI/CD practices, Jammin' Eats maintains professional game development standards, ensuring code quality and stability throughout the development lifecycle.
+> **Note**: This CI/CD setup ensures professional code quality standards while maintaining rapid development velocity. All team members benefit from consistent, high-quality code that's automatically validated before integration.
