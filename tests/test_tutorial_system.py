@@ -12,10 +12,10 @@ def init_pygame():
 
 
 # Import DAL functions and states after pygame init
-import src.persistence.dal as dal
-from src.states.tutorial_state import TutorialState
-from src.states.tutorial_complete_state import TutorialCompleteState
-from src.states.title_state import TitleState
+import src.persistence.dal as dal  # noqa: E402
+from src.states.tutorial_state import TutorialState  # noqa: E402
+from src.states.tutorial_complete_state import TutorialCompleteState  # noqa: E402
+from src.states.title_state import TitleState  # noqa: E402
 
 
 class DummyGame:

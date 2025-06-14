@@ -4,3 +4,6 @@ pyinstaller>=5.6.2
 pygame>=2.0.0
 pytest>=7.0.0
 ruff>=0.1.6
+pre-commit>=4.2.0
+pylint>=3.0.0
+mypy>=1.6.0

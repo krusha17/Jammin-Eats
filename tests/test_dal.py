@@ -3,19 +3,19 @@ Unit tests for the Data Access Layer (DAL)
 Uses in-memory SQLite database for testing
 """
 
-import unittest
-import sqlite3
 import sys
 from pathlib import Path
-from unittest.mock import patch
-import time
 
 # Add the project root to the Python path for importing modules
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-# Import after setting up path
-from src.persistence.dal import (
+import sqlite3  # noqa: E402
+import time  # noqa: E402
+import unittest  # noqa: E402
+from unittest.mock import patch  # noqa: E402
+
+from src.persistence.dal import (  # noqa: E402
     get_player_profile,
     update_high_score,
     fetch_player_settings,
