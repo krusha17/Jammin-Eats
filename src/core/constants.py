@@ -3,6 +3,7 @@ Game constants and configuration values for Jammin' Eats.
 Centralizes all configurable values for easy maintenance.
 
 # Test comment: Pre-commit hooks are working! 
+# GUI commit test in progress...
 """
 
 import os
