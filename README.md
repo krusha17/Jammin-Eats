@@ -107,7 +107,7 @@ Jammin-Eats/
 │   ├── utils/           # Utility functions
 │   └── debug/           # Development tools
 ├── tests/               # Comprehensive test suite
-├── docs/                # Documentation
+├── docs/                # Documentation (guides, technical docs, Archive/ for legacy)
 ├── data/                # Database files
 ├── .pre-commit-config.yaml  # Code quality automation
 ├── mypy.ini             # Type checking configuration
