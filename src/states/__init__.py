@@ -9,9 +9,4 @@ from src.states.title_state import TitleState
 from src.states.tutorial_state import TutorialState
 from src.states.tutorial_complete_state import TutorialCompleteState
 
-__all__ = [
-    'GameState',
-    'TitleState',
-    'TutorialState',
-    'TutorialCompleteState'
-]
+__all__ = ["GameState", "TitleState", "TutorialState", "TutorialCompleteState"]

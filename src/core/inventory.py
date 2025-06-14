@@ -1,5 +1,6 @@
 from src.core import constants
 
+
 class Inventory:
     def __init__(self, initial_stock: dict[str, int]):
         # Copy so tests can mutate safely
@@ -34,7 +35,7 @@ class Inventory:
         if item not in self.stock:
             self.stock[item] = 0
         self.stock[item] = min(self.qty(item) + qty, constants.MAX_STOCK)
-    
+
     def purchase(self, item: str, money: int, qty: int = 1) -> int:
         """
         Attempt to purchase qty of item with available money.
@@ -42,7 +43,7 @@ class Inventory:
         """
         if item not in constants.FOOD_PRICES:
             return 0
-            
+
         cost = constants.FOOD_PRICES[item]["buy_price"] * qty
         if money >= cost:
             self.add(item, qty)

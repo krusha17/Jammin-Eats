@@ -1,45 +1,53 @@
 import os
-import pygame
 from pygame import mixer
 from src.core.constants import ASSETS_DIR
+
 
 def load_sounds():
     """Load all game sounds with error handling"""
     sounds = {}
-    
+
     try:
         # Load sound effects
         try:
-            sounds['pickup_sound'] = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'characters', 'food_throw.wav'))
-            sounds['engine_sound'] = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'vehicles', 'engine_idle.wav'))
-            sounds['button_sound'] = mixer.Sound(os.path.join(ASSETS_DIR, 'sounds', 'ui', 'button_click.wav'))
+            sounds["pickup_sound"] = mixer.Sound(
+                os.path.join(ASSETS_DIR, "sounds", "characters", "food_throw.wav")
+            )
+            sounds["engine_sound"] = mixer.Sound(
+                os.path.join(ASSETS_DIR, "sounds", "vehicles", "engine_idle.wav")
+            )
+            sounds["button_sound"] = mixer.Sound(
+                os.path.join(ASSETS_DIR, "sounds", "ui", "button_click.wav")
+            )
         except Exception as e:
             print(f"Error loading sound: {e}")
-            sounds['pickup_sound'] = None
-            sounds['engine_sound'] = None
-            sounds['button_sound'] = None
-        
+            sounds["pickup_sound"] = None
+            sounds["engine_sound"] = None
+            sounds["button_sound"] = None
+
         # Try to create background music - fallback to looping a sound if needed
         try:
-            mixer.music.load(os.path.join(ASSETS_DIR, 'sounds', 'characters', 'food_throw.wav'))  # Placeholder for background music
+            mixer.music.load(
+                os.path.join(ASSETS_DIR, "sounds", "characters", "food_throw.wav")
+            )  # Placeholder for background music
             mixer.music.set_volume(0.5)
             mixer.music.play(-1)  # Loop indefinitely
-            sounds['music_loaded'] = True
+            sounds["music_loaded"] = True
         except Exception as e:
             print(f"Error loading background music: {e}")
             print("No background music found, continuing without it")
-            sounds['music_loaded'] = False
-            
+            sounds["music_loaded"] = False
+
     except Exception as e:
         print(f"Error loading sounds: {e}")
         print("Continuing without audio")
         sounds = {
-            'pickup_sound': None,
-            'engine_sound': None,
-            'button_sound': None,
-            'music_loaded': False
+            "pickup_sound": None,
+            "engine_sound": None,
+            "button_sound": None,
+            "music_loaded": False,
         }
-    
+
     return sounds
 
 

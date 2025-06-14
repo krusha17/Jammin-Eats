@@ -1,6 +1,7 @@
 import pygame
 from src.core.constants import WHITE
 
+
 def draw_text(surface, text, size, x, y, color=WHITE):
     """Draw text on a surface with the specified parameters"""
     font = pygame.font.Font(None, size)

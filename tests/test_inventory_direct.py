@@ -4,17 +4,20 @@ import os
 import unittest
 
 # Add the project root to the path so we can import src modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.core.inventory import Inventory
-from src.core.constants import STARTING_STOCK, FOOD_PRICES, MAX_STOCK
+from src.core.constants import STARTING_STOCK, MAX_STOCK
+
 
 class TestInventory(unittest.TestCase):
     def test_basic_consume(self):
         """Test that consuming an item decreases its stock count"""
         inv = Inventory(STARTING_STOCK)
         self.assertTrue(inv.consume("Tropical Pizza Slice"))
-        self.assertEqual(inv.qty("Tropical Pizza Slice"), STARTING_STOCK["Tropical Pizza Slice"] - 1)
+        self.assertEqual(
+            inv.qty("Tropical Pizza Slice"), STARTING_STOCK["Tropical Pizza Slice"] - 1
+        )
 
     def test_consume_out_of_stock(self):
         """Test that consuming an out-of-stock item fails"""
@@ -33,7 +36,7 @@ class TestInventory(unittest.TestCase):
         inv = Inventory({})
         self.assertEqual(inv.qty("Nonexistent Item"), 0)
         self.assertFalse(inv.in_stock("Nonexistent Item"))
-        
+
     def test_purchase_deducts_money(self):
         """Test that purchasing deducts correct amount of money and adds stock"""
         inv = Inventory({"Tropical Pizza Slice": 0})
@@ -50,5 +53,6 @@ class TestInventory(unittest.TestCase):
         self.assertEqual(spent, 0)
         self.assertEqual(inv.qty("Island Ice Cream"), 0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

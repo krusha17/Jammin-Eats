@@ -11,12 +11,12 @@ try:
     # Try direct imports first
     from states.state import GameState
     from persistence.dal import mark_tutorial_complete
-    from core.constants import WIDTH, HEIGHT, BLACK, WHITE
+    from core.constants import WIDTH, HEIGHT, WHITE
 except ImportError:
     # Fall back to src-prefixed imports
     from src.states.state import GameState
     from src.persistence.dal import mark_tutorial_complete
-    from src.core.constants import WIDTH, HEIGHT, BLACK, WHITE
+    from src.core.constants import WIDTH, HEIGHT, WHITE
 
 # Set up a simple logger if the main one isn't available
 try:
@@ -26,36 +26,44 @@ except ImportError:
         from src.debug.logger import game_logger
     except ImportError:
         import logging
+
         game_logger = logging.getLogger("TutorialCompleteState")
         game_logger.info = lambda msg, *args, **kwargs: print(f"[INFO] {msg}")
         game_logger.debug = lambda msg, *args, **kwargs: print(f"[DEBUG] {msg}")
         game_logger.error = lambda msg, *args, **kwargs: print(f"[ERROR] {msg}")
         game_logger.warning = lambda msg, *args, **kwargs: print(f"[WARNING] {msg}")
 
+
 class TutorialCompleteState(GameState):
     """State shown when the player successfully completes the tutorial."""
-    
+
     def __init__(self, game):
         super().__init__(game)
         self.font_large = pygame.font.SysFont(None, 64)
         self.font_small = pygame.font.SysFont(None, 32)
-        
+
         # Create translucent overlay surface
         self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         self.overlay.fill((0, 0, 0, 180))  # Black with alpha for translucency
-        
+
         # Text elements
-        self.title_text = self.font_large.render('Tutorial Complete!', True, WHITE)
-        self.title_rect = self.title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
-        
-        self.instruction_text = self.font_small.render('Press ENTER to continue', True, WHITE)
-        self.instruction_rect = self.instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
-        
+        self.title_text = self.font_large.render("Tutorial Complete!", True, WHITE)
+        self.title_rect = self.title_text.get_rect(
+            center=(WIDTH // 2, HEIGHT // 2 - 50)
+        )
+
+        self.instruction_text = self.font_small.render(
+            "Press ENTER to continue", True, WHITE
+        )
+        self.instruction_rect = self.instruction_text.get_rect(
+            center=(WIDTH // 2, HEIGHT // 2 + 50)
+        )
+
         # Animation variables
         self.alpha = 0  # Start fully transparent
         self.fade_in = True
         self.fade_speed = 5
-    
+
     def handle_event(self, event):
         """Handle input events."""
         if event.type == pygame.KEYDOWN:
@@ -64,25 +72,46 @@ class TutorialCompleteState(GameState):
                 try:
                     # Check if persistence is properly initialized
                     player_id = 1  # Default player ID
-                    if hasattr(self.game, 'persistence') and self.game.persistence is not None:
-                        player_id = getattr(self.game.persistence, 'player_id', 1)
-                        game_logger.debug(f"Using player_id {player_id} from persistence for tutorial completion", "TutorialCompleteState")
+                    if (
+                        hasattr(self.game, "persistence")
+                        and self.game.persistence is not None
+                    ):
+                        player_id = getattr(self.game.persistence, "player_id", 1)
+                        game_logger.debug(
+                            f"Using player_id {player_id} from persistence for tutorial completion",
+                            "TutorialCompleteState",
+                        )
                     else:
-                        game_logger.warning("Game persistence not available, using default player_id=1", "TutorialCompleteState")
-                    
+                        game_logger.warning(
+                            "Game persistence not available, using default player_id=1",
+                            "TutorialCompleteState",
+                        )
+
                     # Call the DB function to mark tutorial as complete
                     result = mark_tutorial_complete(player_id)
                     if result:
-                        game_logger.info(f"Successfully marked tutorial as complete for player_id={player_id}", "TutorialCompleteState")
+                        game_logger.info(
+                            f"Successfully marked tutorial as complete for player_id={player_id}",
+                            "TutorialCompleteState",
+                        )
                     else:
-                        game_logger.error(f"Failed to mark tutorial as complete for player_id={player_id}", "TutorialCompleteState")
+                        game_logger.error(
+                            f"Failed to mark tutorial as complete for player_id={player_id}",
+                            "TutorialCompleteState",
+                        )
                 except Exception as e:
-                    game_logger.error(f"Error marking tutorial as complete: {e}", "TutorialCompleteState", exc_info=True)
-                
+                    game_logger.error(
+                        f"Error marking tutorial as complete: {e}",
+                        "TutorialCompleteState",
+                        exc_info=True,
+                    )
+
                 # Update the game's state regardless of database success
                 self.game.tutorial_completed = True
-                game_logger.info("Set game.tutorial_completed=True", "TutorialCompleteState")
-                
+                game_logger.info(
+                    "Set game.tutorial_completed=True", "TutorialCompleteState"
+                )
+
                 # Return to main game
                 try:
                     # Try direct import first
@@ -90,42 +119,47 @@ class TutorialCompleteState(GameState):
                 except ImportError:
                     # Fall back to src-prefixed import
                     from src.states.title_state import TitleState
-                    
-                game_logger.info("Tutorial completed, returning to title screen", "TutorialCompleteState")
+
+                game_logger.info(
+                    "Tutorial completed, returning to title screen",
+                    "TutorialCompleteState",
+                )
                 self.next_state = TitleState(self.game)
                 return True
         return False
-    
+
     def update(self, dt):
         """Update the overlay animation."""
         if self.fade_in and self.alpha < 255:
             self.alpha = min(255, self.alpha + self.fade_speed)
-    
+
     def draw(self, screen):
         """Draw the overlay with the completion message."""
         # First draw the game screen underneath
         self.game.draw_current_state(screen)
-        
+
         # Draw our overlay with current alpha
         temp_overlay = self.overlay.copy()
         temp_overlay.set_alpha(self.alpha)
         screen.blit(temp_overlay, (0, 0))
-        
+
         # Only draw text when overlay is visible enough
         if self.alpha > 100:
             # Apply a pulsing effect to the instruction text
             pulse = (pygame.time.get_ticks() % 1000) / 1000.0
             pulse_value = abs(pulse - 0.5) * 2  # Oscillate between 0 and 1
-            instruction_alpha = 128 + int(127 * pulse_value)  # Oscillate between 128 and 255
-            
+            instruction_alpha = 128 + int(
+                127 * pulse_value
+            )  # Oscillate between 128 and 255
+
             # Draw title and instruction with appropriate alpha
             screen.blit(self.title_text, self.title_rect)
-            
+
             # Create a copy of instruction text with pulsing alpha
             pulsing_text = self.instruction_text.copy()
             pulsing_text.set_alpha(instruction_alpha)
             screen.blit(pulsing_text, self.instruction_rect)
-    
+
     def enter(self):
         """Reset animation state when entering this state."""
         self.alpha = 0

@@ -42,18 +42,21 @@ cursor = conn.cursor()
 print("Creating tables with correct schema...")
 
 # Player profile table
-cursor.execute("""
+cursor.execute(
+    """
 CREATE TABLE IF NOT EXISTS player_profile (
     id INTEGER PRIMARY KEY,
     name TEXT DEFAULT 'Player',
     high_score INTEGER DEFAULT 0,
     tutorial_complete INTEGER DEFAULT 0
 )
-""")
+"""
+)
 print("✓ Created player_profile table")
 
 # Player settings table
-cursor.execute("""
+cursor.execute(
+    """
 CREATE TABLE IF NOT EXISTS player_settings (
     setting_id INTEGER PRIMARY KEY,
     player_id INTEGER,
@@ -63,21 +66,25 @@ CREATE TABLE IF NOT EXISTS player_settings (
     difficulty TEXT DEFAULT 'normal',
     FOREIGN KEY (player_id) REFERENCES player_profile(id)
 )
-""")
+"""
+)
 print("✓ Created player_settings table")
 
 # Starting stock table
-cursor.execute("""
+cursor.execute(
+    """
 CREATE TABLE IF NOT EXISTS starting_stock (
     item_id INTEGER PRIMARY KEY,
     food_type TEXT,
     initial_quantity INTEGER DEFAULT 0
 )
-""")
+"""
+)
 print("✓ Created starting_stock table")
 
 # Upgrades owned table
-cursor.execute("""
+cursor.execute(
+    """
 CREATE TABLE IF NOT EXISTS upgrades_owned (
     upgrade_id INTEGER PRIMARY KEY,
     player_id INTEGER,
@@ -85,11 +92,13 @@ CREATE TABLE IF NOT EXISTS upgrades_owned (
     purchase_date TEXT,
     FOREIGN KEY (player_id) REFERENCES player_profile(id)
 )
-""")
+"""
+)
 print("✓ Created upgrades_owned table")
 
 # Run history table
-cursor.execute("""
+cursor.execute(
+    """
 CREATE TABLE IF NOT EXISTS run_history (
     run_id INTEGER PRIMARY KEY,
     player_id INTEGER,
@@ -100,31 +109,44 @@ CREATE TABLE IF NOT EXISTS run_history (
     duration_sec REAL,
     FOREIGN KEY (player_id) REFERENCES player_profile(id)
 )
-""")
+"""
+)
 print("✓ Created run_history table")
 
 # Insert default data
 print("Inserting default data...")
 
 # Player profile defaults
-cursor.execute("""
+cursor.execute(
+    """
 INSERT INTO player_profile (id, name, high_score, tutorial_complete)
 VALUES (1, 'Player', 0, 0)
-""")
+"""
+)
 print("✓ Inserted default player profile")
 
 # Player settings defaults
-cursor.execute("""
+cursor.execute(
+    """
 INSERT INTO player_settings (player_id, music_volume, sfx_volume, fullscreen)
 VALUES (1, 0.7, 1.0, 0)
-""")
+"""
+)
 print("✓ Inserted default player settings")
 
 # Starting stock defaults
-cursor.execute("INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('burger', 10)")
-cursor.execute("INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('pizza', 5)")
-cursor.execute("INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('taco', 5)")
-cursor.execute("INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('sushi', 3)")
+cursor.execute(
+    "INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('burger', 10)"
+)
+cursor.execute(
+    "INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('pizza', 5)"
+)
+cursor.execute(
+    "INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('taco', 5)"
+)
+cursor.execute(
+    "INSERT INTO starting_stock (food_type, initial_quantity) VALUES ('sushi', 3)"
+)
 print("✓ Inserted default starting stock")
 
 # Commit changes and close

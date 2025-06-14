@@ -7,7 +7,6 @@ handling all database operations through reusable functions.
 
 import sqlite3
 import os
-from pathlib import Path
 from contextlib import contextmanager
 from datetime import datetime
 import time
@@ -16,11 +15,15 @@ import time
 try:
     from src.debug.logger import log, log_error
 except ImportError:
-    def log(message): print(f"[LOG] {message}")
-    def log_error(message): print(f"[ERROR] {message}")
+
+    def log(message):
+        print(f"[LOG] {message}")
+
+    def log_error(message):
+        print(f"[ERROR] {message}")
+
 
 # Import database initialization
-import os
 from src.persistence.db_init import initialize_database, DB_PATH
 
 # Ensure database is initialized when this module is imported
@@ -32,10 +35,10 @@ if not os.path.exists(DB_PATH):
 
 # Cache for frequently accessed data
 _cache = {
-    'player_settings': None,
-    'starting_stock': None,
-    'owned_upgrades': None,
-    'cache_time': 0
+    "player_settings": None,
+    "starting_stock": None,
+    "owned_upgrades": None,
+    "cache_time": 0,
 }
 
 # Cache TTL in seconds
@@ -47,16 +50,16 @@ def _clear_cache(cache_key=None):
     Clear a specific cache entry or all caches if no key provided.
     """
     global _cache
-    
+
     if cache_key:
         if cache_key in _cache:
             _cache[cache_key] = None
             log(f"Cleared cache: {cache_key}")
     else:
         for key in _cache:
-            if key != 'cache_time':  # Keep the timestamp
+            if key != "cache_time":  # Keep the timestamp
                 _cache[key] = None
-        _cache['cache_time'] = 0  # Reset timestamp too
+        _cache["cache_time"] = 0  # Reset timestamp too
         log("Cleared all caches")
 
 
@@ -65,7 +68,7 @@ class DataAccessLayer:
     Data Access Layer class for professional game development pattern.
     Centralizes all database operations and provides a clean interface.
     """
-    
+
     def __init__(self):
         self.initialized = False
         try:
@@ -77,7 +80,7 @@ class DataAccessLayer:
             log("DAL initialized successfully")
         except Exception as e:
             log_error(f"Failed to initialize DAL: {e}")
-    
+
     def is_tutorial_complete(self):
         """
         Check if the tutorial has been completed.
@@ -89,7 +92,7 @@ class DataAccessLayer:
         except Exception as e:
             log_error(f"Error checking tutorial completion: {e}")
             return False
-    
+
     def mark_tutorial_complete(self):
         """
         Mark the tutorial as completed in the database.
@@ -106,7 +109,7 @@ class DataAccessLayer:
         except Exception as e:
             log_error(f"Error marking tutorial as complete: {e}")
             return False
-    
+
     def reset_player_progress(self):
         """
         Reset player progress for a new game while preserving tutorial completion status.
@@ -114,10 +117,10 @@ class DataAccessLayer:
         try:
             # First get the current tutorial completion status
             tutorial_status = self.is_tutorial_complete()
-            
+
             with get_conn() as conn:
                 cursor = conn.cursor()
-                
+
                 # Reset player money and other stats
                 cursor.execute(
                     """UPDATE player_profile 
@@ -126,31 +129,31 @@ class DataAccessLayer:
                            high_score = 0 
                        WHERE id = 1"""
                 )
-                
+
                 # Clear owned upgrades
                 cursor.execute("DELETE FROM upgrades_owned WHERE player_id = 1")
-                
+
                 # Clear save game data if exists
                 cursor.execute("DELETE FROM save_games WHERE player_id = 1")
-                
+
                 # Reset but preserve tutorial status
                 cursor.execute(
                     "UPDATE player_profile SET tutorial_complete = ? WHERE id = 1",
-                    (1 if tutorial_status else 0,)
+                    (1 if tutorial_status else 0,),
                 )
-                
+
                 # Commit all changes
                 conn.commit()
-                
+
                 # Clear all caches
                 _clear_cache()
-                
+
                 log("Player progress reset successfully for new game")
                 return True
         except Exception as e:
             log_error(f"Error resetting player progress: {e}")
             return False
-    
+
     def load_latest_save(self):
         """
         Load the latest save game data.
@@ -164,7 +167,7 @@ class DataAccessLayer:
                        ORDER BY save_date DESC LIMIT 1"""
                 )
                 save_data = cursor.fetchone()
-                
+
                 if save_data:
                     log(f"Found save data from {save_data['save_date']}")
                     return dict(save_data)
@@ -180,7 +183,7 @@ class DataAccessLayer:
 def get_conn():
     """
     Context manager for database connections.
-    
+
     Usage:
         with get_conn() as conn:
             cursor = conn.cursor()
@@ -196,7 +199,7 @@ def get_conn():
         finally:
             conn.close()
         return
-    
+
     conn = None
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -218,31 +221,29 @@ def _clear_cache(key=None):
             _cache[key] = None
     else:
         for k in _cache:
-            if k != 'cache_time':
+            if k != "cache_time":
                 _cache[k] = None
-    _cache['cache_time'] = time.time()
+    _cache["cache_time"] = time.time()
 
 
 def _is_cache_valid(key):
     """Check if the cache for a key is valid."""
     if key not in _cache or _cache[key] is None:
         return False
-    if time.time() - _cache['cache_time'] > CACHE_TTL:
+    if time.time() - _cache["cache_time"] > CACHE_TTL:
         return False
     return True
 
 
 # ---------- Player Profile Functions ----------
 
+
 def get_player_profile(player_id=1):
     """Get the player's profile data."""
     try:
         with get_conn() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT * FROM player_profile WHERE id = ?", 
-                (player_id,)
-            )
+            cursor.execute("SELECT * FROM player_profile WHERE id = ?", (player_id,))
             profile = cursor.fetchone()
             if profile:
                 return dict(profile)
@@ -250,7 +251,7 @@ def get_player_profile(player_id=1):
                 # Create default profile if it doesn't exist
                 cursor.execute(
                     "INSERT INTO player_profile (id, name, tutorial_complete) VALUES (?, ?, ?)",
-                    (player_id, "Player", 0)
+                    (player_id, "Player", 0),
                 )
                 conn.commit()
                 return {"id": player_id, "name": "Player", "tutorial_complete": 0}
@@ -266,8 +267,8 @@ def update_high_score(player_id, score):
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE player_profile SET high_score = ? WHERE player_id = ? AND high_score < ?", 
-                (score, player_id, score)
+                "UPDATE player_profile SET high_score = ? WHERE player_id = ? AND high_score < ?",
+                (score, player_id, score),
             )
             conn.commit()
             return cursor.rowcount > 0
@@ -278,28 +279,29 @@ def update_high_score(player_id, score):
 
 # ---------- Game Settings Functions ----------
 
+
 def fetch_player_settings():
     """Fetch player settings from the database."""
-    if _is_cache_valid('player_settings'):
-        return _cache['player_settings']
-    
+    if _is_cache_valid("player_settings"):
+        return _cache["player_settings"]
+
     try:
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM player_settings WHERE id = 1")
             settings = cursor.fetchone()
-            
+
             if settings:
                 result = dict(settings)
-                _cache['player_settings'] = result
+                _cache["player_settings"] = result
                 return result
             else:
                 # Create default settings if they don't exist
                 default_settings = {
-                    "id": 1, 
+                    "id": 1,
                     "starting_money": 0,
                     "max_stock": 10,
-                    "tutorial_mode": True
+                    "tutorial_mode": True,
                 }
                 cursor.execute(
                     """
@@ -307,67 +309,68 @@ def fetch_player_settings():
                     (id, starting_money, max_stock, tutorial_mode) 
                     VALUES (?, ?, ?, ?)
                     """,
-                    (default_settings["id"], default_settings["starting_money"],
-                     default_settings["max_stock"], default_settings["tutorial_mode"])
+                    (
+                        default_settings["id"],
+                        default_settings["starting_money"],
+                        default_settings["max_stock"],
+                        default_settings["tutorial_mode"],
+                    ),
                 )
                 conn.commit()
-                _cache['player_settings'] = default_settings
+                _cache["player_settings"] = default_settings
                 return default_settings
     except sqlite3.Error as e:
         log_error(f"Failed to fetch player settings: {e}")
         # Return default settings as fallback
         default_settings = {
-            "id": 1, 
+            "id": 1,
             "starting_money": 0,
             "max_stock": 10,
-            "tutorial_mode": True
+            "tutorial_mode": True,
         }
-        _cache['player_settings'] = default_settings
+        _cache["player_settings"] = default_settings
         return default_settings
 
 
 # ---------- Inventory Functions ----------
 
+
 def fetch_starting_stock():
     """Fetch the starting stock configuration."""
-    if _is_cache_valid('starting_stock'):
-        return _cache['starting_stock']
-    
+    if _is_cache_valid("starting_stock"):
+        return _cache["starting_stock"]
+
     try:
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT food, qty FROM starting_stock")
             rows = cursor.fetchall()
-            
+
             if rows:
                 stock = {row["food"]: row["qty"] for row in rows}
-                _cache['starting_stock'] = stock
+                _cache["starting_stock"] = stock
                 return stock
             else:
                 # Return default stock if none found in DB
                 default_stock = {
                     "Tropical Pizza": 5,
                     "Ska Smoothie": 5,
-                    "Island Ice Cream": 5
+                    "Island Ice Cream": 5,
                 }
                 # Insert default stock
                 for food, qty in default_stock.items():
                     cursor.execute(
                         "INSERT INTO starting_stock (food, qty) VALUES (?, ?)",
-                        (food, qty)
+                        (food, qty),
                     )
                 conn.commit()
-                _cache['starting_stock'] = default_stock
+                _cache["starting_stock"] = default_stock
                 return default_stock
     except sqlite3.Error as e:
         log_error(f"Failed to fetch starting stock: {e}")
         # Return default stock as fallback
-        default_stock = {
-            "Tropical Pizza": 5,
-            "Ska Smoothie": 5,
-            "Island Ice Cream": 5
-        }
-        _cache['starting_stock'] = default_stock
+        default_stock = {"Tropical Pizza": 5, "Ska Smoothie": 5, "Island Ice Cream": 5}
+        _cache["starting_stock"] = default_stock
         return default_stock
 
 
@@ -380,26 +383,26 @@ def fetch_starting_defaults():
 
 # ---------- Upgrade Functions ----------
 
+
 def load_owned_upgrades(player_id=1):
     """Load all upgrades owned by the player."""
-    if _is_cache_valid('owned_upgrades'):
-        return _cache['owned_upgrades']
-    
+    if _is_cache_valid("owned_upgrades"):
+        return _cache["owned_upgrades"]
+
     try:
         with get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT upg_id FROM upgrades_owned WHERE player_id = ?",
-                (player_id,)
+                "SELECT upg_id FROM upgrades_owned WHERE player_id = ?", (player_id,)
             )
             rows = cursor.fetchall()
-            
+
             if rows:
                 owned_upgrades = [row["upg_id"] for row in rows]
-                _cache['owned_upgrades'] = owned_upgrades
+                _cache["owned_upgrades"] = owned_upgrades
                 return owned_upgrades
             else:
-                _cache['owned_upgrades'] = []
+                _cache["owned_upgrades"] = []
                 return []
     except sqlite3.Error as e:
         log_error(f"Failed to load owned upgrades: {e}")
@@ -417,10 +420,14 @@ def own_upgrade(player_id, upgrade_id):
                     INSERT INTO upgrades_owned (player_id, upg_id, acquired_at) 
                     VALUES (?, ?, ?)
                     """,
-                    (player_id, upgrade_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    (
+                        player_id,
+                        upgrade_id,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ),
                 )
                 conn.commit()
-                _clear_cache('owned_upgrades')
+                _clear_cache("owned_upgrades")
                 return True
             except sqlite3.IntegrityError:
                 # Already owns this upgrade
@@ -431,6 +438,7 @@ def own_upgrade(player_id, upgrade_id):
 
 
 # ---------- Game Run History Functions ----------
+
 
 def save_run_history(player_id, score, money_earned, missed, duration_sec):
     """Save the history of a game run."""
@@ -443,14 +451,20 @@ def save_run_history(player_id, score, money_earned, missed, duration_sec):
                 (player_id, score, money_earned, missed, duration_sec, run_date) 
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (player_id, score, money_earned, missed, duration_sec, 
-                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                (
+                    player_id,
+                    score,
+                    money_earned,
+                    missed,
+                    duration_sec,
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ),
             )
             conn.commit()
-            
+
             # Check if this is a new high score
             update_high_score(player_id, score)
-            
+
             return cursor.lastrowid
     except sqlite3.Error as e:
         log_error(f"Failed to save run history: {e}")
@@ -470,7 +484,7 @@ def get_high_scores(limit=10):
                 ORDER BY rh.score DESC
                 LIMIT ?
                 """,
-                (limit,)
+                (limit,),
             )
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
@@ -491,7 +505,7 @@ def get_recent_runs(player_id=1, limit=5):
                 ORDER BY run_date DESC 
                 LIMIT ?
                 """,
-                (player_id, limit)
+                (player_id, limit),
             )
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
@@ -502,27 +516,30 @@ def get_recent_runs(player_id=1, limit=5):
 
 # ---------- Database Backup Functions ----------
 
+
 def create_backup():
     """Create a backup of the database."""
     if not os.path.exists(DB_PATH):
         log_error("Cannot backup: database file not found")
         return False
-    
+
     try:
         # Create backup directory
         from pathlib import Path
+
         db_path = Path(DB_PATH)  # Convert string to Path for directory operations
         backup_dir = db_path.parent / "backups"
         backup_dir.mkdir(exist_ok=True)
-        
+
         # Generate backup filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_file = backup_dir / f"jammin_{timestamp}.db"
-        
+
         # Copy database to backup location
         import shutil
+
         shutil.copy2(DB_PATH, backup_file)
-        
+
         log(f"Database backed up to {backup_file}")
         return True
     except Exception as e:
@@ -532,29 +549,32 @@ def create_backup():
 
 # ---------- Health Check Functions ----------
 
+
 def check_database_health():
     """Check the health of the database."""
     try:
         with get_conn() as conn:
             cursor = conn.cursor()
             tables = [
-                "player_profile", 
-                "player_settings", 
-                "starting_stock", 
+                "player_profile",
+                "player_settings",
+                "starting_stock",
                 "upgrades_owned",
-                "run_history"
+                "run_history",
             ]
-            
+
             missing_tables = []
             for table in tables:
-                cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}'")
+                cursor.execute(
+                    f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}'"
+                )
                 if not cursor.fetchone():
                     missing_tables.append(table)
-            
+
             if missing_tables:
                 log_error(f"Missing tables: {', '.join(missing_tables)}")
                 return False, missing_tables
-            
+
             return True, None
     except sqlite3.Error as e:
         log_error(f"Database health check failed: {e}")
@@ -563,6 +583,7 @@ def check_database_health():
 
 # ---------- Tutorial Completion Functions ----------
 
+
 def is_tutorial_complete(player_id=1):
     """Check if the player has completed the tutorial."""
     try:
@@ -570,13 +591,14 @@ def is_tutorial_complete(player_id=1):
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT tutorial_complete FROM player_profile WHERE id = ?",
-                (player_id,)
+                (player_id,),
             )
             row = cursor.fetchone()
             return bool(row["tutorial_complete"]) if row else False
     except sqlite3.Error as e:
         log_error(f"Failed to check tutorial completion: {e}")
         return False
+
 
 def mark_tutorial_complete(player_id=1):
     """Mark the tutorial as complete for a player."""
@@ -585,7 +607,7 @@ def mark_tutorial_complete(player_id=1):
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE player_profile SET tutorial_complete = 1 WHERE id = ?",
-                (player_id,)
+                (player_id,),
             )
             conn.commit()
             return cursor.rowcount > 0

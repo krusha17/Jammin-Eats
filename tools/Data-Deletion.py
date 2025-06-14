@@ -31,7 +31,7 @@ def delete_initial_data(conn):
             "ALTER TABLE PlayerAchievements NOCHECK CONSTRAINT ALL;",
             "ALTER TABLE LevelFoodTypes NOCHECK CONSTRAINT ALL;",
             "ALTER TABLE CustomerPreferences NOCHECK CONSTRAINT ALL;",
-            "ALTER TABLE GameSessions NOCHECK CONSTRAINT ALL;"
+            "ALTER TABLE GameSessions NOCHECK CONSTRAINT ALL;",
         ]
 
         for stmt in disable_constraints:
@@ -39,79 +39,111 @@ def delete_initial_data(conn):
         print("Foreign key constraints disabled.")
 
         # Delete achievements data
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM PlayerAchievements WHERE achievement_id IN 
                 (SELECT achievement_id FROM Achievements WHERE achievement_name IN 
                 ('First Delivery', 'Speed Demon', 'Food Maestro', 'No Customer Left Behind'));
-        """)
+        """
+        )
         print(f"Deleted {cursor.rowcount} rows from PlayerAchievements.")
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM Achievements WHERE achievement_name IN 
                 ('First Delivery', 'Speed Demon', 'Food Maestro', 'No Customer Left Behind');
-        """)
+        """
+        )
         print(f"Deleted {cursor.rowcount} rows from Achievements.")
 
         # Delete sounds data
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM Sounds WHERE sound_name IN 
                 ('pickup_sound', 'engine_sound', 'button_sound', 'background_music');
-        """)
+        """
+        )
         print(f"Deleted {cursor.rowcount} rows from Sounds.")
 
         # Delete game settings
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM GameSettings WHERE setting_name IN 
                 ('FPS', 'SCREEN_WIDTH', 'SCREEN_HEIGHT');
-        """)
+        """
+        )
         print(f"Deleted {cursor.rowcount} rows from GameSettings.")
 
         # Delete customer type data
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM CustomerPreferences WHERE customer_type_id IN 
                 (SELECT customer_type_id FROM CustomerTypes WHERE type_name = 'Regular');
-        """)
-        print(f"Deleted {cursor.rowcount} rows from CustomerPreferences related to 'Regular' type.")
+        """
+        )
+        print(
+            f"Deleted {cursor.rowcount} rows from CustomerPreferences related to 'Regular' type."
+        )
 
         cursor.execute("DELETE FROM CustomerTypes WHERE type_name = 'Regular';")
         print(f"Deleted {cursor.rowcount} rows from CustomerTypes.")
 
         # Delete game level data
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM LevelFoodTypes WHERE level_id IN 
                 (SELECT level_id FROM GameLevels WHERE level_name = 'Kitchen Chaos');
-        """)
-        print(f"Deleted {cursor.rowcount} rows from LevelFoodTypes related to 'Kitchen Chaos'.")
+        """
+        )
+        print(
+            f"Deleted {cursor.rowcount} rows from LevelFoodTypes related to 'Kitchen Chaos'."
+        )
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM CustomerSpawnLocations WHERE level_id IN 
                 (SELECT level_id FROM GameLevels WHERE level_name = 'Kitchen Chaos');
-        """)
-        print(f"Deleted {cursor.rowcount} rows from CustomerSpawnLocations related to 'Kitchen Chaos'.")
+        """
+        )
+        print(
+            f"Deleted {cursor.rowcount} rows from CustomerSpawnLocations related to 'Kitchen Chaos'."
+        )
 
         cursor.execute("DELETE FROM GameLevels WHERE level_name = 'Kitchen Chaos';")
         print(f"Deleted {cursor.rowcount} rows from GameLevels.")
 
         # Delete food types data
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM CustomerPreferences WHERE food_id IN 
                 (SELECT food_id FROM FoodTypes WHERE food_name IN ('pizza', 'smoothie', 'icecream', 'pudding'));
-        """)
-        print(f"Deleted {cursor.rowcount} rows from CustomerPreferences related to food types.")
+        """
+        )
+        print(
+            f"Deleted {cursor.rowcount} rows from CustomerPreferences related to food types."
+        )
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM LevelFoodTypes WHERE food_id IN 
                 (SELECT food_id FROM FoodTypes WHERE food_name IN ('pizza', 'smoothie', 'icecream', 'pudding'));
-        """)
-        print(f"Deleted {cursor.rowcount} rows from LevelFoodTypes related to food types.")
+        """
+        )
+        print(
+            f"Deleted {cursor.rowcount} rows from LevelFoodTypes related to food types."
+        )
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM Deliveries WHERE food_id IN 
                 (SELECT food_id FROM FoodTypes WHERE food_name IN ('pizza', 'smoothie', 'icecream', 'pudding'));
-        """)
+        """
+        )
         print(f"Deleted {cursor.rowcount} rows from Deliveries related to food types.")
 
-        cursor.execute("DELETE FROM FoodTypes WHERE food_name IN ('pizza', 'smoothie', 'icecream', 'pudding');")
+        cursor.execute(
+            "DELETE FROM FoodTypes WHERE food_name IN ('pizza', 'smoothie', 'icecream', 'pudding');"
+        )
         print(f"Deleted {cursor.rowcount} rows from FoodTypes.")
 
         # Re-enable constraints
@@ -120,7 +152,7 @@ def delete_initial_data(conn):
             "ALTER TABLE PlayerAchievements CHECK CONSTRAINT ALL;",
             "ALTER TABLE LevelFoodTypes CHECK CONSTRAINT ALL;",
             "ALTER TABLE CustomerPreferences CHECK CONSTRAINT ALL;",
-            "ALTER TABLE GameSessions CHECK CONSTRAINT ALL;"
+            "ALTER TABLE GameSessions CHECK CONSTRAINT ALL;",
         ]
 
         for stmt in enable_constraints:
