@@ -5,8 +5,8 @@ import os
 # Add project root to path to ensure imports work correctly
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.core.upgrade_manager import UpgradeManager
-from src.core.constants import UPGRADE_DATA
+from src.core.upgrade_manager import UpgradeManager  # noqa: E402
+from src.core.constants import UPGRADE_DATA  # noqa: E402
 
 
 class TestUpgradeManager(unittest.TestCase):

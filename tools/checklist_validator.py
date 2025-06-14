@@ -49,7 +49,6 @@ def parse_pytest_results(xml_file):
 
         for testcase in root.findall(".//testcase"):
             name = testcase.get("name")
-            classname = testcase.get("classname")
 
             # Extract test ID from test name if available
             match = TEST_ID_PATTERN.search(name)

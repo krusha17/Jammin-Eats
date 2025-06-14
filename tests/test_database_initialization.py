@@ -13,8 +13,8 @@ import sqlite3
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import modules to test
-from src.persistence.db_init import initialize_database
-from src.persistence.dal import DataAccessLayer
+from src.persistence.db_init import initialize_database  # noqa: E402
+from src.persistence.dal import DataAccessLayer  # noqa: E402
 
 
 class TestDatabaseInitialization(unittest.TestCase):

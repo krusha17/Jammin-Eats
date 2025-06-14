@@ -6,8 +6,8 @@ import unittest
 # Add the project root to the path so we can import src modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.core.inventory import Inventory
-from src.core.constants import STARTING_STOCK, MAX_STOCK
+from src.core.inventory import Inventory  # noqa: E402
+from src.core.constants import STARTING_STOCK, MAX_STOCK  # noqa: E402
 
 
 class TestInventory(unittest.TestCase):

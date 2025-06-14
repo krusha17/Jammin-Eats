@@ -10,7 +10,7 @@ from pathlib import Path
 
 # Import our basic linting functions
 sys.path.append(str(Path(__file__).parent.resolve()))
-from basic_lint import lint_file
+from basic_lint import lint_file  # noqa: E402
 
 # ANSI color codes for terminal output
 RED = "\033[91m"
