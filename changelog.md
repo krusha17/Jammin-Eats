@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.9.5-alpha] - 2025-06-14
+
+### Changed
+- Moved legacy phase and planning documents into `docs/Archive/` to declutter main documentation.
+- Added archive note in `README.md` and allowed `docs/Archive/` in repository.
+- Cleaned `requirements.txt` (runtime deps only) and updated `requirements-dev.txt`.
+- Updated backup script exclusions and path fix.
+
+### Added
+- `docs/Archive/` folder now tracks historical documents for reference.
+
+---
+
 ## [0.9.4-alpha] - 2025-06-13
 
 ### Added
